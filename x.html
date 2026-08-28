@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>شبکه اجتماعی X | کلون کامل</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ===== RESET & BASE ===== */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f7f9fc;
+      --bg-card: #ffffff;
+      --text-primary: #0f1419;
+      --text-secondary: #536471;
+      --text-muted: #71767b;
+      --border-color: #eff3f4;
+      --accent: #1d9bf0;
+      --accent-hover: #1a8cd8;
+      --success: #00ba7c;
+      --danger: #f91880;
+      --shadow: 0 2px 12px rgba(0,0,0,0.04);
+      --shadow-hover: 0 8px 30px rgba(0,0,0,0.08);
+      --radius: 16px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    body.dark-mode {
+      --bg-primary: #000000;
+      --bg-secondary: #16181c;
+      --bg-card: #1a1a1a;
+      --text-primary: #e8edf5;
+      --text-secondary: #8899a6;
+      --text-muted: #6a7a8a;
+      --border-color: #2a2a2a;
+      --shadow: 0 2px 12px rgba(0,0,0,0.3);
+      --shadow-hover: 0 8px 30px rgba(0,0,0,0.5);
+    }
+    body {
+      background: var(--bg-primary);
+      min-height:100vh;
+      transition: var(--transition);
+      color: var(--text-primary);
+    }
+
+    /* ===== اسکرول ===== */
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--text-muted); border-radius:10px; }
+
+    /* ===== دکمه‌های کنترل ===== */
+    .control-buttons {
+      position:fixed; top:12px; right:12px; display:flex; gap:6px; z-index:9999;
+    }
+    .theme-toggle, .lang-toggle {
+      background:var(--bg-card); border:1px solid var(--border-color);
+      padding:6px 12px; border-radius:50px; cursor:pointer; font-size:0.65rem;
+      display:flex; align-items:center; gap:4px; transition:var(--transition);
+      box-shadow:var(--shadow); color:var(--text-primary);
+    }
+    .theme-toggle:hover, .lang-toggle:hover { transform:scale(1.05); box-shadow:var(--shadow-hover); }
+    body.ltr .control-buttons { right:auto; left:12px; }
+
+    /* ===== هدر ===== */
+    .header {
+      background:var(--bg-card); border-bottom:1px solid var(--border-color);
+      padding:8px 20px; display:flex; justify-content:space-between; align-items:center;
+      position:sticky; top:0; z-index:100; height:56px;
+      backdrop-filter:blur(20px);
+    }
+    .header-logo {
+      font-size:1.4rem; font-weight:700; color:var(--accent); cursor:pointer;
+      display:flex; align-items:center; gap:8px;
+    }
+    .header-logo i { font-size:1.6rem; }
+    .header-actions { display:flex; gap:16px; align-items:center; }
+    .header-actions i {
+      font-size:1.2rem; cursor:pointer; color:var(--text-secondary);
+      transition:var(--transition);
+    }
+    .header-actions i:hover { color:var(--accent); transform:scale(1.1); }
+    .header-actions .notif-badge { position:relative; }
+    .header-actions .notif-badge::after {
+      content:'3'; position:absolute; top:-6px; right:-8px;
+      background:var(--danger); color:#fff; font-size:0.5rem;
+      padding:1px 5px; border-radius:50%; font-weight:700;
+    }
+    body.ltr .header-actions .notif-badge::after { right:auto; left:-8px; }
+    .header-avatar {
+      width:32px; height:32px; border-radius:50%;
+      background:var(--accent); display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:600; font-size:0.8rem; cursor:pointer;
+    }
+
+    /* ===== محتوای اصلی ===== */
+    .main-content {
+      display:grid; grid-template-columns:240px 1fr 300px;
+      gap:0; max-width:1300px; margin:0 auto; min-height:calc(100vh - 56px);
+    }
+
+    /* ===== سایدبار چپ ===== */
+    .sidebar {
+      padding:12px 8px; border-left:1px solid var(--border-color);
+      height:fit-content; position:sticky; top:70px;
+    }
+    body.ltr .sidebar { border-left:none; border-right:1px solid var(--border-color); }
+    .sidebar-item {
+      display:flex; align-items:center; gap:12px; padding:10px 14px;
+      border-radius:50px; cursor:pointer; transition:var(--transition);
+      color:var(--text-secondary); font-size:0.9rem; font-weight:500;
+    }
+    .sidebar-item:hover { background:var(--bg-secondary); color:var(--text-primary); }
+    .sidebar-item.active { color:var(--text-primary); font-weight:700; }
+    .sidebar-item i { width:24px; font-size:1.2rem; }
+    .sidebar-item .badge {
+      margin-right:auto; background:var(--accent); color:#fff;
+      font-size:0.55rem; padding:1px 8px; border-radius:40px;
+    }
+    .sidebar-item .tweet-btn {
+      background:var(--accent); color:#fff; border:none;
+      padding:8px 20px; border-radius:50px; font-weight:700;
+      cursor:pointer; width:100%; margin-top:8px;
+      transition:var(--transition);
+    }
+    .sidebar-item .tweet-btn:hover { background:var(--accent-hover); }
+
+    /* ===== بخش اصلی ===== */
+    .feed-section { border-left:1px solid var(--border-color); border-right:1px solid var(--border-color); }
+    body.ltr .feed-section { border-left:1px solid var(--border-color); border-right:1px solid var(--border-color); }
+
+    /* ===== تب‌ها ===== */
+    .tab-content { display:none; animation:fadeIn 0.3s ease; }
+    .tab-content.active { display:block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ===== هدر فید ===== */
+    .feed-header {
+      padding:12px 16px; border-bottom:1px solid var(--border-color);
+      display:flex; justify-content:space-between; align-items:center;
+      position:sticky; top:0; background:var(--bg-card); z-index:10;
+      backdrop-filter:blur(20px);
+    }
+    .feed-header h2 { font-size:1.1rem; font-weight:700; }
+
+    /* ===== پست‌گذاری ===== */
+    .compose-box {
+      padding:12px 16px; border-bottom:1px solid var(--border-color);
+      display:flex; gap:12px;
+    }
+    .compose-avatar {
+      width:40px; height:40px; border-radius:50%;
+      background:var(--accent); display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:600; font-size:0.9rem; flex-shrink:0;
+    }
+    .compose-input { flex:1; }
+    .compose-input textarea {
+      width:100%; border:none; outline:none; resize:none;
+      font-size:0.95rem; padding:4px 0; background:transparent;
+      color:var(--text-primary); min-height:60px;
+      font-family:inherit;
+    }
+    .compose-input textarea::placeholder { color:var(--text-muted); }
+    .compose-actions {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-top:6px; flex-wrap:wrap; gap:8px;
+    }
+    .compose-actions .icons {
+      display:flex; gap:12px; color:var(--accent); font-size:1.1rem;
+    }
+    .compose-actions .icons i { cursor:pointer; transition:var(--transition); }
+    .compose-actions .icons i:hover { transform:scale(1.15); color:var(--accent-hover); }
+    .compose-actions .post-btn {
+      background:var(--accent); color:#fff; border:none;
+      padding:6px 20px; border-radius:50px; font-weight:600;
+      cursor:pointer; transition:var(--transition); font-size:0.85rem;
+    }
+    .compose-actions .post-btn:hover { background:var(--accent-hover); transform:scale(1.02); }
+    .compose-actions .post-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+    /* ===== پست ===== */
+    .post-card {
+      padding:12px 16px; border-bottom:1px solid var(--border-color);
+      transition:var(--transition);
+    }
+    .post-card:hover { background:var(--bg-secondary); }
+    .post-header {
+      display:flex; gap:10px; align-items:flex-start;
+    }
+    .post-avatar {
+      width:40px; height:40px; border-radius:50%; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:600; font-size:0.9rem;
+    }
+    .post-body { flex:1; }
+    .post-user {
+      display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+    }
+    .post-name { font-weight:700; font-size:0.95rem; }
+    .post-username { color:var(--text-muted); font-size:0.85rem; }
+    .post-time { color:var(--text-muted); font-size:0.8rem; }
+    .post-more { margin-right:auto; color:var(--text-muted); cursor:pointer; }
+    body.ltr .post-more { margin-right:0; margin-left:auto; }
+    .post-text { margin:4px 0 8px; font-size:0.95rem; line-height:1.5; word-wrap:break-word; }
+    .post-media {
+      border-radius:12px; overflow:hidden; margin:6px 0 10px;
+      background:var(--bg-secondary); display:flex; align-items:center; justify-content:center;
+      min-height:100px; color:var(--text-muted); position:relative;
+    }
+    .post-media img { width:100%; height:auto; max-height:300px; object-fit:cover; }
+    .post-media .media-icon {
+      position:absolute; font-size:2rem; opacity:0.3;
+    }
+    .post-actions {
+      display:flex; justify-content:space-between; max-width:400px;
+      margin-top:6px; color:var(--text-muted);
+    }
+    .post-actions .action {
+      display:flex; align-items:center; gap:4px; cursor:pointer;
+      padding:4px 8px; border-radius:50px; transition:var(--transition);
+      font-size:0.85rem;
+    }
+    .post-actions .action:hover { background:var(--bg-secondary); }
+    .post-actions .action.liked { color:var(--danger); }
+    .post-actions .action.liked i { color:var(--danger); }
+    .post-actions .action.retweeted { color:var(--success); }
+    .post-actions .action.retweeted i { color:var(--success); }
+    .post-actions .action.bookmarked { color:var(--accent); }
+    .post-actions .action.bookmarked i { color:var(--accent); }
+
+    /* ===== کامنت‌ها ===== */
+    .comments-section {
+      padding:8px 16px 12px; border-top:1px solid var(--border-color);
+      display:none;
+    }
+    .comments-section.show { display:block; }
+    .comment-item {
+      display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--border-color);
+    }
+    .comment-item:last-child { border-bottom:none; }
+    .comment-avatar {
+      width:32px; height:32px; border-radius:50%; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:600; font-size:0.7rem;
+    }
+    .comment-body { flex:1; }
+    .comment-user { font-weight:600; font-size:0.85rem; }
+    .comment-text { font-size:0.85rem; margin:2px 0; }
+    .comment-time { font-size:0.65rem; color:var(--text-muted); }
+    .comment-input {
+      display:flex; gap:8px; margin-top:8px;
+    }
+    .comment-input input {
+      flex:1; padding:6px 12px; border:1px solid var(--border-color);
+      border-radius:50px; background:var(--bg-secondary);
+      color:var(--text-primary); font-size:0.85rem; outline:none;
+    }
+    .comment-input input:focus { border-color:var(--accent); }
+    .comment-input button {
+      background:var(--accent); color:#fff; border:none;
+      padding:6px 16px; border-radius:50px; font-weight:600;
+      cursor:pointer; font-size:0.75rem;
+    }
+    .comment-input button:hover { background:var(--accent-hover); }
+
+    /* ===== پنل راست ===== */
+    .right-panel {
+      padding:12px 16px; position:sticky; top:70px; height:fit-content;
+    }
+    .trending-box {
+      background:var(--bg-secondary); border-radius:var(--radius); padding:12px 16px;
+      margin-bottom:12px;
+    }
+    .trending-box h3 { font-size:1rem; margin-bottom:8px; }
+    .trend-item {
+      padding:6px 0; border-bottom:1px solid var(--border-color); cursor:pointer;
+      transition:var(--transition);
+    }
+    .trend-item:last-child { border-bottom:none; }
+    .trend-item:hover { opacity:0.7; }
+    .trend-item .category { font-size:0.65rem; color:var(--text-muted); }
+    .trend-item .title { font-weight:600; font-size:0.9rem; }
+    .trend-item .posts { font-size:0.65rem; color:var(--text-muted); }
+
+    .who-to-follow {
+      background:var(--bg-secondary); border-radius:var(--radius); padding:12px 16px;
+    }
+    .who-to-follow h3 { font-size:1rem; margin-bottom:8px; }
+    .follow-item {
+      display:flex; align-items:center; gap:10px; padding:6px 0;
+      border-bottom:1px solid var(--border-color);
+    }
+    .follow-item:last-child { border-bottom:none; }
+    .follow-avatar {
+      width:36px; height:36px; border-radius:50%; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center; color:#fff; font-weight:600;
+      font-size:0.7rem;
+    }
+    .follow-info { flex:1; }
+    .follow-name { font-weight:600; font-size:0.85rem; }
+    .follow-username { font-size:0.7rem; color:var(--text-muted); }
+    .follow-btn {
+      background:var(--text-primary); color:var(--bg-primary); border:none;
+      padding:2px 14px; border-radius:50px; font-size:0.7rem; font-weight:600;
+      cursor:pointer; transition:var(--transition);
+    }
+    .follow-btn:hover { transform:scale(1.05); opacity:0.8; }
+    .follow-btn.followed { background:transparent; border:1px solid var(--border-color); color:var(--text-primary); }
+
+    /* ===== نوتیفیکیشن ===== */
+    .notification {
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
+      background:var(--text-primary); color:var(--bg-primary); padding:8px 18px;
+      border-radius:10px; font-size:0.8rem; z-index:9999; opacity:0;
+      transition:0.5s; pointer-events:none; box-shadow:0 4px 20px rgba(0,0,0,0.2);
+    }
+    body.dark-mode .notification { background:#2a2a2a; color:#e8e8e8; }
+    .notification.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+    /* ===== واکنش‌گرایی ===== */
+    @media (max-width:1200px) { .right-panel { display:none; } .main-content { grid-template-columns:240px 1fr; } }
+    @media (max-width:992px) {
+      .main-content { grid-template-columns:1fr; }
+      .sidebar { display:none; }
+      .header { padding:6px 12px; height:50px; }
+      .header-logo { font-size:1.1rem; }
+      .header-logo i { font-size:1.2rem; }
+      .header-actions { gap:10px; }
+      .header-actions i { font-size:1rem; }
+      .control-buttons { top:6px; right:6px; gap:4px; }
+      .theme-toggle, .lang-toggle { padding:4px 8px; font-size:0.55rem; }
+    }
+    @media (max-width:480px) {
+      .header-logo span { display:none; }
+      .header-actions { gap:6px; }
+      .header-actions i { font-size:0.85rem; }
+      .header-avatar { width:28px; height:28px; font-size:0.6rem; }
+      .compose-box { padding:8px 10px; }
+      .compose-input textarea { font-size:0.85rem; min-height:40px; }
+      .post-card { padding:8px 10px; }
+      .post-text { font-size:0.85rem; }
+      .post-actions .action { font-size:0.75rem; padding:2px 4px; }
+      .feed-header h2 { font-size:0.95rem; }
+      .feed-header { padding:8px 10px; }
+    }
+
+    body.ltr { direction:ltr; text-align:left; }
+    body.ltr .sidebar-item .badge { margin-right:0; margin-left:auto; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== دکمه‌های کنترل ===== -->
+  <div class="control-buttons">
+    <button class="theme-toggle" id="themeToggleBtn"><i class="fas fa-moon"></i> <span id="themeLabel">دارک</span></button>
+    <button class="lang-toggle" id="langToggleBtn"><i class="fas fa-globe"></i> <span id="langLabel">English</span></button>
+  </div>
+
+  <!-- ===== نوتیفیکیشن ===== -->
+  <div class="notification" id="notification"></div>
+
+  <!-- ===== هدر ===== -->
+  <header class="header">
+    <div class="header-logo"><i class="fab fa-twitter"></i> <span id="brandName">X</span></div>
+    <div class="header-actions">
+      <i class="fas fa-search" onclick="showNotification('جستجو 🔍')"></i>
+      <div class="notif-badge"><i class="fas fa-bell" onclick="showTab('notifications')"></i></div>
+      <i class="fas fa-envelope" onclick="showNotification('پیام‌ها 💬')"></i>
+      <div class="header-avatar" onclick="showTab('profile')">ع</div>
+    </div>
+  </header>
+
+  <!-- ===== محتوای اصلی ===== -->
+  <div class="main-content">
+
+    <!-- ===== سایدبار چپ ===== -->
+    <nav class="sidebar">
+      <div class="sidebar-item active" onclick="showTab('feed')"><i class="fas fa-home"></i> <span data-key="menuHome">خانه</span></div>
+      <div class="sidebar-item" onclick="showTab('explore')"><i class="fas fa-hashtag"></i> <span data-key="menuExplore">اکسپلور</span></div>
+      <div class="sidebar-item" onclick="showTab('notifications')"><i class="fas fa-bell"></i> <span data-key="menuNotif">اعلان‌ها</span> <span class="badge">3</span></div>
+      <div class="sidebar-item" onclick="showTab('messages')"><i class="fas fa-envelope"></i> <span data-key="menuMessages">پیام‌ها</span></div>
+      <div class="sidebar-item" onclick="showTab('profile')"><i class="fas fa-user"></i> <span data-key="menuProfile">پروفایل</span></div>
+      <div class="sidebar-item" onclick="showTab('bookmarks')"><i class="fas fa-bookmark"></i> <span data-key="menuBookmarks">نشان‌ها</span></div>
+      <div class="sidebar-item" onclick="showNotification('خروج از حساب')"><i class="fas fa-sign-out-alt"></i> <span data-key="menuLogout">خروج</span></div>
+      <div class="sidebar-item"><button class="tweet-btn" onclick="document.getElementById('postInput').focus()" data-key="tweetBtn">پست</button></div>
+    </nav>
+
+    <!-- ===== بخش اصلی ===== -->
+    <div class="feed-section">
+
+      <!-- ===== تب فید ===== -->
+      <div class="tab-content active" id="tab-feed">
+        <div class="feed-header"><h2 data-key="feedTitle">خانه</h2></div>
+
+        <!-- کامپوز پست -->
+        <div class="compose-box">
+          <div class="compose-avatar">ع</div>
+          <div class="compose-input">
+            <textarea id="postInput" placeholder="چه خبر؟ ..." rows="2"></textarea>
+            <div class="compose-actions">
+              <div class="icons">
+                <i class="fas fa-image" onclick="attachMedia('image')"></i>
+                <i class="fas fa-video" onclick="attachMedia('video')"></i>
+                <i class="fas fa-smile" onclick="showNotification('ایموجی 😊')"></i>
+              </div>
+              <button class="post-btn" id="postBtn" onclick="createPost()" disabled data-key="postBtn">پست</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- پست‌ها -->
+        <div id="postsContainer">
+          <!-- پست‌ها توسط JS ساخته می‌شوند -->
+        </div>
+      </div>
+
+      <!-- ===== تب اکسپلور ===== -->
+      <div class="tab-content" id="tab-explore">
+        <div class="feed-header"><h2 data-key="exploreTitle">اکسپلور</h2></div>
+        <div style="padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">
+          <div style="aspect-ratio:1;background:var(--bg-secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:2rem;cursor:pointer;" onclick="showNotification('محتوای جدید 📸')">📸</div>
+          <div style="aspect-ratio:1;background:var(--bg-secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:2rem;cursor:pointer;" onclick="showNotification('محتوای جدید 🎨')">🎨</div>
+          <div style="aspect-ratio:1;background:var(--bg-secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:2rem;cursor:pointer;" onclick="showNotification('محتوای جدید 🌄')">🌄</div>
+          <div style="aspect-ratio:1;background:var(--bg-secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:2rem;cursor:pointer;" onclick="showNotification('محتوای جدید 🏠')">🏠</div>
+          <div style="aspect-ratio:1;background:var(--bg-secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:2rem;cursor:pointer;" onclick="showNotification('محتوای جدید 🌊')">🌊</div>
+          <div style="aspect-ratio:1;background:var(--bg-secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:2rem;cursor:pointer;" onclick="showNotification('محتوای جدید 🌺')">🌺</div>
+          <div style="aspect-ratio:1;background:var(--bg-secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:2rem;cursor:pointer;" onclick="showNotification('محتوای جدید 📷')">📷</div>
+          <div style="aspect-ratio:1;background:var(--bg-secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:2rem;cursor:pointer;" onclick="showNotification('محتوای جدید 🎵')">🎵</div>
+          <div style="aspect-ratio:1;background:var(--bg-secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:2rem;cursor:pointer;" onclick="showNotification('محتوای جدید ✨')">✨</div>
+        </div>
+      </div>
+
+      <!-- ===== تب اعلان‌ها ===== -->
+      <div class="tab-content" id="tab-notifications">
+        <div class="feed-header"><h2 data-key="notifTitle">اعلان‌ها</h2></div>
+        <div id="notificationsList" style="padding:12px;">
+          <div class="post-card" style="border:none;background:var(--bg-secondary);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;" onclick="showNotification('مشاهده پست')">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div class="post-avatar" style="width:36px;height:36px;font-size:0.7rem;background:linear-gradient(135deg,#f093fb,#f5576c);">س</div>
+              <div><span style="font-weight:600;">سارا محمدی</span> <span style="color:var(--text-muted);font-size:0.85rem;">پست شما را لایک کرد</span></div>
+              <span style="margin-right:auto;font-size:0.7rem;color:var(--text-muted);">۲س</span>
+            </div>
+          </div>
+          <div class="post-card" style="border:none;background:var(--bg-secondary);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;" onclick="showNotification('مشاهده پست')">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div class="post-avatar" style="width:36px;height:36px;font-size:0.7rem;background:linear-gradient(135deg,#f77737,#f59e0b);">م</div>
+              <div><span style="font-weight:600;">مهدی کریمی</span> <span style="color:var(--text-muted);font-size:0.85rem;">شما را دنبال کرد</span></div>
+              <span style="margin-right:auto;font-size:0.7rem;color:var(--text-muted);">۵س</span>
+            </div>
+          </div>
+          <div class="post-card" style="border:none;background:var(--bg-secondary);border-radius:var(--radius);cursor:pointer;" onclick="showNotification('مشاهده پست')">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div class="post-avatar" style="width:36px;height:36px;font-size:0.7rem;background:linear-gradient(135deg,#833ab4,#fd1d1d);">ز</div>
+              <div><span style="font-weight:600;">زهرا حسینی</span> <span style="color:var(--text-muted);font-size:0.85rem;">پست شما را ری‌توییت کرد</span></div>
+              <span style="margin-right:auto;font-size:0.7rem;color:var(--text-muted);">۸س</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== تب پیام‌ها ===== -->
+      <div class="tab-content" id="tab-messages">
+        <div class="feed-header"><h2 data-key="messagesTitle">پیام‌ها</h2></div>
+        <div style="padding:12px;">
+          <div class="post-card" style="border:none;background:var(--bg-secondary);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;" onclick="showNotification('چت با علی باز شد 💬')">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div class="post-avatar" style="width:40px;height:40px;font-size:0.8rem;background:linear-gradient(135deg,#0088cc,#00a8e8);">ع</div>
+              <div><div style="font-weight:600;">علی رضایی</div><div style="font-size:0.8rem;color:var(--text-muted);">سلام! چطوری؟</div></div>
+              <span style="margin-right:auto;font-size:0.65rem;color:var(--text-muted);">۱۰:۳۰</span>
+            </div>
+          </div>
+          <div class="post-card" style="border:none;background:var(--bg-secondary);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;" onclick="showNotification('چت با سارا باز شد 💬')">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div class="post-avatar" style="width:40px;height:40px;font-size:0.8rem;background:linear-gradient(135deg,#f093fb,#f5576c);">س</div>
+              <div><div style="font-weight:600;">سارا محمدی</div><div style="font-size:0.8rem;color:var(--text-muted);">عکس جدیدت رو دیدم</div></div>
+              <span style="margin-right:auto;font-size:0.65rem;color:var(--text-muted);">دیروز</span>
+            </div>
+          </div>
+          <div class="post-card" style="border:none;background:var(--bg-secondary);border-radius:var(--radius);cursor:pointer;" onclick="showNotification('چت با مهدی باز شد 💬')">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div class="post-avatar" style="width:40px;height:40px;font-size:0.8rem;background:linear-gradient(135deg,#f77737,#f59e0b);">م</div>
+              <div><div style="font-weight:600;">مهدی کریمی</div><div style="font-size:0.8rem;color:var(--text-muted);">جلسه ساعت ۳</div></div>
+              <span style="margin-right:auto;font-size:0.65rem;color:var(--text-muted);">دیروز</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== تب پروفایل ===== -->
+      <div class="tab-content" id="tab-profile">
+        <div class="feed-header"><h2 data-key="profileTitle">پروفایل</h2></div>
+        <div style="padding:16px;">
+          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+            <div style="width:80px;height:80px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:2.5rem;font-weight:700;">ع</div>
+            <div>
+              <div style="font-size:1.4rem;font-weight:700;">علی رضایی</div>
+              <div style="color:var(--text-muted);">@ali_rezaei</div>
+              <div style="margin:4px 0;">عاشق تکنولوژی و برنامه‌نویسی 🚀</div>
+              <div style="display:flex;gap:16px;font-size:0.85rem;color:var(--text-muted);">
+                <span><span style="font-weight:700;color:var(--text-primary);" id="postCount">۱۲۴</span> <span data-key="profilePosts">پست</span></span>
+                <span><span style="font-weight:700;color:var(--text-primary);" id="followersCount">۱٫۲K</span> <span data-key="profileFollowers">دنبال‌کننده</span></span>
+                <span><span style="font-weight:700;color:var(--text-primary);">۳۴۵</span> <span data-key="profileFollowing">دنبال‌شونده</span></span>
+              </div>
+              <button style="margin-top:8px;background:var(--accent);color:#fff;border:none;padding:6px 20px;border-radius:50px;font-weight:600;cursor:pointer;transition:var(--transition);" onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent)'" data-key="editProfile">ویرایش پروفایل</button>
+            </div>
+          </div>
+          <div style="margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">
+            <div style="aspect-ratio:1;background:var(--bg-secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem;cursor:pointer;" onclick="showNotification('پست ۱')">📸</div>
+            <div style="aspect-ratio:1;background:var(--bg-secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem;cursor:pointer;" onclick="showNotification('پست ۲')">🎨</div>
+            <div style="aspect-ratio:1;background:var(--bg-secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem;cursor:pointer;" onclick="showNotification('پست ۳')">🌄</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== تب بوکمارک ===== -->
+      <div class="tab-content" id="tab-bookmarks">
+        <div class="feed-header"><h2 data-key="bookmarksTitle">نشان‌ها</h2></div>
+        <div style="padding:16px;text-align:center;color:var(--text-muted);">
+          <i class="fas fa-bookmark" style="font-size:3rem;opacity:0.3;"></i>
+          <p style="margin-top:8px;" data-key="bookmarksEmpty">هنوز پستی نشان نکرده‌اید</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== پنل راست ===== -->
+    <div class="right-panel">
+      <div class="trending-box">
+        <h3 data-key="trendingTitle">ترندهای ایران</h3>
+        <div class="trend-item" onclick="showNotification('مشاهده ترند #برنامه‌نویسی')">
+          <div class="category">تکنولوژی · در حال ترند</div>
+          <div class="title">#برنامه‌نویسی</div>
+          <div class="posts">۱۲٫۴K پست</div>
+        </div>
+        <div class="trend-item" onclick="showNotification('مشاهده ترند #فوتبال')">
+          <div class="category">ورزش · در حال ترند</div>
+          <div class="title">#فوتبال</div>
+          <div class="posts">۸٫۷K پست</div>
+        </div>
+        <div class="trend-item" onclick="showNotification('مشاهده ترند #انتخابات')">
+          <div class="category">سیاست · در حال ترند</div>
+          <div class="title">#انتخابات</div>
+          <div class="posts">۶٫۲K پست</div>
+        </div>
+        <div class="trend-item" onclick="showNotification('مشاهده ترند #سینما')">
+          <div class="category">هنر · در حال ترند</div>
+          <div class="title">#سینما</div>
+          <div class="posts">۴٫۱K پست</div>
+        </div>
+      </div>
+      <div class="who-to-follow">
+        <h3 data-key="whoToFollow">چه کسی را دنبال کنیم</h3>
+        <div class="follow-item">
+          <div class="follow-avatar" style="background:linear-gradient(135deg,#f093fb,#f5576c);">س</div>
+          <div class="follow-info"><div class="follow-name">سارا محمدی</div><div class="follow-username">@sara_art</div></div>
+          <button class="follow-btn" onclick="followUser(this)" data-key="followBtn">دنبال کردن</button>
+        </div>
+        <div class="follow-item">
+          <div class="follow-avatar" style="background:linear-gradient(135deg,#f77737,#f59e0b);">م</div>
+          <div class="follow-info"><div class="follow-name">مهدی کریمی</div><div class="follow-username">@mehdi_dev</div></div>
+          <button class="follow-btn" onclick="followUser(this)" data-key="followBtn">دنبال کردن</button>
+        </div>
+        <div class="follow-item">
+          <div class="follow-avatar" style="background:linear-gradient(135deg,#833ab4,#fd1d1d);">ز</div>
+          <div class="follow-info"><div class="follow-name">زهرا حسینی</div><div class="follow-username">@zahra_design</div></div>
+          <button class="follow-btn" onclick="followUser(this)" data-key="followBtn">دنبال کردن</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ===== دیکشنری =====
+    const dict = {
+      fa: {
+        brandName: 'X',
+        menuHome: 'خانه',
+        menuExplore: 'اکسپلور',
+        menuNotif: 'اعلان‌ها',
+        menuMessages: 'پیام‌ها',
+        menuProfile: 'پروفایل',
+        menuBookmarks: 'نشان‌ها',
+        menuLogout: 'خروج',
+        tweetBtn: 'پست',
+        feedTitle: 'خانه',
+        exploreTitle: 'اکسپلور',
+        notifTitle: 'اعلان‌ها',
+        messagesTitle: 'پیام‌ها',
+        profileTitle: 'پروفایل',
+        bookmarksTitle: 'نشان‌ها',
+        bookmarksEmpty: 'هنوز پستی نشان نکرده‌اید',
+        postBtn: 'پست',
+        profilePosts: 'پست',
+        profileFollowers: 'دنبال‌کننده',
+        profileFollowing: 'دنبال‌شونده',
+        editProfile: 'ویرایش پروفایل',
+        trendingTitle: 'ترندهای ایران',
+        whoToFollow: 'چه کسی را دنبال کنیم',
+        followBtn: 'دنبال کردن'
+      },
+      en: {
+        brandName: 'X',
+        menuHome: 'Home',
+        menuExplore: 'Explore',
+        menuNotif: 'Notifications',
+        menuMessages: 'Messages',
+        menuProfile: 'Profile',
+        menuBookmarks: 'Bookmarks',
+        menuLogout: 'Logout',
+        tweetBtn: 'Post',
+        feedTitle: 'Home',
+        exploreTitle: 'Explore',
+        notifTitle: 'Notifications',
+        messagesTitle: 'Messages',
+        profileTitle: 'Profile',
+        bookmarksTitle: 'Bookmarks',
+        bookmarksEmpty: 'You haven\'t bookmarked any posts yet',
+        postBtn: 'Post',
+        profilePosts: 'Posts',
+        profileFollowers: 'Followers',
+        profileFollowing: 'Following',
+        editProfile: 'Edit Profile',
+        trendingTitle: 'Trending in Iran',
+        whoToFollow: 'Who to follow',
+        followBtn: 'Follow'
+      }
+    };
+
+    let currentLang = 'fa';
+    const body = document.body;
+    const langBtn = document.getElementById('langToggleBtn');
+    const langLabel = document.getElementById('langLabel');
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      if (lang === 'en') {
+        body.classList.add('ltr');
+        body.setAttribute('dir', 'ltr');
+        document.documentElement.lang = 'en';
+        langLabel.textContent = 'فارسی';
+      } else {
+        body.classList.remove('ltr');
+        body.setAttribute('dir', 'rtl');
+        document.documentElement.lang = 'fa';
+        langLabel.textContent = 'English';
+      }
+      const d = dict[lang];
+      document.querySelectorAll('[data-key]').forEach(el => {
+        const key = el.getAttribute('data-key');
+        if (d[key] !== undefined) el.textContent = d[key];
+      });
+      document.getElementById('brandName').textContent = d.brandName;
+    }
+
+    langBtn.addEventListener('click', function() {
+      setLanguage(currentLang === 'fa' ? 'en' : 'fa');
+    });
+
+    // ===== دارک مود =====
+    const darkToggleBtn = document.getElementById('themeToggleBtn');
+    const themeLabel = document.getElementById('themeLabel');
+
+    function toggleDarkMode() {
+      body.classList.toggle('dark-mode');
+      const isDark = body.classList.contains('dark-mode');
+      themeLabel.textContent = isDark ? 'روشن' : 'دارک';
+      darkToggleBtn.innerHTML = `<i class="fas ${isDark ? 'fa-sun' : 'fa-moon'}"></i> ${isDark ? 'روشن' : 'دارک'}`;
+    }
+    darkToggleBtn.addEventListener('click', toggleDarkMode);
+
+    // ===== تب‌ها =====
+    function showTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('tab-' + tabName);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+      const map = { feed: 0, explore: 1, notifications: 2, messages: 3, profile: 4, bookmarks: 5 };
+      const items = document.querySelectorAll('.sidebar-item');
+      if (map[tabName] !== undefined) items[map[tabName]]?.classList.add('active');
+
+      if (window.innerWidth <= 992) {
+        document.querySelector('.sidebar').style.display = 'none';
+      }
+    }
+
+    // ===== پست‌گذاری =====
+    let postIdCounter = 4;
+    let mediaAttached = null;
+
+    function attachMedia(type) {
+      mediaAttached = type;
+      showNotification(type === 'image' ? 'تصویر انتخاب شد 📷' : 'ویدیو انتخاب شد 🎬');
+    }
+
+    function createPost() {
+      const input = document.getElementById('postInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const now = new Date();
+      const time = now.getHours().toString().padStart(2, '0') + ':' +
+                   now.getMinutes().toString().padStart(2, '0');
+
+      const container = document.getElementById('postsContainer');
+      const post = document.createElement('div');
+      post.className = 'post-card';
+      post.id = 'post-' + postIdCounter;
+
+      const mediaHtml = mediaAttached ? `
+        <div class="post-media">
+          <span class="media-icon"><i class="fas fa-${mediaAttached === 'image' ? 'image' : 'video'}"></i></span>
+          ${mediaAttached === 'image' ? '🖼️ تصویر آپلود شده' : '🎬 ویدیو آپلود شده'}
+        </div>
+      ` : '';
+
+      post.innerHTML = `
+        <div class="post-header">
+          <div class="post-avatar" style="background:var(--accent);">ع</div>
+          <div class="post-body">
+            <div class="post-user">
+              <span class="post-name">علی رضایی</span>
+              <span class="post-username">@ali_rezaei</span>
+              <span class="post-time">· ${time}</span>
+              <span class="post-more"><i class="fas fa-ellipsis-h"></i></span>
+            </div>
+            <div class="post-text">${text}</div>
+            ${mediaHtml}
+            <div class="post-actions">
+              <div class="action" onclick="likePost(this, '${postIdCounter}')">
+                <i class="far fa-heart"></i> <span class="count">0</span>
+              </div>
+              <div class="action" onclick="toggleComments('${postIdCounter}')">
+                <i class="far fa-comment"></i> <span class="count">0</span>
+              </div>
+              <div class="action" onclick="retweetPost(this, '${postIdCounter}')">
+                <i class="fas fa-retweet"></i> <span class="count">0</span>
+              </div>
+              <div class="action" onclick="bookmarkPost(this, '${postIdCounter}')">
+                <i class="far fa-bookmark"></i>
+              </div>
+            </div>
+            <div class="comments-section" id="comments-${postIdCounter}">
+              <div class="comment-input">
+                <input type="text" placeholder="نظر خود را بنویسید ..." onkeydown="if(event.key==='Enter') addComment(this, '${postIdCounter}')">
+                <button onclick="addComment(this.previousElementSibling, '${postIdCounter}')">ارسال</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.prepend(post);
+      input.value = '';
+      mediaAttached = null;
+      document.getElementById('postBtn').disabled = true;
+      postIdCounter++;
+
+      showNotification('پست شما با موفقیت منتشر شد ✅');
+      updatePostCount();
+    }
+
+    // ===== لایک =====
+    function likePost(el, postId) {
+      el.classList.toggle('liked');
+      const count = el.querySelector('.count');
+      let val = parseInt(count.textContent) || 0;
+      count.textContent = el.classList.contains('liked') ? val + 1 : val - 1;
+      const icon = el.querySelector('i');
+      icon.className = el.classList.contains('liked') ? 'fas fa-heart' : 'far fa-heart';
+      showNotification(el.classList.contains('liked') ? 'لایک شد ❤️' : 'لایک برداشته شد');
+    }
+
+    // ===== ری‌توییت =====
+    function retweetPost(el, postId) {
+      el.classList.toggle('retweeted');
+      const count = el.querySelector('.count');
+      let val = parseInt(count.textContent) || 0;
+      count.textContent = el.classList.contains('retweeted') ? val + 1 : val - 1;
+      showNotification(el.classList.contains('retweeted') ? 'ری‌توییت شد 🔄' : 'ری‌توییت برداشته شد');
+    }
+
+    // ===== بوکمارک =====
+    function bookmarkPost(el, postId) {
+      el.classList.toggle('bookmarked');
+      const icon = el.querySelector('i');
+      icon.className = el.classList.contains('bookmarked') ? 'fas fa-bookmark' : 'far fa-bookmark';
+      showNotification(el.classList.contains('bookmarked') ? 'نشان شد 📌' : 'از نشان خارج شد');
+    }
+
+    // ===== کامنت =====
+    function toggleComments(postId) {
+      const section = document.getElementById('comments-' + postId);
+      section.classList.toggle('show');
+      if (section.classList.contains('show')) {
+        section.querySelector('input').focus();
+      }
+    }
+
+    function addComment(input, postId) {
+      const text = input.value.trim();
+      if (!text) return;
+
+      const section = document.getElementById('comments-' + postId);
+      const commentDiv = document.createElement('div');
+      commentDiv.className = 'comment-item';
+      commentDiv.innerHTML = `
+        <div class="comment-avatar" style="background:var(--accent);">ش</div>
+        <div class="comment-body">
+          <div><span class="comment-user">شما</span></div>
+          <div class="comment-text">${text}</div>
+          <div class="comment-time">همین الان</div>
+        </div>
+      `;
+      section.insertBefore(commentDiv, section.querySelector('.comment-input'));
+
+      input.value = '';
+
+      // به‌روزرسانی تعداد کامنت‌ها
+      const post = document.getElementById('post-' + postId);
+      const commentAction = post.querySelector('.post-actions .action:nth-child(2)');
+      const count = commentAction.querySelector('.count');
+      let val = parseInt(count.textContent) || 0;
+      count.textContent = val + 1;
+
+      showNotification('کامنت ارسال شد 💬');
+    }
+
+    // ===== دنبال کردن =====
+    function followUser(btn) {
+      btn.classList.toggle('followed');
+      btn.textContent = btn.classList.contains('followed') ? 'دنبال شد' : 'دنبال کردن';
+      showNotification(btn.classList.contains('followed') ? 'دنبال شد ✅' : 'دنبال نشد');
+    }
+
+    // ===== به‌روزرسانی تعداد پست‌ها =====
+    function updatePostCount() {
+      const count = document.querySelectorAll('.post-card').length;
+      const el = document.getElementById('postCount');
+      if (el) el.textContent = count;
+    }
+
+    // ===== فعال/غیرفعال کردن دکمه پست =====
+    document.getElementById('postInput').addEventListener('input', function() {
+      const btn = document.getElementById('postBtn');
+      btn.disabled = this.value.trim() === '';
+    });
+
+    // ===== نوتیفیکیشن =====
+    let notifTimeout;
+
+    function showNotification(message) {
+      const notif = document.getElementById('notification');
+      notif.textContent = message;
+      notif.classList.add('show');
+      clearTimeout(notifTimeout);
+      notifTimeout = setTimeout(() => notif.classList.remove('show'), 2500);
+    }
+
+    // ===== تنظیم اولیه =====
+    setLanguage('fa');
+    showTab('feed');
+
+    // ===== افزودن پست‌های نمونه =====
+    const samplePosts = [
+      { name: 'سارا محمدی', username: '@sara_art', text: 'نقاشی جدیدم رو ببینید 🎨', time: '۲س', avatar: 'linear-gradient(135deg,#f093fb,#f5576c)' },
+      { name: 'مهدی کریمی', username: '@mehdi_dev', text: 'امروز پروژه جدیدم رو شروع کردم 🚀 #برنامه‌نویسی', time: '۴س', avatar: 'linear-gradient(135deg,#f77737,#f59e0b)' },
+      { name: 'زهرا حسینی', username: '@zahra_design', text: 'طراحی جدید برای یک برند معروف ✨', time: '۶س', avatar: 'linear-gradient(135deg,#833ab4,#fd1d1d)' }
+    ];
+
+    samplePosts.forEach((p, i) => {
+      const container = document.getElementById('postsContainer');
+      const post = document.createElement('div');
+      post.className = 'post-card';
+      post.id = 'post-' + (i + 1);
+      post.innerHTML = `
+        <div class="post-header">
+          <div class="post-avatar" style="background:${p.avatar};">${p.name[0]}</div>
+          <div class="post-body">
+            <div class="post-user">
+              <span class="post-name">${p.name}</span>
+              <span class="post-username">${p.username}</span>
+              <span class="post-time">· ${p.time}</span>
+              <span class="post-more"><i class="fas fa-ellipsis-h"></i></span>
+            </div>
+            <div class="post-text">${p.text}</div>
+            <div class="post-actions">
+              <div class="action" onclick="likePost(this, '${i+1}')">
+                <i class="far fa-heart"></i> <span class="count">${Math.floor(Math.random() * 20) + 5}</span>
+              </div>
+              <div class="action" onclick="toggleComments('${i+1}')">
+                <i class="far fa-comment"></i> <span class="count">${Math.floor(Math.random() * 10) + 2}</span>
+              </div>
+              <div class="action" onclick="retweetPost(this, '${i+1}')">
+                <i class="fas fa-retweet"></i> <span class="count">${Math.floor(Math.random() * 10)}</span>
+              </div>
+              <div class="action" onclick="bookmarkPost(this, '${i+1}')">
+                <i class="far fa-bookmark"></i>
+              </div>
+            </div>
+            <div class="comments-section" id="comments-${i+1}">
+              <div class="comment-input">
+                <input type="text" placeholder="نظر خود را بنویسید ..." onkeydown="if(event.key==='Enter') addComment(this, '${i+1}')">
+                <button onclick="addComment(this.previousElementSibling, '${i+1}')">ارسال</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      container.appendChild(post);
+    });
+
+    document.getElementById('postCount').textContent = document.querySelectorAll('.post-card').length;
+
+    console.log('✅ شبکه اجتماعی X کامل بارگذاری شد!');
+  </script>
+</body>
+</html>

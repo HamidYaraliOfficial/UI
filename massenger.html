@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>واتساپ کلون | کامل‌ترین نسخه</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ===== RESET & BASE ===== */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+    body {
+      background: #ece5dd;
+      min-height:100vh;
+      transition: all 0.3s ease;
+      color: #1c1c1c;
+    }
+    body.dark-mode {
+      background: #0a0a0a;
+      color: #e8e8e8;
+    }
+    body.dark-mode .header,
+    body.dark-mode .sidebar,
+    body.dark-mode .chat-list,
+    body.dark-mode .chat-window,
+    body.dark-mode .message-input,
+    body.dark-mode .profile-card,
+    body.dark-mode .settings-card,
+    body.dark-mode .status-card,
+    body.dark-mode .call-card,
+    body.dark-mode .community-card {
+      background: #1a1a1a;
+      border-color: #2a2a2a;
+    }
+    body.dark-mode .chat-item:hover,
+    body.dark-mode .sidebar-menu-item:hover {
+      background: #2a2a2a;
+    }
+    body.dark-mode .message-bubble.sent {
+      background: #005c4b;
+      color: #e8e8e8;
+    }
+    body.dark-mode .message-bubble.received {
+      background: #2a2a2a;
+      color: #e8e8e8;
+    }
+    body.dark-mode .search-box input {
+      background: #2a2a2a;
+      color: #e8e8e8;
+    }
+    body.dark-mode .search-box input::placeholder {
+      color: #8a8a8a;
+    }
+    body.dark-mode .chat-item .last-message {
+      color: #8a8a8a;
+    }
+    body.dark-mode .status-item .status-time {
+      color: #8a8a8a;
+    }
+
+    /* ===== اسکرول ===== */
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:#c0c0c0; border-radius:10px; }
+    body.dark-mode ::-webkit-scrollbar-thumb { background:#3a3a3a; }
+
+    /* ===== دکمه‌های کنترل ===== */
+    .control-buttons {
+      position:fixed;
+      top:12px;
+      right:12px;
+      display:flex;
+      gap:8px;
+      z-index:9999;
+    }
+    .theme-toggle, .lang-toggle {
+      background:rgba(255,255,255,0.95);
+      border:1px solid #dbdbdb;
+      padding:6px 12px;
+      border-radius:50px;
+      cursor:pointer;
+      font-size:0.7rem;
+      display:flex;
+      align-items:center;
+      gap:5px;
+      transition:0.3s;
+      box-shadow:0 2px 12px rgba(0,0,0,0.08);
+    }
+    body.dark-mode .theme-toggle,
+    body.dark-mode .lang-toggle {
+      background:rgba(30,30,30,0.95);
+      border-color:#3a3a3a;
+      color:#e8e8e8;
+    }
+    .theme-toggle:hover, .lang-toggle:hover { transform:scale(1.05); }
+    body.ltr .control-buttons { right:auto; left:12px; }
+
+    /* ===== هدر ===== */
+    .header {
+      background:#075e54;
+      padding:10px 20px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      position:sticky;
+      top:0;
+      z-index:100;
+      height:60px;
+    }
+    body.dark-mode .header { background:#0d2b2a; }
+    .header-logo {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:#fff;
+      font-size:1.3rem;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .header-logo i { font-size:1.6rem; }
+    .header-actions {
+      display:flex;
+      gap:18px;
+      align-items:center;
+      color:#fff;
+    }
+    .header-actions i {
+      font-size:1.2rem;
+      cursor:pointer;
+      transition:0.3s;
+    }
+    .header-actions i:hover { transform:scale(1.1); opacity:0.8; }
+    .header-avatar {
+      width:32px;
+      height:32px;
+      border-radius:50%;
+      background:rgba(255,255,255,0.2);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-weight:600;
+      font-size:0.8rem;
+      cursor:pointer;
+    }
+
+    /* ===== محتوای اصلی ===== */
+    .main-content {
+      display:grid;
+      grid-template-columns:320px 1fr 280px;
+      gap:0;
+      height:calc(100vh - 60px);
+      max-width:1400px;
+      margin:0 auto;
+      background:#fff;
+    }
+    body.dark-mode .main-content { background:#1a1a1a; }
+
+    /* ===== سایدبار چپ ===== */
+    .sidebar {
+      background:#f0f2f5;
+      border-left:1px solid #e0e0e0;
+      padding:8px;
+      display:flex;
+      flex-direction:column;
+      height:100%;
+      overflow-y:auto;
+    }
+    body.dark-mode .sidebar { background:#1a1a1a; border-color:#2a2a2a; }
+    body.ltr .sidebar { border-left:none; border-right:1px solid #e0e0e0; }
+    body.dark-mode.ltr .sidebar { border-color:#2a2a2a; }
+
+    .search-box {
+      background:#fff;
+      border-radius:8px;
+      padding:6px 12px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-bottom:8px;
+      border:1px solid #e0e0e0;
+    }
+    body.dark-mode .search-box { background:#2a2a2a; border-color:#3a3a3a; }
+    .search-box input {
+      border:none;
+      background:transparent;
+      padding:6px 0;
+      width:100%;
+      outline:none;
+      font-size:0.85rem;
+      color:#1c1c1c;
+    }
+    body.dark-mode .search-box input { color:#e8e8e8; }
+    .search-box input::placeholder { color:#8e8e8e; }
+    .search-box i { color:#8e8e8e; font-size:0.9rem; }
+
+    .sidebar-menu-item {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:8px 12px;
+      border-radius:8px;
+      cursor:pointer;
+      transition:0.2s;
+      color:#1c1c1c;
+      font-size:0.9rem;
+    }
+    body.dark-mode .sidebar-menu-item { color:#e8e8e8; }
+    .sidebar-menu-item:hover { background:#e8e8e8; }
+    body.dark-mode .sidebar-menu-item:hover { background:#2a2a2a; }
+    .sidebar-menu-item.active { background:#d4e9e6; color:#075e54; }
+    body.dark-mode .sidebar-menu-item.active { background:#1a3a3a; color:#4ac9b0; }
+    .sidebar-menu-item i { width:24px; font-size:1.1rem; }
+
+    /* ===== لیست چت‌ها ===== */
+    .chat-list {
+      background:#fff;
+      border-left:1px solid #e0e0e0;
+      overflow-y:auto;
+      height:100%;
+    }
+    body.dark-mode .chat-list { background:#1a1a1a; border-color:#2a2a2a; }
+    body.ltr .chat-list { border-left:none; border-right:1px solid #e0e0e0; }
+    body.dark-mode.ltr .chat-list { border-color:#2a2a2a; }
+
+    .chat-item {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px 14px;
+      cursor:pointer;
+      transition:0.15s;
+      border-bottom:1px solid #f0f2f5;
+    }
+    body.dark-mode .chat-item { border-color:#2a2a2a; }
+    .chat-item:hover { background:#f5f5f5; }
+    body.dark-mode .chat-item:hover { background:#2a2a2a; }
+    .chat-item.active { background:#e8f0fe; }
+    body.dark-mode .chat-item.active { background:#1a2a3a; }
+    .chat-avatar {
+      width:48px;
+      height:48px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-weight:600;
+      font-size:1rem;
+      flex-shrink:0;
+      position:relative;
+    }
+    .chat-avatar .online-dot {
+      position:absolute;
+      bottom:0;
+      right:0;
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      background:#31b545;
+      border:2px solid #fff;
+    }
+    body.dark-mode .chat-avatar .online-dot { border-color:#1a1a1a; }
+    .chat-info {
+      flex:1;
+      min-width:0;
+    }
+    .chat-name {
+      font-weight:600;
+      font-size:0.95rem;
+    }
+    .chat-last-message {
+      font-size:0.8rem;
+      color:#8e8e8e;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .chat-last-message .message-icon { margin-left:4px; font-size:0.7rem; }
+    .chat-time {
+      font-size:0.65rem;
+      color:#8e8e8e;
+      flex-shrink:0;
+    }
+    .chat-unread {
+      background:#25d366;
+      color:#fff;
+      font-size:0.6rem;
+      padding:1px 6px;
+      border-radius:40px;
+      flex-shrink:0;
+      min-width:18px;
+      text-align:center;
+    }
+
+    /* ===== پنجره چت ===== */
+    .chat-window {
+      background:#ece5dd;
+      display:flex;
+      flex-direction:column;
+      height:100%;
+    }
+    body.dark-mode .chat-window { background:#0f0f0f; }
+
+    .chat-header {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px 16px;
+      border-bottom:1px solid #e0e0e0;
+      background:#f0f2f5;
+    }
+    body.dark-mode .chat-header { background:#1a1a1a; border-color:#2a2a2a; }
+    .chat-header .chat-avatar { width:40px; height:40px; font-size:0.8rem; }
+    .chat-header .chat-name { font-size:1rem; }
+    .chat-header .chat-status { font-size:0.65rem; color:#8e8e8e; }
+    .chat-header-actions {
+      margin-right:auto;
+      display:flex;
+      gap:14px;
+    }
+    body.ltr .chat-header-actions { margin-right:0; margin-left:auto; }
+    .chat-header-actions i {
+      font-size:1.1rem;
+      cursor:pointer;
+      color:#8e8e8e;
+      transition:0.3s;
+    }
+    .chat-header-actions i:hover { color:#075e54; transform:scale(1.1); }
+    body.dark-mode .chat-header-actions i:hover { color:#25d366; }
+
+    /* ===== پیام‌ها ===== */
+    .messages-container {
+      flex:1;
+      padding:12px 16px;
+      overflow-y:auto;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      background: transparent;
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNkYmRiZGIiIGZpbGwtb3BhY2l0eT0iMC4yIj48cGF0aCBkPSJNMzYgMzRjMC0xLjEgMC45LTIgMi0yczIgLjkgMiAyLS45IDItMiAyLTItLjktMi0yem0tMTAgMGMwLTEuMS45LTIgMi0yczIgLjkgMiAyLS45IDItMiAyLTItLjktMi0yem0tMTAgMGMwLTEuMS45LTIgMi0yczIgLjkgMiAyLS45IDItMiAyLTItLjktMi0yeiIvPjwvZz48L2c+PC9zdmc+');
+      background-repeat:repeat;
+    }
+    body.dark-mode .messages-container { background-image: none; }
+
+    .message-date {
+      text-align:center;
+      color:#8e8e8e;
+      font-size:0.65rem;
+      padding:6px 0;
+    }
+    .message-bubble {
+      max-width:75%;
+      padding:6px 12px;
+      border-radius:8px;
+      font-size:0.9rem;
+      position:relative;
+      word-wrap:break-word;
+      animation:messageIn 0.3s ease;
+      box-shadow:0 1px 2px rgba(0,0,0,0.05);
+    }
+    @keyframes messageIn {
+      from { opacity:0; transform:translateY(8px) scale(0.98); }
+      to { opacity:1; transform:translateY(0) scale(1); }
+    }
+    .message-bubble.sent {
+      align-self:flex-end;
+      background:#dcf8c6;
+      color:#1c1c1c;
+      border-bottom-right-radius:4px;
+    }
+    .message-bubble.received {
+      align-self:flex-start;
+      background:#fff;
+      color:#1c1c1c;
+      border-bottom-left-radius:4px;
+    }
+    body.dark-mode .message-bubble.received {
+      background:#2a2a2a;
+      color:#e8e8e8;
+    }
+    .message-bubble .time {
+      font-size:0.55rem;
+      opacity:0.7;
+      margin-right:6px;
+    }
+    .message-bubble.sent .time { color:#1c1c1c; }
+    .message-bubble.received .time { color:#8e8e8e; }
+    .message-bubble .status {
+      font-size:0.5rem;
+      margin-right:3px;
+    }
+
+    /* ===== ورودی پیام ===== */
+    .message-input {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:8px 14px;
+      border-top:1px solid #e0e0e0;
+      background:#f0f2f5;
+    }
+    body.dark-mode .message-input { background:#1a1a1a; border-color:#2a2a2a; }
+    .message-input i {
+      font-size:1.2rem;
+      color:#8e8e8e;
+      cursor:pointer;
+      transition:0.3s;
+    }
+    .message-input i:hover { color:#075e54; transform:scale(1.1); }
+    body.dark-mode .message-input i:hover { color:#25d366; }
+    .message-input input {
+      flex:1;
+      border:none;
+      outline:none;
+      padding:8px 12px;
+      font-size:0.9rem;
+      border-radius:8px;
+      background:#fff;
+      color:#1c1c1c;
+    }
+    body.dark-mode .message-input input { background:#2a2a2a; color:#e8e8e8; }
+    .message-input input::placeholder { color:#8e8e8e; }
+    .message-input .send-btn {
+      background:#25d366;
+      color:#fff;
+      border:none;
+      border-radius:50%;
+      width:40px;
+      height:40px;
+      font-size:1.1rem;
+      cursor:pointer;
+      transition:0.3s;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .message-input .send-btn:hover { transform:scale(1.05); background:#1da85a; }
+
+    /* ===== پنل راست ===== */
+    .right-panel {
+      background:#fff;
+      border-right:1px solid #e0e0e0;
+      padding:12px;
+      overflow-y:auto;
+      height:100%;
+    }
+    body.dark-mode .right-panel { background:#1a1a1a; border-color:#2a2a2a; }
+    body.ltr .right-panel { border-right:none; border-left:1px solid #e0e0e0; }
+    body.dark-mode.ltr .right-panel { border-color:#2a2a2a; }
+
+    /* ===== پروفایل ===== */
+    .profile-card {
+      text-align:center;
+      padding:12px;
+    }
+    .profile-card .avatar {
+      width:72px;
+      height:72px;
+      border-radius:50%;
+      margin:0 auto 10px;
+      background:linear-gradient(135deg,#25d366,#075e54);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-size:1.8rem;
+      font-weight:700;
+    }
+    .profile-card .name { font-size:1.1rem; font-weight:600; }
+    .profile-card .status { color:#8e8e8e; font-size:0.85rem; }
+    .profile-card .bio { margin:6px 0; font-size:0.8rem; color:#8e8e8e; }
+    .profile-stats {
+      display:flex;
+      justify-content:center;
+      gap:20px;
+      padding:10px 0;
+      border-top:1px solid #e0e0e0;
+      border-bottom:1px solid #e0e0e0;
+    }
+    body.dark-mode .profile-stats { border-color:#2a2a2a; }
+    .profile-stats div { text-align:center; }
+    .profile-stats .number { font-weight:600; font-size:1rem; }
+    .profile-stats .label { font-size:0.6rem; color:#8e8e8e; }
+
+    /* ===== تنظیمات ===== */
+    .settings-card { padding:8px 0; }
+    .settings-item {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:8px 0;
+      border-bottom:1px solid #e0e0e0;
+      font-size:0.85rem;
+    }
+    body.dark-mode .settings-item { border-color:#2a2a2a; }
+    .settings-item:last-child { border-bottom:none; }
+    .settings-item .label { font-weight:500; }
+    .settings-item .value { color:#8e8e8e; cursor:pointer; }
+    .settings-item .value:hover { color:#075e54; }
+
+    /* ===== استاتوس ===== */
+    .status-item {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:8px 0;
+      border-bottom:1px solid #e0e0e0;
+      cursor:pointer;
+    }
+    body.dark-mode .status-item { border-color:#2a2a2a; }
+    .status-item:hover { background:#f5f5f5; border-radius:8px; padding:8px 12px; }
+    body.dark-mode .status-item:hover { background:#2a2a2a; }
+    .status-item .avatar {
+      width:44px;
+      height:44px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-weight:600;
+      font-size:0.9rem;
+      flex-shrink:0;
+    }
+    .status-item .info { flex:1; }
+    .status-item .name { font-weight:600; font-size:0.9rem; }
+    .status-item .status-time { font-size:0.7rem; color:#8e8e8e; }
+
+    /* ===== تماس‌ها ===== */
+    .call-item {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:8px 0;
+      border-bottom:1px solid #e0e0e0;
+      cursor:pointer;
+    }
+    body.dark-mode .call-item { border-color:#2a2a2a; }
+    .call-item:hover { background:#f5f5f5; border-radius:8px; padding:8px 12px; }
+    body.dark-mode .call-item:hover { background:#2a2a2a; }
+    .call-item .avatar {
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-weight:600;
+      font-size:0.8rem;
+      flex-shrink:0;
+    }
+    .call-item .info { flex:1; }
+    .call-item .name { font-weight:600; font-size:0.9rem; }
+    .call-item .call-info { font-size:0.7rem; color:#8e8e8e; }
+    .call-item .call-icon { color:#25d366; font-size:1.1rem; }
+
+    /* ===== کامیونیتی ===== */
+    .community-item {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:8px 0;
+      border-bottom:1px solid #e0e0e0;
+      cursor:pointer;
+    }
+    body.dark-mode .community-item { border-color:#2a2a2a; }
+    .community-item:hover { background:#f5f5f5; border-radius:8px; padding:8px 12px; }
+    body.dark-mode .community-item:hover { background:#2a2a2a; }
+    .community-item .avatar {
+      width:44px;
+      height:44px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-weight:700;
+      font-size:1.2rem;
+      flex-shrink:0;
+      background:linear-gradient(135deg,#25d366,#075e54);
+    }
+    .community-item .info { flex:1; }
+    .community-item .name { font-weight:600; font-size:0.9rem; }
+    .community-item .members { font-size:0.7rem; color:#8e8e8e; }
+
+    /* ===== تب‌ها ===== */
+    .tab-content {
+      display:none;
+      flex-direction:column;
+      height:100%;
+      animation:fadeIn 0.3s ease;
+    }
+    .tab-content.active { display:flex; }
+    @keyframes fadeIn {
+      from { opacity:0; transform:translateY(5px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+
+    /* ===== واکنش‌گرایی ===== */
+    @media (max-width:1200px) {
+      .right-panel { display:none; }
+      .main-content { grid-template-columns:320px 1fr; }
+    }
+    @media (max-width:768px) {
+      .main-content { grid-template-columns:1fr; height:calc(100vh - 56px); }
+      .sidebar { display:none; }
+      .chat-list { display:none; }
+      .chat-window { display:flex; }
+      .header { padding:8px 12px; height:56px; }
+      .header-logo { font-size:1.1rem; }
+      .header-logo i { font-size:1.3rem; }
+      .header-actions { gap:12px; }
+      .header-actions i { font-size:1rem; }
+      .control-buttons { top:8px; right:8px; gap:4px; }
+      .theme-toggle, .lang-toggle { padding:4px 8px; font-size:0.6rem; }
+      .messages-container { padding:8px 10px; }
+      .message-bubble { max-width:85%; font-size:0.85rem; padding:5px 10px; }
+      .chat-header { padding:8px 12px; }
+      .chat-header .chat-avatar { width:34px; height:34px; font-size:0.7rem; }
+      .chat-header .chat-name { font-size:0.9rem; }
+      .message-input { padding:6px 10px; gap:6px; }
+      .message-input input { font-size:0.85rem; padding:6px 10px; }
+      .message-input .send-btn { width:34px; height:34px; font-size:0.9rem; }
+      .chat-item { padding:8px 10px; }
+      .chat-avatar { width:40px; height:40px; font-size:0.8rem; }
+      .chat-name { font-size:0.85rem; }
+      .chat-last-message { font-size:0.7rem; }
+      .chat-unread { font-size:0.55rem; min-width:16px; padding:1px 5px; }
+      .search-box { padding:4px 10px; }
+      .search-box input { font-size:0.75rem; }
+    }
+    @media (max-width:480px) {
+      .header-logo span { display:none; }
+      .header-actions { gap:8px; }
+      .header-actions i { font-size:0.9rem; }
+      .header-avatar { width:28px; height:28px; font-size:0.7rem; }
+      .message-bubble { font-size:0.8rem; padding:4px 8px; max-width:90%; }
+      .chat-item { padding:6px 8px; }
+      .chat-avatar { width:36px; height:36px; font-size:0.7rem; }
+      .chat-name { font-size:0.8rem; }
+      .chat-time { font-size:0.55rem; }
+      .messages-container { padding:6px 8px; }
+      .message-input input { font-size:0.8rem; padding:4px 8px; }
+      .message-input .send-btn { width:30px; height:30px; font-size:0.8rem; }
+    }
+
+    body.ltr {
+      direction:ltr;
+      text-align:left;
+    }
+    body.ltr .chat-header-actions { margin-right:0; margin-left:auto; }
+    body.ltr .message-bubble.sent { border-bottom-right-radius:8px; border-bottom-left-radius:4px; }
+    body.ltr .message-bubble.received { border-bottom-left-radius:8px; border-bottom-right-radius:4px; }
+    body.ltr .chat-last-message .message-icon { margin-left:0; margin-right:4px; }
+
+    /* ===== نوتیفیکیشن ===== */
+    .notification {
+      position:fixed;
+      bottom:20px;
+      left:50%;
+      transform:translateX(-50%) translateY(20px);
+      background:#1c1c1c;
+      color:#fff;
+      padding:10px 20px;
+      border-radius:12px;
+      font-size:0.85rem;
+      z-index:9999;
+      opacity:0;
+      transition:0.5s;
+      pointer-events:none;
+      box-shadow:0 4px 20px rgba(0,0,0,0.2);
+    }
+    body.dark-mode .notification { background:#2a2a2a; }
+    .notification.show {
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== دکمه‌های کنترل ===== -->
+  <div class="control-buttons">
+    <button class="theme-toggle" id="themeToggleBtn">
+      <i class="fas fa-moon"></i> <span id="themeLabel">دارک</span>
+    </button>
+    <button class="lang-toggle" id="langToggleBtn">
+      <i class="fas fa-globe"></i> <span id="langLabel">English</span>
+    </button>
+  </div>
+
+  <!-- ===== نوتیفیکیشن ===== -->
+  <div class="notification" id="notification"></div>
+
+  <!-- ===== هدر ===== -->
+  <header class="header">
+    <div class="header-logo">
+      <i class="fab fa-whatsapp"></i>
+      <span id="brandName">واتساپ</span>
+    </div>
+    <div class="header-actions">
+      <i class="fas fa-camera" onclick="showNotification('دوربین باز شد 📷')"></i>
+      <i class="fas fa-search" onclick="showNotification('جستجو 🔍')"></i>
+      <i class="fas fa-ellipsis-v" onclick="showNotification('منوی بیشتر')"></i>
+      <div class="header-avatar" onclick="showTab('profile')">ع</div>
+    </div>
+  </header>
+
+  <!-- ===== محتوای اصلی ===== -->
+  <div class="main-content">
+
+    <!-- ===== سایدبار چپ ===== -->
+    <aside class="sidebar">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="جستجو ...">
+      </div>
+      <div class="sidebar-menu-item active" onclick="showTab('chats')">
+        <i class="fas fa-comment-dots"></i> <span data-key="menuChats">چت‌ها</span>
+      </div>
+      <div class="sidebar-menu-item" onclick="showTab('status')">
+        <i class="fas fa-circle"></i> <span data-key="menuStatus">استاتوس</span>
+      </div>
+      <div class="sidebar-menu-item" onclick="showTab('calls')">
+        <i class="fas fa-phone"></i> <span data-key="menuCalls">تماس‌ها</span>
+      </div>
+      <div class="sidebar-menu-item" onclick="showTab('communities')">
+        <i class="fas fa-users"></i> <span data-key="menuCommunities">کامیونیتی</span>
+      </div>
+      <div class="sidebar-menu-item" onclick="showTab('settings')">
+        <i class="fas fa-cog"></i> <span data-key="menuSettings">تنظیمات</span>
+      </div>
+    </aside>
+
+    <!-- ===== لیست چت‌ها ===== -->
+    <div class="chat-list" id="chatList">
+      <div class="chat-item active" onclick="selectChat(0)">
+        <div class="chat-avatar" style="background:linear-gradient(135deg,#25d366,#075e54);">
+          ع
+          <span class="online-dot"></span>
+        </div>
+        <div class="chat-info">
+          <div class="chat-name">علی رضایی</div>
+          <div class="chat-last-message"><span class="message-icon"><i class="fas fa-check-double" style="color:#25d366;"></i></span> سلام! چطوری؟</div>
+        </div>
+        <div class="chat-time">۱۰:۳۰</div>
+        <div class="chat-unread">2</div>
+      </div>
+      <div class="chat-item" onclick="selectChat(1)">
+        <div class="chat-avatar" style="background:linear-gradient(135deg,#f093fb,#f5576c);">
+          س
+        </div>
+        <div class="chat-info">
+          <div class="chat-name">سارا محمدی</div>
+          <div class="chat-last-message"><span class="message-icon"><i class="fas fa-check"></i></span> عکس جدیدت رو دیدم عالیه!</div>
+        </div>
+        <div class="chat-time">دیروز</div>
+      </div>
+      <div class="chat-item" onclick="selectChat(2)">
+        <div class="chat-avatar" style="background:linear-gradient(135deg,#f77737,#f59e0b);">
+          م
+          <span class="online-dot"></span>
+        </div>
+        <div class="chat-info">
+          <div class="chat-name">مهدی کریمی</div>
+          <div class="chat-last-message"><span class="message-icon"><i class="fas fa-check"></i></span> جلسه ساعت ۳</div>
+        </div>
+        <div class="chat-time">دیروز</div>
+        <div class="chat-unread">1</div>
+      </div>
+      <div class="chat-item" onclick="selectChat(3)">
+        <div class="chat-avatar" style="background:linear-gradient(135deg,#833ab4,#fd1d1d);">
+          ز
+        </div>
+        <div class="chat-info">
+          <div class="chat-name">زهرا حسینی</div>
+          <div class="chat-last-message"><span class="message-icon"><i class="fas fa-check-double" style="color:#25d366;"></i></span> ممنون از کمکت 🙏</div>
+        </div>
+        <div class="chat-time">۳ روز پیش</div>
+      </div>
+      <div class="chat-item" onclick="selectChat(4)">
+        <div class="chat-avatar" style="background:linear-gradient(135deg,#10b981,#34d399);">
+          ن
+        </div>
+        <div class="chat-info">
+          <div class="chat-name">نرگس احمدی</div>
+          <div class="chat-last-message"><span class="message-icon"><i class="fas fa-clock"></i></span> باشه حتماً</div>
+        </div>
+        <div class="chat-time">۴ روز پیش</div>
+      </div>
+      <div class="chat-item" onclick="selectChat(5)">
+        <div class="chat-avatar" style="background:linear-gradient(135deg,#00a8e8,#0088cc);">
+          ر
+        </div>
+        <div class="chat-info">
+          <div class="chat-name">رضا نوروزی</div>
+          <div class="chat-last-message"><span class="message-icon"><i class="fas fa-check-double" style="color:#25d366;"></i></span> عالی بود! 👍</div>
+        </div>
+        <div class="chat-time">۵ روز پیش</div>
+      </div>
+    </div>
+
+    <!-- ===== بخش مرکزی (پنجره چت) ===== -->
+    <div class="chat-window">
+
+      <!-- ===== تب چت‌ها ===== -->
+      <div class="tab-content active" id="tab-chats" style="display:flex;flex-direction:column;height:100%;">
+
+        <!-- هدر چت -->
+        <div class="chat-header">
+          <div class="chat-avatar" style="background:linear-gradient(135deg,#25d366,#075e54);width:40px;height:40px;font-size:0.8rem;">
+            ع
+            <span class="online-dot" style="width:10px;height:10px;"></span>
+          </div>
+          <div>
+            <div class="chat-name" id="chatName">علی رضایی</div>
+            <div class="chat-status" id="chatStatus">آنلاین</div>
+          </div>
+          <div class="chat-header-actions">
+            <i class="fas fa-phone" onclick="showNotification('تماس صوتی با علی 📞')"></i>
+            <i class="fas fa-video" onclick="showNotification('تماس تصویری با علی 📹')"></i>
+            <i class="fas fa-ellipsis-v" onclick="showNotification('گزینه‌های بیشتر')"></i>
+          </div>
+        </div>
+
+        <!-- پیام‌ها -->
+        <div class="messages-container" id="messagesContainer">
+          <div class="message-date">امروز</div>
+          <div class="message-bubble received">
+            سلام! چطوری؟ <span class="time">۱۰:۲۵</span>
+          </div>
+          <div class="message-bubble sent">
+            سلام علی! خوبم، تو چطوری؟ <span class="time">۱۰:۲۷</span>
+            <span class="status"><i class="fas fa-check-double" style="color:#25d366;"></i></span>
+          </div>
+          <div class="message-bubble received">
+            منم خوبم. قرار ملاقات یادت نره! <span class="time">۱۰:۲۸</span>
+          </div>
+          <div class="message-bubble sent">
+            آره حتماً ساعت ۳ میرسم. <span class="time">۱۰:۳۰</span>
+            <span class="status"><i class="fas fa-check-double" style="color:#25d366;"></i></span>
+          </div>
+          <div class="message-bubble received">
+            عالی، پس میبینمت <span class="time">۱۰:۳۲</span>
+          </div>
+        </div>
+
+        <!-- ورودی پیام -->
+        <div class="message-input">
+          <i class="fas fa-smile" onclick="showNotification('ایموجی‌ها 😊')"></i>
+          <i class="fas fa-paperclip" onclick="showNotification('ضمیمه 📎')"></i>
+          <input type="text" id="messageInput" placeholder="پیام خود را بنویسید ..." onkeydown="sendMessage(event)">
+          <button class="send-btn" onclick="sendMessage()">
+            <i class="fas fa-microphone" id="sendIcon" style="font-size:1rem;"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== تب استاتوس ===== -->
+      <div class="tab-content" id="tab-status">
+        <div style="padding:12px;overflow-y:auto;">
+          <h3 style="margin-bottom:10px;font-size:1rem;"><i class="fas fa-circle" style="color:#25d366;font-size:0.6rem;"></i> <span data-key="statusTitle">استاتوس</span></h3>
+          <div class="status-item" onclick="showNotification('مشاهده استاتوس علی')">
+            <div class="avatar" style="background:linear-gradient(135deg,#25d366,#075e54);">ع</div>
+            <div class="info"><div class="name">علی رضایی</div><div class="status-time">۵ دقیقه پیش</div></div>
+            <i class="fas fa-circle" style="color:#25d366;font-size:0.6rem;"></i>
+          </div>
+          <div class="status-item" onclick="showNotification('مشاهده استاتوس سارا')">
+            <div class="avatar" style="background:linear-gradient(135deg,#f093fb,#f5576c);">س</div>
+            <div class="info"><div class="name">سارا محمدی</div><div class="status-time">۲ ساعت پیش</div></div>
+            <i class="fas fa-circle" style="color:#8e8e8e;font-size:0.6rem;"></i>
+          </div>
+          <div class="status-item" onclick="showNotification('مشاهده استاتوس مهدی')">
+            <div class="avatar" style="background:linear-gradient(135deg,#f77737,#f59e0b);">م</div>
+            <div class="info"><div class="name">مهدی کریمی</div><div class="status-time">۵ ساعت پیش</div></div>
+            <i class="fas fa-circle" style="color:#8e8e8e;font-size:0.6rem;"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== تب تماس‌ها ===== -->
+      <div class="tab-content" id="tab-calls">
+        <div style="padding:12px;overflow-y:auto;">
+          <h3 style="margin-bottom:10px;font-size:1rem;"><i class="fas fa-phone" style="color:#25d366;"></i> <span data-key="callTitle">تماس‌های اخیر</span></h3>
+          <div class="call-item" onclick="showNotification('تماس با علی')">
+            <div class="avatar" style="background:linear-gradient(135deg,#25d366,#075e54);">ع</div>
+            <div class="info"><div class="name">علی رضایی</div><div class="call-info"><i class="fas fa-phone" style="color:#25d366;"></i> ورودی - ۱۰:۲۰</div></div>
+            <div class="call-icon"><i class="fas fa-phone" onclick="event.stopPropagation();showNotification('تماس با علی 📞')"></i></div>
+          </div>
+          <div class="call-item" onclick="showNotification('تماس با سارا')">
+            <div class="avatar" style="background:linear-gradient(135deg,#f093fb,#f5576c);">س</div>
+            <div class="info"><div class="name">سارا محمدی</div><div class="call-info"><i class="fas fa-phone" style="color:#ed4956;transform:rotate(135deg);"></i> خروجی - دیروز</div></div>
+            <div class="call-icon"><i class="fas fa-phone" onclick="event.stopPropagation();showNotification('تماس با سارا 📞')"></i></div>
+          </div>
+          <div class="call-item" onclick="showNotification('تماس با مهدی')">
+            <div class="avatar" style="background:linear-gradient(135deg,#f77737,#f59e0b);">م</div>
+            <div class="info"><div class="name">مهدی کریمی</div><div class="call-info"><i class="fas fa-phone" style="color:#25d366;"></i> ورودی - دیروز</div></div>
+            <div class="call-icon"><i class="fas fa-phone" onclick="event.stopPropagation();showNotification('تماس با مهدی 📞')"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== تب کامیونیتی ===== -->
+      <div class="tab-content" id="tab-communities">
+        <div style="padding:12px;overflow-y:auto;">
+          <h3 style="margin-bottom:10px;font-size:1rem;"><i class="fas fa-users" style="color:#25d366;"></i> <span data-key="communityTitle">کامیونیتی‌ها</span></h3>
+          <div class="community-item" onclick="showNotification('ورود به کامیونیتی برنامه‌نویسان')">
+            <div class="avatar">پ</div>
+            <div class="info"><div class="name">برنامه‌نویسان</div><div class="members">۱٫۲K عضو</div></div>
+            <i class="fas fa-chevron-left" style="color:#8e8e8e;"></i>
+          </div>
+          <div class="community-item" onclick="showNotification('ورود به کامیونیتی طراحی')">
+            <div class="avatar" style="background:linear-gradient(135deg,#f093fb,#f5576c);">ط</div>
+            <div class="info"><div class="name">طراحان حرفه‌ای</div><div class="members">۸۵۰ عضو</div></div>
+            <i class="fas fa-chevron-left" style="color:#8e8e8e;"></i>
+          </div>
+          <div class="community-item" onclick="showNotification('ورود به کامیونیتی موسیقی')">
+            <div class="avatar" style="background:linear-gradient(135deg,#f77737,#f59e0b);">م</div>
+            <div class="info"><div class="name">موسیقی‌دوستان</div><div class="members">۶۲۰ عضو</div></div>
+            <i class="fas fa-chevron-left" style="color:#8e8e8e;"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== تب پروفایل ===== -->
+      <div class="tab-content" id="tab-profile">
+        <div style="padding:12px;overflow-y:auto;">
+          <div class="profile-card">
+            <div class="avatar">ع</div>
+            <div class="name">علی رضایی</div>
+            <div class="status">آنلاین</div>
+            <div class="bio">عاشق تکنولوژی و برنامه‌نویسی 🚀</div>
+            <div class="profile-stats">
+              <div><div class="number">۱۲۴</div><div class="label" data-key="profilePosts">پست</div></div>
+              <div><div class="number">۱٫۲K</div><div class="label" data-key="profileFollowers">دنبال‌کننده</div></div>
+              <div><div class="number">۳۴۵</div><div class="label" data-key="profileFollowing">دنبال‌شونده</div></div>
+            </div>
+            <button style="width:100%;padding:8px;margin-top:10px;background:#25d366;color:#fff;border:none;border-radius:8px;font-size:0.9rem;cursor:pointer;transition:0.3s;" onmouseover="this.style.background='#1da85a'" onmouseout="this.style.background='#25d366'">ویرایش پروفایل</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== تب تنظیمات ===== -->
+      <div class="tab-content" id="tab-settings">
+        <div style="padding:12px;overflow-y:auto;">
+          <h3 style="margin-bottom:10px;font-size:1rem;"><i class="fas fa-cog" style="color:#25d366;"></i> <span data-key="settingsTitle">تنظیمات</span></h3>
+          <div class="settings-card">
+            <div class="settings-item">
+              <span class="label" data-key="settingProfile">پروفایل</span>
+              <span class="value" onclick="showTab('profile')">مشاهده</span>
+            </div>
+            <div class="settings-item">
+              <span class="label" data-key="settingPrivacy">حریم خصوصی</span>
+              <span class="value" onclick="showNotification('تنظیمات حریم خصوصی')">مدیریت</span>
+            </div>
+            <div class="settings-item">
+              <span class="label" data-key="settingNotif">اعلان‌ها</span>
+              <span class="value" onclick="toggleSwitch(this)">فعال</span>
+            </div>
+            <div class="settings-item">
+              <span class="label" data-key="settingDark">حالت تاریک</span>
+              <span class="value" onclick="toggleDarkMode()" style="cursor:pointer;">تغییر</span>
+            </div>
+            <div class="settings-item">
+              <span class="label" data-key="settingLang">زبان</span>
+              <span class="value" onclick="toggleLanguage()" style="cursor:pointer;">فارسی / English</span>
+            </div>
+            <div class="settings-item">
+              <span class="label" data-key="settingStorage">حافظه</span>
+              <span class="value" onclick="showNotification('مدیریت حافظه')">۱۲۴MB</span>
+            </div>
+            <div class="settings-item">
+              <span class="label" data-key="settingLogout">خروج</span>
+              <span class="value" style="color:#ed4956;cursor:pointer;" onclick="showNotification('خروج از حساب')"><span data-key="logoutBtn">خروج</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== پنل راست ===== -->
+    <div class="right-panel">
+      <div class="profile-card">
+        <div class="avatar">ع</div>
+        <div class="name">علی رضایی</div>
+        <div class="status">آنلاین</div>
+        <div class="bio">عاشق تکنولوژی و برنامه‌نویسی 🚀</div>
+        <div class="profile-stats">
+          <div><div class="number">۱۲۴</div><div class="label">پست</div></div>
+          <div><div class="number">۱٫۲K</div><div class="label">دنبال‌کننده</div></div>
+          <div><div class="number">۳۴۵</div><div class="label">دنبال‌شونده</div></div>
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <h4 style="font-size:0.8rem;color:#8e8e8e;margin-bottom:6px;">استاتوس‌های اخیر</h4>
+        <div class="status-item" onclick="showNotification('مشاهده استاتوس علی')">
+          <div class="avatar" style="background:linear-gradient(135deg,#25d366,#075e54);width:36px;height:36px;font-size:0.7rem;">ع</div>
+          <div class="info"><div class="name" style="font-size:0.8rem;">علی رضایی</div><div class="status-time">۵ دقیقه پیش</div></div>
+        </div>
+        <div class="status-item" onclick="showNotification('مشاهده استاتوس سارا')">
+          <div class="avatar" style="background:linear-gradient(135deg,#f093fb,#f5576c);width:36px;height:36px;font-size:0.7rem;">س</div>
+          <div class="info"><div class="name" style="font-size:0.8rem;">سارا محمدی</div><div class="status-time">۲ ساعت پیش</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ===== دیکشنری =====
+    const dict = {
+      fa: {
+        brandName: 'واتساپ',
+        menuChats: 'چت‌ها',
+        menuStatus: 'استاتوس',
+        menuCalls: 'تماس‌ها',
+        menuCommunities: 'کامیونیتی',
+        menuSettings: 'تنظیمات',
+        statusTitle: 'استاتوس',
+        callTitle: 'تماس‌های اخیر',
+        communityTitle: 'کامیونیتی‌ها',
+        settingsTitle: 'تنظیمات',
+        settingProfile: 'پروفایل',
+        settingPrivacy: 'حریم خصوصی',
+        settingNotif: 'اعلان‌ها',
+        settingDark: 'حالت تاریک',
+        settingLang: 'زبان',
+        settingStorage: 'حافظه',
+        settingLogout: 'خروج',
+        logoutBtn: 'خروج',
+        profilePosts: 'پست',
+        profileFollowers: 'دنبال‌کننده',
+        profileFollowing: 'دنبال‌شونده'
+      },
+      en: {
+        brandName: 'WhatsApp',
+        menuChats: 'Chats',
+        menuStatus: 'Status',
+        menuCalls: 'Calls',
+        menuCommunities: 'Communities',
+        menuSettings: 'Settings',
+        statusTitle: 'Status',
+        callTitle: 'Recent Calls',
+        communityTitle: 'Communities',
+        settingsTitle: 'Settings',
+        settingProfile: 'Profile',
+        settingPrivacy: 'Privacy',
+        settingNotif: 'Notifications',
+        settingDark: 'Dark Mode',
+        settingLang: 'Language',
+        settingStorage: 'Storage',
+        settingLogout: 'Logout',
+        logoutBtn: 'Logout',
+        profilePosts: 'Posts',
+        profileFollowers: 'Followers',
+        profileFollowing: 'Following'
+      }
+    };
+
+    let currentLang = 'fa';
+    const body = document.body;
+    const langBtn = document.getElementById('langToggleBtn');
+    const langLabel = document.getElementById('langLabel');
+
+    function toggleLanguage() {
+      setLanguage(currentLang === 'fa' ? 'en' : 'fa');
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      if (lang === 'en') {
+        body.classList.add('ltr');
+        body.setAttribute('dir', 'ltr');
+        document.documentElement.lang = 'en';
+        langLabel.textContent = 'فارسی';
+      } else {
+        body.classList.remove('ltr');
+        body.setAttribute('dir', 'rtl');
+        document.documentElement.lang = 'fa';
+        langLabel.textContent = 'English';
+      }
+      const d = dict[lang];
+      document.querySelectorAll('[data-key]').forEach(el => {
+        const key = el.getAttribute('data-key');
+        if (d[key] !== undefined) el.textContent = d[key];
+      });
+      document.getElementById('brandName').textContent = d.brandName;
+      document.getElementById('searchInput').placeholder = lang === 'fa' ? 'جستجو ...' : 'Search ...';
+    }
+
+    langBtn.addEventListener('click', toggleLanguage);
+
+    // ===== دارک مود =====
+    const darkToggleBtn = document.getElementById('themeToggleBtn');
+    const themeLabel = document.getElementById('themeLabel');
+
+    function toggleDarkMode() {
+      body.classList.toggle('dark-mode');
+      const isDark = body.classList.contains('dark-mode');
+      themeLabel.textContent = isDark ? 'روشن' : 'دارک';
+      darkToggleBtn.innerHTML = `<i class="fas ${isDark ? 'fa-sun' : 'fa-moon'}"></i> ${isDark ? 'روشن' : 'دارک'}`;
+      showNotification(isDark ? 'حالت تاریک فعال شد 🌙' : 'حالت روشن فعال شد ☀️');
+    }
+
+    darkToggleBtn.addEventListener('click', toggleDarkMode);
+
+    // ===== تب‌ها =====
+    function showTab(tabName) {
+      const tabs = document.querySelectorAll('.tab-content');
+      tabs.forEach(tab => tab.classList.remove('active'));
+
+      const target = document.getElementById('tab-' + tabName);
+      if (target) target.classList.add('active');
+
+      const menuItems = document.querySelectorAll('.sidebar-menu-item');
+      menuItems.forEach(item => item.classList.remove('active'));
+
+      const menuMap = {
+        'chats': 0,
+        'status': 1,
+        'calls': 2,
+        'communities': 3,
+        'settings': 4,
+        'profile': -1
+      };
+      if (menuMap[tabName] !== undefined && menuMap[tabName] >= 0) {
+        menuItems[menuMap[tabName]]?.classList.add('active');
+      }
+
+      // در موبایل
+      if (window.innerWidth <= 768) {
+        const chatList = document.querySelector('.chat-list');
+        const chatWindow = document.querySelector('.chat-window');
+        if (tabName === 'chats') {
+          chatList.style.display = 'block';
+          chatWindow.style.display = 'none';
+        } else {
+          chatList.style.display = 'none';
+          chatWindow.style.display = 'flex';
+        }
+      }
+    }
+
+    // ===== انتخاب چت =====
+    const chatData = [
+      { name: 'علی رضایی', status: 'آنلاین' },
+      { name: 'سارا محمدی', status: 'آخرین بازدید ۱۰:۱۵' },
+      { name: 'مهدی کریمی', status: 'آنلاین' },
+      { name: 'زهرا حسینی', status: 'آخرین بازدید ۲ ساعت پیش' },
+      { name: 'نرگس احمدی', status: 'آخرین بازدید ۴ روز پیش' },
+      { name: 'رضا نوروزی', status: 'آخرین بازدید ۱ روز پیش' }
+    ];
+
+    function selectChat(index) {
+      const items = document.querySelectorAll('.chat-item');
+      items.forEach((item, i) => {
+        item.classList.toggle('active', i === index);
+      });
+
+      const data = chatData[index] || chatData[0];
+      document.getElementById('chatName').textContent = data.name;
+      document.getElementById('chatStatus').textContent = data.status;
+
+      if (window.innerWidth <= 768) {
+        document.querySelector('.chat-list').style.display = 'none';
+        document.querySelector('.chat-window').style.display = 'flex';
+      }
+
+      showNotification('چت با ' + data.name + ' باز شد 💬');
+    }
+
+    // ===== ارسال پیام =====
+    function sendMessage(e) {
+      if (e && e.key !== 'Enter') return;
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const container = document.getElementById('messagesContainer');
+      const now = new Date();
+      const time = now.getHours().toString().padStart(2, '0') + ':' +
+                   now.getMinutes().toString().padStart(2, '0');
+
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message-bubble sent';
+      messageDiv.innerHTML = `${text} <span class="time">${time}</span> <span class="status"><i class="fas fa-check"></i></span>`;
+      container.appendChild(messageDiv);
+      container.scrollTop = container.scrollHeight;
+
+      input.value = '';
+
+      // تغییر آیکون دکمه ارسال
+      const sendBtn = document.querySelector('.send-btn i');
+      sendBtn.className = 'fas fa-check';
+
+      // پاسخ خودکار
+      setTimeout(() => {
+        const reply = document.createElement('div');
+        reply.className = 'message-bubble received';
+        const replies = ['عالی! 👍', 'ممنون 😊', 'حتماً', 'باشه', 'خواهش میکنم 🙏', 'دقیقاً', 'خیلی خوبه!', 'عالی بود'];
+        const randomReply = replies[Math.floor(Math.random() * replies.length)];
+        const replyTime = new Date();
+        const rTime = replyTime.getHours().toString().padStart(2, '0') + ':' +
+                      replyTime.getMinutes().toString().padStart(2, '0');
+        reply.innerHTML = `${randomReply} <span class="time">${rTime}</span>`;
+        container.appendChild(reply);
+        container.scrollTop = container.scrollHeight;
+
+        // تغییر وضعیت پیام ارسال‌شده
+        const sentMessages = container.querySelectorAll('.message-bubble.sent');
+        const lastSent = sentMessages[sentMessages.length - 1];
+        if (lastSent) {
+          const statusSpan = lastSent.querySelector('.status');
+          if (statusSpan) {
+            statusSpan.innerHTML = '<i class="fas fa-check-double" style="color:#25d366;"></i>';
+          }
+        }
+
+        // برگرداندن آیکون
+        sendBtn.className = 'fas fa-microphone';
+      }, 1200 + Math.random() * 2000);
+    }
+
+    // ===== تاگل سویچ =====
+    function toggleSwitch(el) {
+      const texts = ['فعال', 'غیرفعال'];
+      const enTexts = ['Enabled', 'Disabled'];
+      const isFa = currentLang === 'fa';
+      const current = el.textContent;
+      const list = isFa ? texts : enTexts;
+      el.textContent = current === list[0] ? list[1] : list[0];
+      showNotification(el.textContent === list[0] ? 'فعال شد ✅' : 'غیرفعال شد ❌');
+    }
+
+    // ===== نوتیفیکیشن =====
+    let notifTimeout;
+
+    function showNotification(message) {
+      const notif = document.getElementById('notification');
+      notif.textContent = message;
+      notif.classList.add('show');
+      clearTimeout(notifTimeout);
+      notifTimeout = setTimeout(() => {
+        notif.classList.remove('show');
+      }, 2500);
+    }
+
+    // ===== جستجو =====
+    document.getElementById('searchInput').addEventListener('input', function() {
+      const query = this.value.trim();
+      const items = document.querySelectorAll('.chat-item');
+      if (query.length > 0) {
+        showNotification('در حال جستجو برای: "' + query + '" 🔍');
+        items.forEach(item => {
+          const name = item.querySelector('.chat-name')?.textContent || '';
+          const match = name.includes(query);
+          item.style.display = match ? 'flex' : 'none';
+        });
+      } else {
+        items.forEach(item => item.style.display = 'flex');
+      }
+    });
+
+    // ===== تنظیم اولیه =====
+    setLanguage('fa');
+    showTab('chats');
+
+    // ===== واکنش‌گرایی موبایل =====
+    window.addEventListener('resize', function() {
+      if (window.innerWidth <= 768) {
+        const chatList = document.querySelector('.chat-list');
+        const chatWindow = document.querySelector('.chat-window');
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab && activeTab.id === 'tab-chats') {
+          chatList.style.display = 'block';
+          chatWindow.style.display = 'none';
+        } else {
+          chatList.style.display = 'none';
+          chatWindow.style.display = 'flex';
+        }
+      } else {
+        document.querySelector('.chat-list').style.display = 'block';
+        document.querySelector('.chat-window').style.display = 'flex';
+      }
+    });
+
+    console.log('✅ واتساپ کلون کامل و رسپانسیو بارگذاری شد!');
+  </script>
+</body>
+</html>

@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>پنل مدیریت فروشگاهی | کامل</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ===== RESET & BASE ===== */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+    :root {
+      --bg-primary: #f0f2f7;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --text-primary: #1a1a2e;
+      --text-secondary: #4a4a6a;
+      --text-muted: #8a8aa8;
+      --border-color: #e8ecf1;
+      --accent: #667eea;
+      --accent-hover: #5a67d8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 4px 20px rgba(0,0,0,0.04);
+      --shadow-hover: 0 8px 40px rgba(0,0,0,0.08);
+      --radius: 16px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    body.dark-mode {
+      --bg-primary: #0a0a1a;
+      --bg-secondary: #12122a;
+      --bg-card: #1a1a3a;
+      --text-primary: #e8edf5;
+      --text-secondary: #b0b8d0;
+      --text-muted: #6a7a9a;
+      --border-color: #2a2a4a;
+      --shadow: 0 4px 20px rgba(0,0,0,0.3);
+      --shadow-hover: 0 8px 40px rgba(0,0,0,0.5);
+    }
+    body {
+      background: var(--bg-primary);
+      min-height:100vh;
+      transition: var(--transition);
+      color: var(--text-primary);
+    }
+
+    /* ===== اسکرول ===== */
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--text-muted); border-radius:10px; }
+
+    /* ===== دکمه‌های کنترل ===== */
+    .control-buttons {
+      position:fixed; top:12px; right:12px; display:flex; gap:6px; z-index:9999;
+    }
+    .theme-toggle, .lang-toggle {
+      background:var(--bg-card); border:1px solid var(--border-color);
+      padding:6px 12px; border-radius:50px; cursor:pointer; font-size:0.65rem;
+      display:flex; align-items:center; gap:4px; transition:var(--transition);
+      box-shadow:var(--shadow); color:var(--text-primary);
+    }
+    .theme-toggle:hover, .lang-toggle:hover { transform:scale(1.05); box-shadow:var(--shadow-hover); }
+    body.ltr .control-buttons { right:auto; left:12px; }
+
+    /* ===== هدر ===== */
+    .header {
+      background:var(--bg-secondary); border-bottom:1px solid var(--border-color);
+      padding:10px 24px; display:flex; justify-content:space-between; align-items:center;
+      position:sticky; top:0; z-index:100; height:64px;
+    }
+    .header-logo {
+      display:flex; align-items:center; gap:10px; font-size:1.3rem; font-weight:700;
+      color:var(--accent);
+    }
+    .header-logo i { font-size:1.6rem; }
+    .header-search {
+      display:flex; align-items:center; background:var(--bg-primary);
+      border-radius:50px; padding:6px 14px; gap:8px; width:260px;
+      border:1px solid transparent; transition:var(--transition);
+    }
+    .header-search:focus-within { border-color:var(--accent); background:var(--bg-card); }
+    .header-search input {
+      border:none; background:transparent; outline:none; width:100%;
+      color:var(--text-primary); font-size:0.85rem;
+    }
+    .header-search input::placeholder { color:var(--text-muted); }
+    .header-search i { color:var(--text-muted); }
+    .header-actions { display:flex; gap:16px; align-items:center; }
+    .header-actions i {
+      font-size:1.2rem; cursor:pointer; color:var(--text-secondary);
+      transition:var(--transition);
+    }
+    .header-actions i:hover { color:var(--accent); transform:scale(1.1); }
+    .header-avatar {
+      width:36px; height:36px; border-radius:50%;
+      background:var(--accent); display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:600; font-size:0.8rem; cursor:pointer;
+    }
+
+    /* ===== سایدبار ===== */
+    .main-layout {
+      display:grid; grid-template-columns:220px 1fr; gap:0; max-width:1400px; margin:0 auto;
+    }
+    .sidebar {
+      background:var(--bg-secondary); border-left:1px solid var(--border-color);
+      padding:12px 8px; height:calc(100vh - 64px); position:sticky; top:64px;
+      overflow-y:auto;
+    }
+    body.ltr .sidebar { border-left:none; border-right:1px solid var(--border-color); }
+    .sidebar-item {
+      display:flex; align-items:center; gap:10px; padding:10px 14px;
+      border-radius:10px; cursor:pointer; transition:var(--transition);
+      color:var(--text-secondary); font-size:0.85rem; margin-bottom:2px;
+    }
+    .sidebar-item:hover { background:var(--bg-primary); color:var(--text-primary); }
+    .sidebar-item.active { background:var(--bg-primary); color:var(--accent); font-weight:600; }
+    .sidebar-item i { width:20px; font-size:1rem; }
+    .sidebar-item .badge {
+      margin-right:auto; background:var(--danger); color:#fff;
+      font-size:0.55rem; padding:1px 8px; border-radius:40px;
+    }
+    .sidebar-divider { height:1px; background:var(--border-color); margin:8px 8px; }
+    .sidebar-label { font-size:0.6rem; color:var(--text-muted); padding:8px 14px 4px; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+
+    /* ===== محتوای اصلی ===== */
+    .content { padding:20px 24px; }
+
+    /* ===== تب‌ها ===== */
+    .tab-content { display:none; animation:fadeIn 0.3s ease; }
+    .tab-content.active { display:block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ===== کارت‌های آماری ===== */
+    .stats-grid {
+      display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px;
+    }
+    .stat-card {
+      background:var(--bg-card); border-radius:var(--radius); padding:16px 18px;
+      border:1px solid var(--border-color); box-shadow:var(--shadow);
+      transition:var(--transition);
+    }
+    .stat-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-hover); }
+    .stat-card .top { display:flex; justify-content:space-between; align-items:flex-start; }
+    .stat-card .icon {
+      width:40px; height:40px; border-radius:10px; display:flex; align-items:center;
+      justify-content:center; font-size:1.1rem;
+    }
+    .stat-card .icon.blue { background:rgba(102,126,234,0.15); color:var(--accent); }
+    .stat-card .icon.green { background:rgba(16,185,129,0.15); color:var(--success); }
+    .stat-card .icon.yellow { background:rgba(245,158,11,0.15); color:var(--warning); }
+    .stat-card .icon.red { background:rgba(239,68,68,0.15); color:var(--danger); }
+    .stat-card .number { font-size:1.6rem; font-weight:700; margin-top:4px; }
+    .stat-card .label { font-size:0.8rem; color:var(--text-muted); }
+    .stat-card .change {
+      font-size:0.65rem; padding:2px 10px; border-radius:40px; display:inline-block;
+      margin-top:4px;
+    }
+    .stat-card .change.up { color:var(--success); background:rgba(16,185,129,0.15); }
+    .stat-card .change.down { color:var(--danger); background:rgba(239,68,68,0.15); }
+
+    /* ===== نمودار ===== */
+    .chart-section {
+      background:var(--bg-card); border-radius:var(--radius); padding:18px 20px;
+      border:1px solid var(--border-color); box-shadow:var(--shadow); margin-bottom:20px;
+    }
+    .chart-section h3 { font-size:1rem; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+    .chart-bars {
+      display:flex; align-items:flex-end; gap:6px; height:120px; padding-top:8px;
+    }
+    .chart-bar {
+      flex:1; border-radius:4px 4px 0 0; min-height:8px;
+      background:var(--accent); transition:0.5s; position:relative;
+    }
+    .chart-bar:hover { opacity:0.7; transform:scaleY(1.02); }
+    .chart-bar .value {
+      position:absolute; top:-18px; left:50%; transform:translateX(-50%);
+      font-size:0.6rem; color:var(--text-muted);
+    }
+    .chart-labels {
+      display:flex; gap:6px; margin-top:6px; font-size:0.6rem; color:var(--text-muted);
+    }
+    .chart-labels span { flex:1; text-align:center; }
+
+    /* ===== جدول ===== */
+    .table-section {
+      background:var(--bg-card); border-radius:var(--radius); padding:16px 18px;
+      border:1px solid var(--border-color); box-shadow:var(--shadow); margin-bottom:20px;
+      overflow-x:auto;
+    }
+    .table-section .header {
+      display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;
+      flex-wrap:wrap; gap:8px;
+    }
+    .table-section .header h3 { font-size:1rem; display:flex; align-items:center; gap:8px; }
+    .table-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .table-actions button {
+      padding:5px 14px; border-radius:8px; border:none; font-size:0.75rem;
+      cursor:pointer; transition:var(--transition); display:flex; align-items:center; gap:4px;
+    }
+    .table-actions .btn-primary { background:var(--accent); color:#fff; }
+    .table-actions .btn-primary:hover { background:var(--accent-hover); }
+    .table-actions .btn-success { background:var(--success); color:#fff; }
+    .table-actions .btn-success:hover { opacity:0.8; }
+    .table-actions .btn-danger { background:var(--danger); color:#fff; }
+    .table-actions .btn-danger:hover { opacity:0.8; }
+
+    table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+    th { text-align:right; padding:10px 8px; color:var(--text-muted); font-weight:600;
+      border-bottom:2px solid var(--border-color); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.5px; }
+    td { padding:10px 8px; border-bottom:1px solid var(--border-color); color:var(--text-secondary); }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:var(--bg-primary); }
+
+    .status-badge {
+      padding:2px 12px; border-radius:40px; font-size:0.6rem; font-weight:600; display:inline-block;
+    }
+    .status-badge.paid { background:rgba(16,185,129,0.15); color:var(--success); }
+    .status-badge.pending { background:rgba(245,158,11,0.15); color:var(--warning); }
+    .status-badge.shipped { background:rgba(102,126,234,0.15); color:var(--accent); }
+    .status-badge.cancelled { background:rgba(239,68,68,0.15); color:var(--danger); }
+
+    /* ===== مودال ===== */
+    .modal-overlay {
+      display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.5); z-index:9998; align-items:center; justify-content:center;
+    }
+    .modal-overlay.show { display:flex; }
+    .modal {
+      background:var(--bg-card); border-radius:var(--radius); padding:24px; max-width:500px;
+      width:90%; max-height:80vh; overflow-y:auto; animation:modalIn 0.3s ease;
+    }
+    @keyframes modalIn { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }
+    .modal h3 { margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; }
+    .modal .close { cursor:pointer; font-size:1.2rem; color:var(--text-muted); }
+    .modal .close:hover { color:var(--danger); }
+    .modal .form-group { margin-bottom:12px; }
+    .modal .form-group label { display:block; font-size:0.85rem; font-weight:500; margin-bottom:4px; }
+    .modal .form-group input, .modal .form-group select, .modal .form-group textarea {
+      width:100%; padding:8px 12px; border:1px solid var(--border-color); border-radius:8px;
+      background:var(--bg-primary); color:var(--text-primary); font-size:0.85rem;
+      transition:var(--transition);
+    }
+    .modal .form-group input:focus, .modal .form-group select:focus, .modal .form-group textarea:focus {
+      border-color:var(--accent); outline:none;
+    }
+    .modal .form-group textarea { resize:vertical; min-height:60px; }
+    .modal .form-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+    .modal .form-actions button {
+      padding:8px 24px; border-radius:8px; border:none; font-size:0.85rem;
+      cursor:pointer; transition:var(--transition);
+    }
+    .modal .form-actions .btn-primary { background:var(--accent); color:#fff; }
+    .modal .form-actions .btn-primary:hover { background:var(--accent-hover); }
+    .modal .form-actions .btn-secondary { background:var(--bg-primary); color:var(--text-secondary); }
+    .modal .form-actions .btn-secondary:hover { background:var(--border-color); }
+
+    /* ===== نوتیفیکیشن ===== */
+    .notification {
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
+      background:var(--text-primary); color:var(--bg-primary); padding:8px 18px;
+      border-radius:10px; font-size:0.8rem; z-index:9999; opacity:0;
+      transition:0.5s; pointer-events:none; box-shadow:0 4px 20px rgba(0,0,0,0.2);
+    }
+    body.dark-mode .notification { background:#2a2a2a; color:#e8e8e8; }
+    .notification.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+    /* ===== واکنش‌گرایی ===== */
+    @media (max-width:1200px) {
+      .stats-grid { grid-template-columns:repeat(2,1fr); }
+      .main-layout { grid-template-columns:1fr; }
+      .sidebar { display:none; }
+    }
+    @media (max-width:768px) {
+      .stats-grid { grid-template-columns:1fr; }
+      .header { padding:8px 12px; height:56px; flex-wrap:wrap; gap:8px; }
+      .header-search { width:100%; order:3; }
+      .header-logo { font-size:1.1rem; }
+      .header-actions { gap:8px; }
+      .header-actions i { font-size:1rem; }
+      .content { padding:12px; }
+      .table-section { padding:10px; }
+      .modal { padding:16px; max-width:100%; }
+      .control-buttons { top:6px; right:6px; gap:4px; }
+      .theme-toggle, .lang-toggle { padding:4px 8px; font-size:0.55rem; }
+    }
+    @media (max-width:480px) {
+      .header-logo span { display:none; }
+      .header-actions i { font-size:0.85rem; }
+      .header-avatar { width:28px; height:28px; font-size:0.6rem; }
+      .stat-card .number { font-size:1.3rem; }
+      .chart-bars { height:80px; }
+    }
+
+    body.ltr { direction:ltr; text-align:left; }
+    body.ltr .sidebar-item .badge { margin-right:0; margin-left:auto; }
+    body.ltr .modal .form-actions { justify-content:flex-start; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== دکمه‌های کنترل ===== -->
+  <div class="control-buttons">
+    <button class="theme-toggle" id="themeToggleBtn"><i class="fas fa-moon"></i> <span id="themeLabel">دارک</span></button>
+    <button class="lang-toggle" id="langToggleBtn"><i class="fas fa-globe"></i> <span id="langLabel">English</span></button>
+  </div>
+
+  <!-- ===== نوتیفیکیشن ===== -->
+  <div class="notification" id="notification"></div>
+
+  <!-- ===== هدر ===== -->
+  <header class="header">
+    <div class="header-logo"><i class="fas fa-store"></i> <span id="brandName">فروشگاه</span></div>
+    <div class="header-search">
+      <i class="fas fa-search"></i>
+      <input type="text" id="searchInput" placeholder="جستجو ...">
+    </div>
+    <div class="header-actions">
+      <i class="fas fa-bell" onclick="showNotification('اعلان‌ها')"></i>
+      <i class="fas fa-cog" onclick="showTab('settings')"></i>
+      <div class="header-avatar" onclick="showNotification('پروفایل')">ع</div>
+    </div>
+  </header>
+
+  <!-- ===== لایه اصلی ===== -->
+  <div class="main-layout">
+
+    <!-- ===== سایدبار ===== -->
+    <nav class="sidebar">
+      <div class="sidebar-item active" onclick="showTab('dashboard')"><i class="fas fa-chart-pie"></i> <span data-key="menuDashboard">داشبورد</span></div>
+      <div class="sidebar-item" onclick="showTab('products')"><i class="fas fa-box"></i> <span data-key="menuProducts">محصولات</span> <span class="badge">24</span></div>
+      <div class="sidebar-item" onclick="showTab('orders')"><i class="fas fa-shopping-cart"></i> <span data-key="menuOrders">سفارشات</span> <span class="badge">12</span></div>
+      <div class="sidebar-item" onclick="showTab('users')"><i class="fas fa-users"></i> <span data-key="menuUsers">کاربران</span></div>
+      <div class="sidebar-item" onclick="showTab('reports')"><i class="fas fa-file-alt"></i> <span data-key="menuReports">گزارش‌ها</span></div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-label" data-key="labelSettings">تنظیمات</div>
+      <div class="sidebar-item" onclick="showTab('settings')"><i class="fas fa-cog"></i> <span data-key="menuSettings">تنظیمات فروشگاه</span></div>
+    </nav>
+
+    <!-- ===== محتوای اصلی ===== -->
+    <div class="content">
+
+      <!-- ===== تب داشبورد ===== -->
+      <div class="tab-content active" id="tab-dashboard">
+
+        <!-- آمار -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="top"><div><div class="label" data-key="statRevenue">فروش کل</div><div class="number">۱۲۴,۸۰۰,۰۰۰</div></div><div class="icon blue"><i class="fas fa-dollar-sign"></i></div></div>
+            <span class="change up"><i class="fas fa-arrow-up"></i> ۱۲.۴%</span>
+          </div>
+          <div class="stat-card">
+            <div class="top"><div><div class="label" data-key="statOrders">تعداد سفارشات</div><div class="number">۱,۲۴۳</div></div><div class="icon green"><i class="fas fa-shopping-cart"></i></div></div>
+            <span class="change up"><i class="fas fa-arrow-up"></i> ۸.۲%</span>
+          </div>
+          <div class="stat-card">
+            <div class="top"><div><div class="label" data-key="statCustomers">مشتریان</div><div class="number">۸۷۴</div></div><div class="icon yellow"><i class="fas fa-users"></i></div></div>
+            <span class="change down"><i class="fas fa-arrow-down"></i> ۲.۱%</span>
+          </div>
+          <div class="stat-card">
+            <div class="top"><div><div class="label" data-key="statConversion">نرخ تبدیل</div><div class="number">۳.۶%</div></div><div class="icon red"><i class="fas fa-percent"></i></div></div>
+            <span class="change up"><i class="fas fa-arrow-up"></i> ۰.۴%</span>
+          </div>
+        </div>
+
+        <!-- نمودار -->
+        <div class="chart-section">
+          <h3><i class="fas fa-chart-bar" style="color:var(--accent);"></i> <span data-key="chartTitle">فروش ماهانه</span></h3>
+          <div class="chart-bars" id="chartBars">
+            <div class="chart-bar" style="height:40%;"><span class="value">۱۲M</span></div>
+            <div class="chart-bar" style="height:55%;"><span class="value">۱۸M</span></div>
+            <div class="chart-bar" style="height:45%;"><span class="value">۱۴M</span></div>
+            <div class="chart-bar" style="height:75%;"><span class="value">۲۴M</span></div>
+            <div class="chart-bar" style="height:60%;"><span class="value">۲۰M</span></div>
+            <div class="chart-bar" style="height:85%;"><span class="value">۲۸M</span></div>
+            <div class="chart-bar" style="height:50%;"><span class="value">۱۶M</span></div>
+            <div class="chart-bar" style="height:70%;"><span class="value">۲۲M</span></div>
+            <div class="chart-bar" style="height:90%;"><span class="value">۳۰M</span></div>
+            <div class="chart-bar" style="height:65%;"><span class="value">۲۱M</span></div>
+            <div class="chart-bar" style="height:95%;"><span class="value">۳۲M</span></div>
+            <div class="chart-bar" style="height:80%;"><span class="value">۲۶M</span></div>
+          </div>
+          <div class="chart-labels">
+            <span>فروردین</span><span>اردیبهشت</span><span>خرداد</span><span>تیر</span>
+            <span>مرداد</span><span>شهریور</span><span>مهر</span><span>آبان</span>
+            <span>آذر</span><span>دی</span><span>بهمن</span><span>اسفند</span>
+          </div>
+        </div>
+
+        <!-- سفارشات اخیر -->
+        <div class="table-section">
+          <div class="header">
+            <h3><i class="fas fa-clock" style="color:var(--accent);"></i> <span data-key="recentOrders">سفارشات اخیر</span></h3>
+            <div class="table-actions">
+              <button class="btn-primary" onclick="showTab('orders')"><i class="fas fa-eye"></i> <span data-key="viewAll">مشاهده همه</span></button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th data-key="thOrder">شماره</th><th data-key="thCustomer">مشتری</th><th data-key="thTotal">مبلغ</th><th data-key="thStatus">وضعیت</th><th data-key="thDate">تاریخ</th></tr></thead>
+            <tbody>
+              <tr><td>#1245</td><td>علی محمدی</td><td>۱۲,۴۰۰,۰۰۰</td><td><span class="status-badge paid">پرداخت شده</span></td><td>۱۴۰۵/۰۲/۱۰</td></tr>
+              <tr><td>#1246</td><td>سارا حسینی</td><td>۸,۲۰۰,۰۰۰</td><td><span class="status-badge pending">در انتظار</span></td><td>۱۴۰۵/۰۲/۱۲</td></tr>
+              <tr><td>#1247</td><td>مریم جعفری</td><td>۲۳,۷۵۰,۰۰۰</td><td><span class="status-badge shipped">ارسال شده</span></td><td>۱۴۰۵/۰۲/۱۴</td></tr>
+              <tr><td>#1248</td><td>محمد رضایی</td><td>۵,۸۰۰,۰۰۰</td><td><span class="status-badge cancelled">لغو شده</span></td><td>۱۴۰۵/۰۲/۱۶</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== تب محصولات ===== -->
+      <div class="tab-content" id="tab-products">
+        <div class="table-section">
+          <div class="header">
+            <h3><i class="fas fa-box" style="color:var(--accent);"></i> <span data-key="productsTitle">مدیریت محصولات</span></h3>
+            <div class="table-actions">
+              <button class="btn-primary" onclick="openModal('product')"><i class="fas fa-plus"></i> <span data-key="addProduct">افزودن محصول</span></button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th data-key="thProduct">محصول</th><th data-key="thPrice">قیمت</th><th data-key="thStock">موجودی</th><th data-key="thCategory">دسته</th><th data-key="thActions">عملیات</th></tr></thead>
+            <tbody id="productsTable">
+              <tr><td>لپ‌تاپ ایسوس</td><td>۲۵,۰۰۰,۰۰۰</td><td>۱۲</td><td>الکترونیک</td><td><button class="btn-primary" style="padding:2px 10px;font-size:0.7rem;" onclick="editProduct(this)"><i class="fas fa-edit"></i></button> <button class="btn-danger" style="padding:2px 10px;font-size:0.7rem;background:var(--danger);color:#fff;border:none;border-radius:4px;cursor:pointer;" onclick="deleteProduct(this)"><i class="fas fa-trash"></i></button></td></tr>
+              <tr><td>هدفون بی‌سیم</td><td>۴,۲۰۰,۰۰۰</td><td>۴۵</td><td>الکترونیک</td><td><button class="btn-primary" style="padding:2px 10px;font-size:0.7rem;" onclick="editProduct(this)"><i class="fas fa-edit"></i></button> <button class="btn-danger" style="padding:2px 10px;font-size:0.7rem;background:var(--danger);color:#fff;border:none;border-radius:4px;cursor:pointer;" onclick="deleteProduct(this)"><i class="fas fa-trash"></i></button></td></tr>
+              <tr><td>کیف چرمی</td><td>۱,۸۰۰,۰۰۰</td><td>۲۳</td><td>مد و پوشاک</td><td><button class="btn-primary" style="padding:2px 10px;font-size:0.7rem;" onclick="editProduct(this)"><i class="fas fa-edit"></i></button> <button class="btn-danger" style="padding:2px 10px;font-size:0.7rem;background:var(--danger);color:#fff;border:none;border-radius:4px;cursor:pointer;" onclick="deleteProduct(this)"><i class="fas fa-trash"></i></button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== تب سفارشات ===== -->
+      <div class="tab-content" id="tab-orders">
+        <div class="table-section">
+          <div class="header">
+            <h3><i class="fas fa-shopping-cart" style="color:var(--accent);"></i> <span data-key="ordersTitle">مدیریت سفارشات</span></h3>
+            <div class="table-actions">
+              <button class="btn-success" onclick="showNotification('گزارش اکسل دانلود شد 📊')"><i class="fas fa-file-excel"></i> <span data-key="exportExcel">خروجی اکسل</span></button>
+              <button class="btn-danger" onclick="showNotification('گزارش PDF دانلود شد 📄')"><i class="fas fa-file-pdf"></i> <span data-key="exportPDF">خروجی PDF</span></button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th data-key="thOrder">شماره</th><th data-key="thCustomer">مشتری</th><th data-key="thTotal">مبلغ</th><th data-key="thStatus">وضعیت</th><th data-key="thDate">تاریخ</th><th data-key="thActions">عملیات</th></tr></thead>
+            <tbody>
+              <tr><td>#1245</td><td>علی محمدی</td><td>۱۲,۴۰۰,۰۰۰</td><td><span class="status-badge paid">پرداخت شده</span></td><td>۱۴۰۵/۰۲/۱۰</td><td><select onchange="updateOrderStatus(this)" style="padding:2px 6px;border-radius:4px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);font-size:0.7rem;"><option value="paid">پرداخت شده</option><option value="pending">در انتظار</option><option value="shipped">ارسال شده</option><option value="cancelled">لغو شده</option></select></td></tr>
+              <tr><td>#1246</td><td>سارا حسینی</td><td>۸,۲۰۰,۰۰۰</td><td><span class="status-badge pending">در انتظار</span></td><td>۱۴۰۵/۰۲/۱۲</td><td><select onchange="updateOrderStatus(this)" style="padding:2px 6px;border-radius:4px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);font-size:0.7rem;"><option value="paid">پرداخت شده</option><option value="pending" selected>در انتظار</option><option value="shipped">ارسال شده</option><option value="cancelled">لغو شده</option></select></td></tr>
+              <tr><td>#1247</td><td>مریم جعفری</td><td>۲۳,۷۵۰,۰۰۰</td><td><span class="status-badge shipped">ارسال شده</span></td><td>۱۴۰۵/۰۲/۱۴</td><td><select onchange="updateOrderStatus(this)" style="padding:2px 6px;border-radius:4px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);font-size:0.7rem;"><option value="paid">پرداخت شده</option><option value="pending">در انتظار</option><option value="shipped" selected>ارسال شده</option><option value="cancelled">لغو شده</option></select></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== تب کاربران ===== -->
+      <div class="tab-content" id="tab-users">
+        <div class="table-section">
+          <div class="header">
+            <h3><i class="fas fa-users" style="color:var(--accent);"></i> <span data-key="usersTitle">مدیریت کاربران</span></h3>
+            <div class="table-actions">
+              <button class="btn-primary" onclick="showNotification('کاربر جدید اضافه شد ✅')"><i class="fas fa-plus"></i> <span data-key="addUser">افزودن کاربر</span></button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th data-key="thUser">کاربر</th><th data-key="thEmail">ایمیل</th><th data-key="thRole">نقش</th><th data-key="thStatus">وضعیت</th><th data-key="thActions">عملیات</th></tr></thead>
+            <tbody>
+              <tr><td>علی رضایی</td><td>ali@shop.com</td><td>مدیر</td><td><span class="status-badge paid">فعال</span></td><td><button class="btn-primary" style="padding:2px 10px;font-size:0.7rem;"><i class="fas fa-edit"></i></button> <button class="btn-danger" style="padding:2px 10px;font-size:0.7rem;background:var(--danger);color:#fff;border:none;border-radius:4px;cursor:pointer;"><i class="fas fa-trash"></i></button></td></tr>
+              <tr><td>سارا محمدی</td><td>sara@shop.com</td><td>کارشناس</td><td><span class="status-badge paid">فعال</span></td><td><button class="btn-primary" style="padding:2px 10px;font-size:0.7rem;"><i class="fas fa-edit"></i></button> <button class="btn-danger" style="padding:2px 10px;font-size:0.7rem;background:var(--danger);color:#fff;border:none;border-radius:4px;cursor:pointer;"><i class="fas fa-trash"></i></button></td></tr>
+              <tr><td>مهدی کریمی</td><td>mehdi@shop.com</td><td>کاربر</td><td><span class="status-badge pending">غیرفعال</span></td><td><button class="btn-primary" style="padding:2px 10px;font-size:0.7rem;"><i class="fas fa-edit"></i></button> <button class="btn-danger" style="padding:2px 10px;font-size:0.7rem;background:var(--danger);color:#fff;border:none;border-radius:4px;cursor:pointer;"><i class="fas fa-trash"></i></button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== تب گزارش‌ها ===== -->
+      <div class="tab-content" id="tab-reports">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+          <div class="stat-card"><div class="top"><div><div class="label">فروش کل</div><div class="number">۱۲۴.۸M</div></div><div class="icon blue"><i class="fas fa-dollar-sign"></i></div></div></div>
+          <div class="stat-card"><div class="top"><div><div class="label">تعداد سفارشات</div><div class="number">۱,۲۴۳</div></div><div class="icon green"><i class="fas fa-shopping-cart"></i></div></div></div>
+          <div class="stat-card"><div class="top"><div><div class="label">میانگین ارزش</div><div class="number">۱۰۰,۴۰۰</div></div><div class="icon yellow"><i class="fas fa-calculator"></i></div></div></div>
+        </div>
+        <div class="table-section">
+          <div class="header">
+            <h3><i class="fas fa-file-alt" style="color:var(--accent);"></i> <span>گزارش‌های فروش</span></h3>
+            <div class="table-actions">
+              <button class="btn-success" onclick="showNotification('گزارش اکسل دانلود شد 📊')"><i class="fas fa-file-excel"></i> خروجی اکسل</button>
+              <button class="btn-danger" onclick="showNotification('گزارش PDF دانلود شد 📄')"><i class="fas fa-file-pdf"></i> خروجی PDF</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>ماه</th><th>تعداد سفارش</th><th>فروش کل</th><th>میانگین</th></tr></thead>
+            <tbody>
+              <tr><td>فروردین</td><td>۱۲۴</td><td>۱۲,۴۰۰,۰۰۰</td><td>۱۰۰,۰۰۰</td></tr>
+              <tr><td>اردیبهشت</td><td>۱۵۶</td><td>۱۵,۶۰۰,۰۰۰</td><td>۱۰۰,۰۰۰</td></tr>
+              <tr><td>خرداد</td><td>۱۸۹</td><td>۱۸,۹۰۰,۰۰۰</td><td>۱۰۰,۰۰۰</td></tr>
+              <tr><td>تیر</td><td>۲۱۰</td><td>۲۱,۰۰۰,۰۰۰</td><td>۱۰۰,۰۰۰</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== تب تنظیمات ===== -->
+      <div class="tab-content" id="tab-settings">
+        <div class="chart-section">
+          <h3><i class="fas fa-cog" style="color:var(--accent);"></i> <span data-key="settingsTitle">تنظیمات فروشگاه</span></h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="background:var(--bg-primary);border-radius:12px;padding:16px;">
+              <h4 style="font-size:0.9rem;margin-bottom:8px;"><i class="fas fa-store"></i> اطلاعات فروشگاه</h4>
+              <div style="font-size:0.85rem;color:var(--text-secondary);">
+                <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-color);"><span>نام فروشگاه</span><span style="font-weight:500;">فروشگاه آنلاین</span></div>
+                <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-color);"><span>ایمیل</span><span style="font-weight:500;">info@shop.com</span></div>
+                <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>تلفن</span><span style="font-weight:500;">۰۲۱-۱۲۳۴۵۶۷۸</span></div>
+              </div>
+            </div>
+            <div style="background:var(--bg-primary);border-radius:12px;padding:16px;">
+              <h4 style="font-size:0.9rem;margin-bottom:8px;"><i class="fas fa-credit-card"></i> پرداخت</h4>
+              <div style="font-size:0.85rem;color:var(--text-secondary);">
+                <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-color);"><span>درگاه پرداخت</span><span style="font-weight:500;">زرین‌پال</span></div>
+                <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-color);"><span>وضعیت</span><span class="status-badge paid" style="font-size:0.7rem;">فعال</span></div>
+                <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>روش‌های پرداخت</span><span style="font-weight:500;">آنلاین / کارت به کارت</span></div>
+              </div>
+            </div>
+            <div style="background:var(--bg-primary);border-radius:12px;padding:16px;grid-column:1/3;">
+              <h4 style="font-size:0.9rem;margin-bottom:8px;"><i class="fas fa-truck"></i> حمل‌ونقل</h4>
+              <div style="font-size:0.85rem;color:var(--text-secondary);display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-color);"><span>روش ارسال</span><span style="font-weight:500;">پست پیشتاز</span></div>
+                <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-color);"><span>هزینه ارسال</span><span style="font-weight:500;">۵۰,۰۰۰</span></div>
+                <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-color);"><span>زمان تحویل</span><span style="font-weight:500;">۲-۳ روز</span></div>
+                <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>ارسال رایگان</span><span style="font-weight:500;">بالای ۱,۰۰۰,۰۰۰</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ===== مودال محصول ===== -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal">
+      <h3><span id="modalTitle" data-key="addProduct">افزودن محصول</span> <span class="close" onclick="closeModal('productModal')">&times;</span></h3>
+      <div class="form-group"><label data-key="lblName">نام محصول</label><input type="text" id="productName" placeholder="نام محصول ..."></div>
+      <div class="form-group"><label data-key="lblPrice">قیمت</label><input type="text" id="productPrice" placeholder="قیمت ..."></div>
+      <div class="form-group"><label data-key="lblStock">موجودی</label><input type="number" id="productStock" placeholder="تعداد ..."></div>
+      <div class="form-group"><label data-key="lblCategory">دسته‌بندی</label>
+        <select id="productCategory"><option value="الکترونیک">الکترونیک</option><option value="مد و پوشاک">مد و پوشاک</option><option value="کتاب">کتاب</option></select>
+      </div>
+      <div class="form-group"><label data-key="lblDescription">توضیحات</label><textarea id="productDesc" placeholder="توضیحات محصول ..."></textarea></div>
+      <div class="form-actions">
+        <button class="btn-secondary" onclick="closeModal('productModal')" data-key="cancel">انصراف</button>
+        <button class="btn-primary" onclick="saveProduct()" data-key="save">ذخیره</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== دیکشنری =====
+    const dict = {
+      fa: {
+        brandName: 'فروشگاه',
+        menuDashboard: 'داشبورد',
+        menuProducts: 'محصولات',
+        menuOrders: 'سفارشات',
+        menuUsers: 'کاربران',
+        menuReports: 'گزارش‌ها',
+        menuSettings: 'تنظیمات',
+        labelSettings: 'تنظیمات',
+        statRevenue: 'فروش کل',
+        statOrders: 'تعداد سفارشات',
+        statCustomers: 'مشتریان',
+        statConversion: 'نرخ تبدیل',
+        chartTitle: 'فروش ماهانه',
+        recentOrders: 'سفارشات اخیر',
+        viewAll: 'مشاهده همه',
+        thOrder: 'شماره',
+        thCustomer: 'مشتری',
+        thTotal: 'مبلغ',
+        thStatus: 'وضعیت',
+        thDate: 'تاریخ',
+        productsTitle: 'مدیریت محصولات',
+        addProduct: 'افزودن محصول',
+        thProduct: 'محصول',
+        thPrice: 'قیمت',
+        thStock: 'موجودی',
+        thCategory: 'دسته',
+        thActions: 'عملیات',
+        ordersTitle: 'مدیریت سفارشات',
+        exportExcel: 'خروجی اکسل',
+        exportPDF: 'خروجی PDF',
+        usersTitle: 'مدیریت کاربران',
+        addUser: 'افزودن کاربر',
+        thUser: 'کاربر',
+        thEmail: 'ایمیل',
+        thRole: 'نقش',
+        settingsTitle: 'تنظیمات فروشگاه',
+        lblName: 'نام محصول',
+        lblPrice: 'قیمت',
+        lblStock: 'موجودی',
+        lblCategory: 'دسته‌بندی',
+        lblDescription: 'توضیحات',
+        cancel: 'انصراف',
+        save: 'ذخیره'
+      },
+      en: {
+        brandName: 'Shop',
+        menuDashboard: 'Dashboard',
+        menuProducts: 'Products',
+        menuOrders: 'Orders',
+        menuUsers: 'Users',
+        menuReports: 'Reports',
+        menuSettings: 'Settings',
+        labelSettings: 'Settings',
+        statRevenue: 'Total Revenue',
+        statOrders: 'Total Orders',
+        statCustomers: 'Customers',
+        statConversion: 'Conversion Rate',
+        chartTitle: 'Monthly Sales',
+        recentOrders: 'Recent Orders',
+        viewAll: 'View All',
+        thOrder: 'Order',
+        thCustomer: 'Customer',
+        thTotal: 'Total',
+        thStatus: 'Status',
+        thDate: 'Date',
+        productsTitle: 'Product Management',
+        addProduct: 'Add Product',
+        thProduct: 'Product',
+        thPrice: 'Price',
+        thStock: 'Stock',
+        thCategory: 'Category',
+        thActions: 'Actions',
+        ordersTitle: 'Order Management',
+        exportExcel: 'Export Excel',
+        exportPDF: 'Export PDF',
+        usersTitle: 'User Management',
+        addUser: 'Add User',
+        thUser: 'User',
+        thEmail: 'Email',
+        thRole: 'Role',
+        settingsTitle: 'Store Settings',
+        lblName: 'Product Name',
+        lblPrice: 'Price',
+        lblStock: 'Stock',
+        lblCategory: 'Category',
+        lblDescription: 'Description',
+        cancel: 'Cancel',
+        save: 'Save'
+      }
+    };
+
+    let currentLang = 'fa';
+    const body = document.body;
+    const langBtn = document.getElementById('langToggleBtn');
+    const langLabel = document.getElementById('langLabel');
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      if (lang === 'en') {
+        body.classList.add('ltr');
+        body.setAttribute('dir', 'ltr');
+        document.documentElement.lang = 'en';
+        langLabel.textContent = 'فارسی';
+      } else {
+        body.classList.remove('ltr');
+        body.setAttribute('dir', 'rtl');
+        document.documentElement.lang = 'fa';
+        langLabel.textContent = 'English';
+      }
+      const d = dict[lang];
+      document.querySelectorAll('[data-key]').forEach(el => {
+        const key = el.getAttribute('data-key');
+        if (d[key] !== undefined) el.textContent = d[key];
+      });
+      document.getElementById('brandName').textContent = d.brandName;
+    }
+
+    langBtn.addEventListener('click', function() {
+      setLanguage(currentLang === 'fa' ? 'en' : 'fa');
+    });
+
+    // ===== دارک مود =====
+    const darkToggleBtn = document.getElementById('themeToggleBtn');
+    const themeLabel = document.getElementById('themeLabel');
+
+    function toggleDarkMode() {
+      body.classList.toggle('dark-mode');
+      const isDark = body.classList.contains('dark-mode');
+      themeLabel.textContent = isDark ? 'روشن' : 'دارک';
+      darkToggleBtn.innerHTML = `<i class="fas ${isDark ? 'fa-sun' : 'fa-moon'}"></i> ${isDark ? 'روشن' : 'دارک'}`;
+    }
+    darkToggleBtn.addEventListener('click', toggleDarkMode);
+
+    // ===== تب‌ها =====
+    function showTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('tab-' + tabName);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+      const map = { dashboard: 0, products: 1, orders: 2, users: 3, reports: 4, settings: 6 };
+      const items = document.querySelectorAll('.sidebar-item');
+      if (map[tabName] !== undefined) items[map[tabName]]?.classList.add('active');
+
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').style.display = 'none';
+      }
+    }
+
+    // ===== مودال =====
+    let editingRow = null;
+
+    function openModal(type) {
+      document.getElementById('productModal').classList.add('show');
+      document.getElementById('modalTitle').textContent = type === 'product' ? 'افزودن محصول' : 'ویرایش محصول';
+      if (type === 'edit') {
+        // پر کردن فرم با داده‌های ردیف
+      } else {
+        document.getElementById('productName').value = '';
+        document.getElementById('productPrice').value = '';
+        document.getElementById('productStock').value = '';
+        document.getElementById('productDesc').value = '';
+      }
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('show');
+    }
+
+    function saveProduct() {
+      const name = document.getElementById('productName').value;
+      const price = document.getElementById('productPrice').value;
+      const stock = document.getElementById('productStock').value;
+      const category = document.getElementById('productCategory').value;
+      if (!name || !price || !stock) {
+        showNotification('لطفاً تمام فیلدها را پر کنید!');
+        return;
+      }
+      const table = document.getElementById('productsTable');
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${name}</td>
+        <td>${Number(price).toLocaleString()}</td>
+        <td>${stock}</td>
+        <td>${category}</td>
+        <td><button class="btn-primary" style="padding:2px 10px;font-size:0.7rem;" onclick="editProduct(this)"><i class="fas fa-edit"></i></button> <button class="btn-danger" style="padding:2px 10px;font-size:0.7rem;background:var(--danger);color:#fff;border:none;border-radius:4px;cursor:pointer;" onclick="deleteProduct(this)"><i class="fas fa-trash"></i></button></td>
+      `;
+      table.appendChild(row);
+      closeModal('productModal');
+      showNotification('محصول با موفقیت اضافه شد ✅');
+    }
+
+    function editProduct(btn) {
+      const row = btn.closest('tr');
+      const cells = row.querySelectorAll('td');
+      editingRow = row;
+      document.getElementById('productName').value = cells[0].textContent;
+      document.getElementById('productPrice').value = cells[1].textContent.replace(/,/g, '');
+      document.getElementById('productStock').value = cells[2].textContent;
+      document.getElementById('productCategory').value = cells[3].textContent;
+      document.getElementById('modalTitle').textContent = 'ویرایش محصول';
+      document.getElementById('productModal').classList.add('show');
+    }
+
+    function deleteProduct(btn) {
+      if (confirm('آیا از حذف این محصول اطمینان دارید؟')) {
+        btn.closest('tr').remove();
+        showNotification('محصول حذف شد 🗑️');
+      }
+    }
+
+    function updateOrderStatus(select) {
+      const statusMap = {
+        'paid': 'پرداخت شده',
+        'pending': 'در انتظار',
+        'shipped': 'ارسال شده',
+        'cancelled': 'لغو شده'
+      };
+      const badge = select.closest('tr').querySelector('.status-badge');
+      badge.textContent = statusMap[select.value];
+      badge.className = 'status-badge ' + select.value;
+      showNotification('وضعیت سفارش به‌روزرسانی شد ✅');
+    }
+
+    // ===== جستجو =====
+    document.getElementById('searchInput').addEventListener('input', function() {
+      const query = this.value.trim().toLowerCase();
+      document.querySelectorAll('table tbody tr').forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(query) ? '' : 'none';
+      });
+    });
+
+    // ===== نوتیفیکیشن =====
+    let notifTimeout;
+
+    function showNotification(message) {
+      const notif = document.getElementById('notification');
+      notif.textContent = message;
+      notif.classList.add('show');
+      clearTimeout(notifTimeout);
+      notifTimeout = setTimeout(() => notif.classList.remove('show'), 2500);
+    }
+
+    // ===== تنظیم اولیه =====
+    setLanguage('fa');
+    showTab('dashboard');
+
+    // ===== بستن مودال با کلیک بیرون =====
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('show');
+      });
+    });
+
+    console.log('✅ پنل مدیریت فروشگاهی کامل بارگذاری شد!');
+  </script>
+</body>
+</html>

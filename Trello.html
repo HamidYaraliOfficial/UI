@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سیستم مدیریت پروژه | Trello Clone</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ===== RESET & BASE ===== */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+    :root {
+      --bg-primary: #f0f2f7;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --text-primary: #1a1a2e;
+      --text-secondary: #4a4a6a;
+      --text-muted: #8a8aa8;
+      --border-color: #e8ecf1;
+      --accent: #667eea;
+      --accent-hover: #5a67d8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 4px 20px rgba(0,0,0,0.04);
+      --shadow-hover: 0 8px 40px rgba(0,0,0,0.08);
+      --radius: 12px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    body.dark-mode {
+      --bg-primary: #0a0a1a;
+      --bg-secondary: #12122a;
+      --bg-card: #1a1a3a;
+      --text-primary: #e8edf5;
+      --text-secondary: #b0b8d0;
+      --text-muted: #6a7a9a;
+      --border-color: #2a2a4a;
+      --shadow: 0 4px 20px rgba(0,0,0,0.3);
+      --shadow-hover: 0 8px 40px rgba(0,0,0,0.5);
+    }
+    body {
+      background: var(--bg-primary);
+      min-height:100vh;
+      transition: var(--transition);
+      color: var(--text-primary);
+    }
+
+    /* ===== اسکرول ===== */
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--text-muted); border-radius:10px; }
+
+    /* ===== دکمه‌های کنترل ===== */
+    .control-buttons {
+      position:fixed; top:12px; right:12px; display:flex; gap:6px; z-index:9999;
+    }
+    .theme-toggle, .lang-toggle {
+      background:var(--bg-card); border:1px solid var(--border-color);
+      padding:6px 12px; border-radius:50px; cursor:pointer; font-size:0.65rem;
+      display:flex; align-items:center; gap:4px; transition:var(--transition);
+      box-shadow:var(--shadow); color:var(--text-primary);
+    }
+    .theme-toggle:hover, .lang-toggle:hover { transform:scale(1.05); box-shadow:var(--shadow-hover); }
+    body.ltr .control-buttons { right:auto; left:12px; }
+
+    /* ===== هدر ===== */
+    .header {
+      background:var(--bg-secondary); border-bottom:2px solid var(--accent);
+      padding:10px 24px; display:flex; justify-content:space-between; align-items:center;
+      position:sticky; top:0; z-index:100; box-shadow:var(--shadow);
+    }
+    .header .logo {
+      font-size:1.4rem; font-weight:700; color:var(--accent);
+      display:flex; align-items:center; gap:10px;
+    }
+    .header .logo i { font-size:1.6rem; }
+    .header-actions { display:flex; gap:16px; align-items:center; }
+    .header-actions i {
+      font-size:1.2rem; cursor:pointer; color:var(--text-secondary);
+      transition:var(--transition);
+    }
+    .header-actions i:hover { color:var(--accent); transform:scale(1.1); }
+    .header-avatar {
+      width:32px; height:32px; border-radius:50%;
+      background:var(--accent); display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:600; font-size:0.8rem; cursor:pointer;
+    }
+
+    /* ===== محتوای اصلی ===== */
+    .main-content {
+      max-width:1400px; margin:0 auto; padding:20px 24px;
+    }
+
+    /* ===== تب‌ها ===== */
+    .tab-content { display:none; animation:fadeIn 0.3s ease; }
+    .tab-content.active { display:block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ===== سایدبار ===== */
+    .sidebar {
+      display:grid; grid-template-columns:200px 1fr; gap:20px;
+    }
+    .sidebar-nav {
+      background:var(--bg-card); border-radius:var(--radius);
+      padding:12px; border:1px solid var(--border-color);
+      height:fit-content; position:sticky; top:80px;
+    }
+    .sidebar-nav .item {
+      display:flex; align-items:center; gap:10px; padding:8px 12px;
+      border-radius:8px; cursor:pointer; transition:var(--transition);
+      color:var(--text-secondary); font-size:0.85rem;
+    }
+    .sidebar-nav .item:hover { background:var(--bg-primary); color:var(--text-primary); }
+    .sidebar-nav .item.active { background:var(--bg-primary); color:var(--accent); font-weight:600; }
+    .sidebar-nav .item i { width:20px; }
+
+    /* ===== بوردها ===== */
+    .board-header {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:16px; flex-wrap:wrap; gap:10px;
+    }
+    .board-header h2 { font-size:1.4rem; display:flex; align-items:center; gap:10px; }
+    .board-header .actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .board-header .actions button {
+      padding:6px 16px; border:none; border-radius:8px;
+      font-weight:600; cursor:pointer; transition:var(--transition);
+    }
+    .board-header .actions .btn-primary { background:var(--accent); color:#fff; }
+    .board-header .actions .btn-primary:hover { background:var(--accent-hover); }
+    .board-header .actions .btn-success { background:var(--success); color:#fff; }
+    .board-header .actions .btn-success:hover { opacity:0.8; }
+
+    /* ===== لیست‌های بورد ===== */
+    .board-lists {
+      display:flex; gap:16px; overflow-x:auto; padding-bottom:8px;
+      min-height:400px;
+    }
+    .list-column {
+      min-width:280px; max-width:320px;
+      background:var(--bg-card); border-radius:var(--radius);
+      padding:12px; border:1px solid var(--border-color);
+      display:flex; flex-direction:column; max-height:70vh;
+    }
+    .list-column .list-header {
+      display:flex; justify-content:space-between; align-items:center;
+      padding-bottom:8px; border-bottom:1px solid var(--border-color);
+      margin-bottom:8px;
+    }
+    .list-column .list-header .title {
+      font-weight:600; font-size:0.95rem; display:flex; align-items:center; gap:6px;
+    }
+    .list-column .list-header .title .count {
+      font-size:0.7rem; color:var(--text-muted); font-weight:400;
+    }
+    .list-column .list-header .actions i {
+      cursor:pointer; color:var(--text-muted); transition:var(--transition);
+      margin-right:4px;
+    }
+    .list-column .list-header .actions i:hover { color:var(--danger); }
+    .list-column .cards-container {
+      flex:1; overflow-y:auto; padding:4px 2px;
+      min-height:60px;
+    }
+    .list-column .cards-container.drag-over {
+      background:var(--bg-primary); border-radius:8px;
+    }
+
+    /* ===== کارت‌ها ===== */
+    .card-item {
+      background:var(--bg-secondary); border-radius:8px;
+      padding:10px 12px; margin-bottom:6px;
+      border:1px solid var(--border-color);
+      cursor:grab; transition:var(--transition);
+      position:relative;
+    }
+    .card-item:hover { box-shadow:var(--shadow-hover); transform:translateY(-2px); }
+    .card-item:active { cursor:grabbing; opacity:0.7; }
+    .card-item .card-title { font-weight:500; font-size:0.9rem; margin-bottom:4px; }
+    .card-item .card-title .edit-icon {
+      float:left; font-size:0.7rem; color:var(--text-muted);
+      cursor:pointer; opacity:0; transition:var(--transition);
+    }
+    .card-item:hover .card-title .edit-icon { opacity:1; }
+    .card-item .card-tags {
+      display:flex; gap:4px; flex-wrap:wrap; margin:4px 0;
+    }
+    .card-item .card-tags .tag {
+      padding:1px 10px; border-radius:40px; font-size:0.55rem;
+      font-weight:600; color:#fff;
+    }
+    .card-item .card-meta {
+      display:flex; justify-content:space-between; font-size:0.7rem;
+      color:var(--text-muted); margin-top:4px;
+    }
+    .card-item .card-meta .due-date { display:flex; align-items:center; gap:4px; }
+    .card-item .card-meta .due-date.overdue { color:var(--danger); }
+    .card-item .card-meta .members { display:flex; gap:4px; }
+    .card-item .card-meta .members .member-avatar {
+      width:20px; height:20px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:0.5rem; font-weight:600;
+    }
+    .card-item .card-description {
+      font-size:0.8rem; color:var(--text-secondary);
+      margin:4px 0; display:none;
+    }
+    .card-item .card-description.show { display:block; }
+
+    /* ===== افزودن کارت ===== */
+    .add-card {
+      display:flex; gap:6px; margin-top:8px;
+    }
+    .add-card input {
+      flex:1; padding:6px 10px; border:1px solid var(--border-color);
+      border-radius:6px; background:var(--bg-primary);
+      color:var(--text-primary); font-size:0.85rem;
+      transition:var(--transition);
+    }
+    .add-card input:focus { border-color:var(--accent); outline:none; }
+    .add-card button {
+      padding:6px 12px; background:var(--accent); color:#fff;
+      border:none; border-radius:6px; cursor:pointer; font-weight:600;
+      transition:var(--transition);
+    }
+    .add-card button:hover { background:var(--accent-hover); }
+
+    /* ===== مودال کارت ===== */
+    .modal-overlay {
+      display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.5); z-index:9998; align-items:center; justify-content:center;
+    }
+    .modal-overlay.show { display:flex; }
+    .modal {
+      background:var(--bg-card); border-radius:var(--radius); padding:24px;
+      max-width:500px; width:90%; max-height:80vh; overflow-y:auto;
+      animation:modalIn 0.3s ease;
+    }
+    @keyframes modalIn { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }
+    .modal h3 { margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; }
+    .modal .close { cursor:pointer; font-size:1.2rem; color:var(--text-muted); }
+    .modal .close:hover { color:var(--danger); }
+    .modal .form-group { margin-bottom:12px; }
+    .modal .form-group label { display:block; font-size:0.85rem; font-weight:500; margin-bottom:4px; }
+    .modal .form-group input,
+    .modal .form-group select,
+    .modal .form-group textarea {
+      width:100%; padding:8px 12px; border:1px solid var(--border-color);
+      border-radius:8px; background:var(--bg-primary);
+      color:var(--text-primary); font-size:0.85rem;
+      transition:var(--transition);
+    }
+    .modal .form-group input:focus,
+    .modal .form-group select:focus,
+    .modal .form-group textarea:focus {
+      border-color:var(--accent); outline:none;
+    }
+    .modal .form-group textarea { resize:vertical; min-height:60px; }
+    .modal .form-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+    .modal .form-actions button {
+      padding:8px 24px; border:none; border-radius:8px; font-weight:600;
+      cursor:pointer; transition:var(--transition);
+    }
+    .modal .form-actions .btn-primary { background:var(--accent); color:#fff; }
+    .modal .form-actions .btn-primary:hover { background:var(--accent-hover); }
+    .modal .form-actions .btn-secondary { background:var(--bg-primary); color:var(--text-secondary); }
+    .modal .form-actions .btn-secondary:hover { background:var(--border-color); }
+
+    /* ===== اعضای تیم ===== */
+    .team-grid {
+      display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+      gap:12px;
+    }
+    .team-member-card {
+      background:var(--bg-card); border-radius:var(--radius);
+      padding:12px; border:1px solid var(--border-color);
+      text-align:center; transition:var(--transition);
+    }
+    .team-member-card:hover { transform:translateY(-2px); box-shadow:var(--shadow); }
+    .team-member-card .avatar {
+      width:56px; height:56px; border-radius:50%; margin:0 auto 8px;
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:1.2rem; font-weight:700;
+    }
+    .team-member-card .name { font-weight:600; }
+    .team-member-card .role { font-size:0.8rem; color:var(--text-muted); }
+    .team-member-card .remove { cursor:pointer; color:var(--danger); font-size:0.8rem; margin-top:4px; }
+
+    /* ===== فعالیت‌ها ===== */
+    .activity-list {
+      max-height:300px; overflow-y:auto;
+    }
+    .activity-item {
+      display:flex; gap:10px; padding:8px 0;
+      border-bottom:1px solid var(--border-color);
+    }
+    .activity-item:last-child { border-bottom:none; }
+    .activity-item .icon {
+      width:28px; height:28px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:0.7rem; flex-shrink:0;
+    }
+    .activity-item .text { flex:1; font-size:0.85rem; }
+    .activity-item .text .highlight { font-weight:600; color:var(--accent); }
+    .activity-item .time { font-size:0.65rem; color:var(--text-muted); }
+
+    /* ===== نوتیفیکیشن ===== */
+    .notification {
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
+      background:var(--text-primary); color:var(--bg-primary); padding:8px 18px;
+      border-radius:10px; font-size:0.8rem; z-index:9999; opacity:0;
+      transition:0.5s; pointer-events:none; box-shadow:0 4px 20px rgba(0,0,0,0.2);
+    }
+    body.dark-mode .notification { background:#2a2a2a; color:#e8e8e8; }
+    .notification.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+    /* ===== واکنش‌گرایی ===== */
+    @media (max-width:992px) {
+      .sidebar { grid-template-columns:1fr; }
+      .sidebar-nav { display:flex; gap:8px; overflow-x:auto; position:static; }
+      .sidebar-nav .item { white-space:nowrap; }
+      .board-lists { flex-wrap:nowrap; }
+    }
+    @media (max-width:768px) {
+      .header { padding:8px 12px; flex-wrap:wrap; gap:8px; }
+      .header .logo { font-size:1.1rem; }
+      .header-actions { gap:8px; }
+      .main-content { padding:12px; }
+      .list-column { min-width:240px; max-width:280px; }
+      .board-header h2 { font-size:1.1rem; }
+      .control-buttons { top:6px; right:6px; gap:4px; }
+      .theme-toggle, .lang-toggle { padding:4px 8px; font-size:0.55rem; }
+    }
+    @media (max-width:480px) {
+      .header .logo span { display:none; }
+      .list-column { min-width:200px; max-width:240px; }
+      .modal { padding:16px; }
+    }
+
+    body.ltr { direction:ltr; text-align:left; }
+    body.ltr .card-item .card-title .edit-icon { float:right; }
+    body.ltr .card-item .card-meta .due-date { flex-direction:row; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== دکمه‌های کنترل ===== -->
+  <div class="control-buttons">
+    <button class="theme-toggle" id="themeToggleBtn"><i class="fas fa-moon"></i> <span id="themeLabel">دارک</span></button>
+    <button class="lang-toggle" id="langToggleBtn"><i class="fas fa-globe"></i> <span id="langLabel">English</span></button>
+  </div>
+
+  <!-- ===== نوتیفیکیشن ===== -->
+  <div class="notification" id="notification"></div>
+
+  <!-- ===== هدر ===== -->
+  <header class="header">
+    <div class="logo"><i class="fas fa-tasks"></i> <span id="brandName">پروژه‌ساز</span></div>
+    <div class="header-actions">
+      <i class="fas fa-search" onclick="showNotification('جستجو 🔍')"></i>
+      <i class="fas fa-bell" onclick="showNotification('اعلان‌ها 🔔')"></i>
+      <div class="header-avatar" onclick="showTab('team')">ع</div>
+    </div>
+  </header>
+
+  <!-- ===== محتوای اصلی ===== -->
+  <div class="main-content">
+
+    <!-- ===== سایدبار + محتوا ===== -->
+    <div class="sidebar">
+
+      <!-- ناوبری -->
+      <nav class="sidebar-nav">
+        <div class="item active" onclick="showTab('board')"><i class="fas fa-columns"></i> <span data-key="navBoard">بورد</span></div>
+        <div class="item" onclick="showTab('team')"><i class="fas fa-users"></i> <span data-key="navTeam">تیم</span></div>
+        <div class="item" onclick="showTab('activities')"><i class="fas fa-clock"></i> <span data-key="navActivities">فعالیت‌ها</span></div>
+        <div class="item" onclick="showNotification('تنظیمات ⚙️')"><i class="fas fa-cog"></i> <span data-key="navSettings">تنظیمات</span></div>
+      </nav>
+
+      <!-- محتوای اصلی -->
+      <div>
+
+        <!-- ===== تب بورد ===== -->
+        <div class="tab-content active" id="tab-board">
+          <div class="board-header">
+            <h2><i class="fas fa-project-diagram" style="color:var(--accent);"></i> <span data-key="boardTitle">پروژه توسعه وب</span></h2>
+            <div class="actions">
+              <button class="btn-success" onclick="addList()" data-key="addListBtn">+ افزودن لیست</button>
+              <button class="btn-primary" onclick="showNotification('گزارش خروجی 📊')" data-key="exportBtn">خروجی</button>
+            </div>
+          </div>
+          <div class="board-lists" id="boardLists">
+            <!-- لیست‌ها توسط JS ساخته می‌شوند -->
+          </div>
+        </div>
+
+        <!-- ===== تب تیم ===== -->
+        <div class="tab-content" id="tab-team">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+            <h2><i class="fas fa-users" style="color:var(--accent);"></i> <span data-key="teamTitle">اعضای تیم</span></h2>
+            <button class="btn-primary" onclick="addMember()" data-key="addMemberBtn">+ افزودن عضو</button>
+          </div>
+          <div class="team-grid" id="teamGrid">
+            <!-- توسط JS ساخته می‌شود -->
+          </div>
+        </div>
+
+        <!-- ===== تب فعالیت‌ها ===== -->
+        <div class="tab-content" id="tab-activities">
+          <h2 style="margin-bottom:16px;"><i class="fas fa-clock" style="color:var(--accent);"></i> <span data-key="activitiesTitle">تاریخچه فعالیت‌ها</span></h2>
+          <div class="activity-list" id="activityList">
+            <!-- توسط JS ساخته می‌شود -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ===== مودال کارت ===== -->
+  <div class="modal-overlay" id="cardModal">
+    <div class="modal">
+      <h3 id="modalTitle" data-key="editCard">ویرایش کارت</h3>
+      <span class="close" onclick="closeModal('cardModal')">&times;</span>
+      <div class="form-group">
+        <label data-key="lblTitle">عنوان</label>
+        <input type="text" id="cardTitleInput" placeholder="عنوان کارت ...">
+      </div>
+      <div class="form-group">
+        <label data-key="lblDescription">توضیحات</label>
+        <textarea id="cardDescInput" placeholder="توضیحات ..."></textarea>
+      </div>
+      <div class="form-group">
+        <label data-key="lblDueDate">تاریخ سررسید</label>
+        <input type="date" id="cardDueInput">
+      </div>
+      <div class="form-group">
+        <label data-key="lblTags">برچسب‌ها</label>
+        <select id="cardTagsInput" multiple style="height:80px;">
+          <option value="urgent">🔥 فوری</option>
+          <option value="important">⭐ مهم</option>
+          <option value="bug">🐛 باگ</option>
+          <option value="feature">🚀 ویژگی جدید</option>
+          <option value="design">🎨 طراحی</option>
+          <option value="documentation">📄 مستندات</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-key="lblMembers">اعضا</label>
+        <select id="cardMembersInput" multiple style="height:60px;">
+          <!-- توسط JS پر می‌شود -->
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" onclick="closeModal('cardModal')" data-key="cancelBtn">انصراف</button>
+        <button class="btn-primary" onclick="saveCard()" data-key="saveBtn">ذخیره</button>
+      </div>
+      <input type="hidden" id="editingCardId">
+    </div>
+  </div>
+
+  <script>
+    // ===== دیکشنری =====
+    const dict = {
+      fa: {
+        brandName: 'پروژه‌ساز',
+        navBoard: 'بورد',
+        navTeam: 'تیم',
+        navActivities: 'فعالیت‌ها',
+        navSettings: 'تنظیمات',
+        boardTitle: 'پروژه توسعه وب',
+        addListBtn: '+ افزودن لیست',
+        exportBtn: 'خروجی',
+        teamTitle: 'اعضای تیم',
+        addMemberBtn: '+ افزودن عضو',
+        activitiesTitle: 'تاریخچه فعالیت‌ها',
+        editCard: 'ویرایش کارت',
+        lblTitle: 'عنوان',
+        lblDescription: 'توضیحات',
+        lblDueDate: 'تاریخ سررسید',
+        lblTags: 'برچسب‌ها',
+        lblMembers: 'اعضا',
+        cancelBtn: 'انصراف',
+        saveBtn: 'ذخیره',
+        addListPlaceholder: 'عنوان لیست جدید...',
+        addCardPlaceholder: 'عنوان کارت...',
+        deleteList: 'حذف لیست',
+        deleteCard: 'حذف کارت'
+      },
+      en: {
+        brandName: 'ProjectPro',
+        navBoard: 'Board',
+        navTeam: 'Team',
+        navActivities: 'Activities',
+        navSettings: 'Settings',
+        boardTitle: 'Web Development Project',
+        addListBtn: '+ Add List',
+        exportBtn: 'Export',
+        teamTitle: 'Team Members',
+        addMemberBtn: '+ Add Member',
+        activitiesTitle: 'Activity History',
+        editCard: 'Edit Card',
+        lblTitle: 'Title',
+        lblDescription: 'Description',
+        lblDueDate: 'Due Date',
+        lblTags: 'Tags',
+        lblMembers: 'Members',
+        cancelBtn: 'Cancel',
+        saveBtn: 'Save',
+        addListPlaceholder: 'Enter list title...',
+        addCardPlaceholder: 'Enter card title...',
+        deleteList: 'Delete List',
+        deleteCard: 'Delete Card'
+      }
+    };
+
+    let currentLang = 'fa';
+    const body = document.body;
+    const langBtn = document.getElementById('langToggleBtn');
+    const langLabel = document.getElementById('langLabel');
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      if (lang === 'en') {
+        body.classList.add('ltr');
+        body.setAttribute('dir', 'ltr');
+        document.documentElement.lang = 'en';
+        langLabel.textContent = 'فارسی';
+      } else {
+        body.classList.remove('ltr');
+        body.setAttribute('dir', 'rtl');
+        document.documentElement.lang = 'fa';
+        langLabel.textContent = 'English';
+      }
+      const d = dict[lang];
+      document.querySelectorAll('[data-key]').forEach(el => {
+        const key = el.getAttribute('data-key');
+        if (d[key] !== undefined) el.textContent = d[key];
+      });
+      document.getElementById('brandName').textContent = d.brandName;
+    }
+
+    langBtn.addEventListener('click', function() {
+      setLanguage(currentLang === 'fa' ? 'en' : 'fa');
+    });
+
+    // ===== دارک مود =====
+    const darkToggleBtn = document.getElementById('themeToggleBtn');
+    const themeLabel = document.getElementById('themeLabel');
+
+    function toggleDarkMode() {
+      body.classList.toggle('dark-mode');
+      const isDark = body.classList.contains('dark-mode');
+      themeLabel.textContent = isDark ? 'روشن' : 'دارک';
+      darkToggleBtn.innerHTML = `<i class="fas ${isDark ? 'fa-sun' : 'fa-moon'}"></i> ${isDark ? 'روشن' : 'دارک'}`;
+    }
+    darkToggleBtn.addEventListener('click', toggleDarkMode);
+
+    // ===== داده‌ها =====
+    const tagColors = {
+      urgent: '#ef4444',
+      important: '#f59e0b',
+      bug: '#dc2626',
+      feature: '#10b981',
+      design: '#8b5cf6',
+      documentation: '#3b82f6'
+    };
+    const tagNames = {
+      urgent: '🔥 فوری',
+      important: '⭐ مهم',
+      bug: '🐛 باگ',
+      feature: '🚀 ویژگی جدید',
+      design: '🎨 طراحی',
+      documentation: '📄 مستندات'
+    };
+
+    let teamMembers = [
+      { id: 1, name: 'علی رضایی', role: 'مدیر پروژه', color: '#667eea' },
+      { id: 2, name: 'سارا محمدی', role: 'توسعه‌دهنده', color: '#10b981' },
+      { id: 3, name: 'مهدی کریمی', role: 'طراح', color: '#f59e0b' }
+    ];
+
+    let activities = [
+      { id: 1, icon: 'fa-plus', color: '#10b981', text: 'پروژه "توسعه وب" ایجاد شد', time: '۲ ساعت پیش' },
+      { id: 2, icon: 'fa-user-plus', color: '#667eea', text: 'علی رضایی به تیم اضافه شد', time: '۳ ساعت پیش' },
+      { id: 3, icon: 'fa-plus', color: '#f59e0b', text: 'کارت "طراحی اولیه" به لیست Doing اضافه شد', time: '۵ ساعت پیش' }
+    ];
+
+    let lists = [
+      { id: 1, title: '📋 To Do', cards: [
+        { id: 1, title: 'طراحی اولیه', description: 'طراحی وایرفریم و موکاپ', dueDate: '2026-09-15', tags: ['design', 'important'], members: [1, 2] },
+        { id: 2, title: 'مطالعه مستندات', description: 'مطالعه مستندات فنی پروژه', dueDate: '2026-09-10', tags: ['documentation'], members: [2] }
+      ]},
+      { id: 2, title: '⚙️ Doing', cards: [
+        { id: 3, title: 'توسعه API', description: 'توسعه RESTful API برای پروژه', dueDate: '2026-09-18', tags: ['feature', 'important'], members: [1, 3] },
+        { id: 4, title: 'رفع باگ‌ها', description: 'رفع باگ‌های گزارش شده', dueDate: '2026-09-12', tags: ['bug', 'urgent'], members: [2] }
+      ]},
+      { id: 3, title: '✅ Done', cards: [
+        { id: 5, title: 'تنظیم محیط', description: 'تنظیم محیط توسعه و ابزارها', dueDate: '2026-09-05', tags: ['documentation'], members: [1] }
+      ]}
+    ];
+
+    let nextCardId = 6;
+    let nextListId = 4;
+    let nextMemberId = 4;
+    let nextActivityId = 4;
+    let draggedCard = null;
+
+    // ===== تابع‌ها =====
+
+    // ===== تب‌ها =====
+    function showTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('tab-' + tabName);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.sidebar-nav .item').forEach(el => el.classList.remove('active'));
+      const map = { board: 0, team: 1, activities: 2 };
+      const items = document.querySelectorAll('.sidebar-nav .item');
+      if (map[tabName] !== undefined) items[map[tabName]]?.classList.add('active');
+
+      if (tabName === 'team') renderTeam();
+      if (tabName === 'activities') renderActivities();
+    }
+
+    // ===== رندر بورد =====
+    function renderBoard() {
+      const container = document.getElementById('boardLists');
+      container.innerHTML = lists.map(list => `
+        <div class="list-column" data-list-id="${list.id}" ondrop="dropCard(event)" ondragover="allowDrop(event)">
+          <div class="list-header">
+            <div class="title">
+              ${list.title}
+              <span class="count">(${list.cards.length})</span>
+            </div>
+            <div class="actions">
+              <i class="fas fa-trash" onclick="deleteList(${list.id})" title="حذف لیست"></i>
+            </div>
+          </div>
+          <div class="cards-container" id="cards-${list.id}" ondrop="dropCard(event)" ondragover="allowDrop(event)">
+            ${list.cards.map(card => `
+              <div class="card-item" draggable="true" data-card-id="${card.id}" data-list-id="${list.id}"
+                   onclick="openCardModal(${card.id})" ondragstart="dragStart(event)">
+                <div class="card-title">
+                  ${card.title}
+                  <i class="fas fa-pen edit-icon" onclick="event.stopPropagation();openCardModal(${card.id})"></i>
+                </div>
+                <div class="card-tags">
+                  ${card.tags.map(t => `<span class="tag" style="background:${tagColors[t]}">${tagNames[t]}</span>`).join('')}
+                </div>
+                <div class="card-meta">
+                  <div class="due-date ${card.dueDate && new Date(card.dueDate) < new Date() ? 'overdue' : ''}">
+                    <i class="fas fa-calendar-alt"></i> ${card.dueDate || 'بدون تاریخ'}
+                  </div>
+                  <div class="members">
+                    ${card.members.map(mid => {
+                      const member = teamMembers.find(m => m.id === mid);
+                      return member ? `<span class="member-avatar" style="background:${member.color}">${member.name[0]}</span>` : '';
+                    }).join('')}
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="add-card">
+            <input type="text" placeholder="عنوان کارت..." id="cardInput-${list.id}" onkeydown="if(event.key==='Enter') addCard(${list.id})">
+            <button onclick="addCard(${list.id})">+</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ===== افزودن لیست =====
+    function addList() {
+      const title = prompt(currentLang === 'fa' ? 'عنوان لیست جدید:' : 'Enter list title:');
+      if (title && title.trim()) {
+        lists.push({ id: nextListId++, title: title.trim(), cards: [] });
+        renderBoard();
+        addActivity('fa-plus', '#10b981', `لیست "${title.trim()}" ایجاد شد`);
+        showNotification('لیست جدید اضافه شد ✅');
+      }
+    }
+
+    // ===== حذف لیست =====
+    function deleteList(listId) {
+      if (confirm(currentLang === 'fa' ? 'آیا از حذف این لیست اطمینان دارید؟' : 'Are you sure to delete this list?')) {
+        const list = lists.find(l => l.id === listId);
+        lists = lists.filter(l => l.id !== listId);
+        renderBoard();
+        if (list) addActivity('fa-trash', '#ef4444', `لیست "${list.title}" حذف شد`);
+        showNotification('لیست حذف شد 🗑️');
+      }
+    }
+
+    // ===== افزودن کارت =====
+    function addCard(listId) {
+      const input = document.getElementById('cardInput-' + listId);
+      const title = input.value.trim();
+      if (!title) return;
+      const list = lists.find(l => l.id === listId);
+      if (!list) return;
+      list.cards.push({
+        id: nextCardId++,
+        title: title,
+        description: '',
+        dueDate: '',
+        tags: [],
+        members: []
+      });
+      input.value = '';
+      renderBoard();
+      addActivity('fa-plus', '#f59e0b', `کارت "${title}" به لیست "${list.title}" اضافه شد`);
+      showNotification('کارت جدید اضافه شد ✅');
+    }
+
+    // ===== مودال کارت =====
+    let editingCardId = null;
+
+    function openCardModal(cardId) {
+      editingCardId = cardId;
+      const card = findCard(cardId);
+      if (!card) return;
+      document.getElementById('cardTitleInput').value = card.title;
+      document.getElementById('cardDescInput').value = card.description || '';
+      document.getElementById('cardDueInput').value = card.dueDate || '';
+      document.getElementById('editingCardId').value = cardId;
+
+      // برچسب‌ها
+      const tagsSelect = document.getElementById('cardTagsInput');
+      Array.from(tagsSelect.options).forEach(opt => opt.selected = card.tags.includes(opt.value));
+
+      // اعضا
+      const membersSelect = document.getElementById('cardMembersInput');
+      membersSelect.innerHTML = teamMembers.map(m =>
+        `<option value="${m.id}" ${card.members.includes(m.id) ? 'selected' : ''}>${m.name}</option>`
+      ).join('');
+
+      document.getElementById('modalTitle').textContent = currentLang === 'fa' ? 'ویرایش کارت' : 'Edit Card';
+      document.getElementById('cardModal').classList.add('show');
+    }
+
+    function saveCard() {
+      const cardId = parseInt(document.getElementById('editingCardId').value);
+      const card = findCard(cardId);
+      if (!card) return;
+      card.title = document.getElementById('cardTitleInput').value.trim() || card.title;
+      card.description = document.getElementById('cardDescInput').value.trim();
+      card.dueDate = document.getElementById('cardDueInput').value;
+      const tagsSelect = document.getElementById('cardTagsInput');
+      card.tags = Array.from(tagsSelect.selectedOptions).map(o => o.value);
+      const membersSelect = document.getElementById('cardMembersInput');
+      card.members = Array.from(membersSelect.selectedOptions).map(o => parseInt(o.value));
+
+      closeModal('cardModal');
+      renderBoard();
+      addActivity('fa-edit', '#667eea', `کارت "${card.title}" به‌روزرسانی شد`);
+      showNotification('کارت با موفقیت ذخیره شد ✅');
+    }
+
+    function findCard(cardId) {
+      for (const list of lists) {
+        const card = list.cards.find(c => c.id === cardId);
+        if (card) return card;
+      }
+      return null;
+    }
+
+    function findListByCard(cardId) {
+      return lists.find(l => l.cards.some(c => c.id === cardId));
+    }
+
+    // ===== حذف کارت =====
+    function deleteCard(cardId) {
+      if (confirm(currentLang === 'fa' ? 'آیا از حذف این کارت اطمینان دارید؟' : 'Are you sure to delete this card?')) {
+        const list = findListByCard(cardId);
+        if (list) {
+          const card = list.cards.find(c => c.id === cardId);
+          list.cards = list.cards.filter(c => c.id !== cardId);
+          renderBoard();
+          if (card) addActivity('fa-trash', '#ef4444', `کارت "${card.title}" حذف شد`);
+          showNotification('کارت حذف شد 🗑️');
+        }
+      }
+    }
+
+    // ===== Drag & Drop =====
+    function dragStart(e) {
+      const card = e.target.closest('.card-item');
+      if (!card) return;
+      draggedCard = {
+        cardId: parseInt(card.dataset.cardId),
+        listId: parseInt(card.dataset.listId)
+      };
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function allowDrop(e) {
+      e.preventDefault();
+    }
+
+    function dropCard(e) {
+      e.preventDefault();
+      const target = e.target.closest('.cards-container') || e.target.closest('.list-column');
+      if (!target || !draggedCard) return;
+
+      const targetListId = parseInt(target.dataset.listId || target.closest('.list-column')?.dataset?.listId);
+      if (!targetListId || targetListId === draggedCard.listId) return;
+
+      const sourceList = lists.find(l => l.id === draggedCard.listId);
+      const targetList = lists.find(l => l.id === targetListId);
+      if (!sourceList || !targetList) return;
+
+      const cardIndex = sourceList.cards.findIndex(c => c.id === draggedCard.cardId);
+      if (cardIndex === -1) return;
+
+      const [card] = sourceList.cards.splice(cardIndex, 1);
+      targetList.cards.push(card);
+
+      renderBoard();
+      addActivity('fa-arrows-alt', '#8b5cf6', `کارت "${card.title}" از "${sourceList.title}" به "${targetList.title}" منتقل شد`);
+      showNotification('کارت با موفقیت جابه‌جا شد 🔄');
+      draggedCard = null;
+    }
+
+    // ===== رندر تیم =====
+    function renderTeam() {
+      const container = document.getElementById('teamGrid');
+      container.innerHTML = teamMembers.map(m => `
+        <div class="team-member-card">
+          <div class="avatar" style="background:${m.color}">${m.name[0]}</div>
+          <div class="name">${m.name}</div>
+          <div class="role">${m.role}</div>
+          <div class="remove" onclick="removeMember(${m.id})"><i class="fas fa-user-minus"></i> حذف</div>
+        </div>
+      `).join('');
+    }
+
+    // ===== افزودن عضو =====
+    function addMember() {
+      const name = prompt(currentLang === 'fa' ? 'نام عضو جدید:' : 'Enter member name:');
+      if (!name || !name.trim()) return;
+      const role = prompt(currentLang === 'fa' ? 'نقش:' : 'Role:') || 'عضو';
+      const colors = ['#667eea', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6'];
+      const color = colors[teamMembers.length % colors.length];
+      teamMembers.push({ id: nextMemberId++, name: name.trim(), role, color });
+      renderTeam();
+      // به‌روزرسانی select اعضا در مودال
+      const membersSelect = document.getElementById('cardMembersInput');
+      membersSelect.innerHTML = teamMembers.map(m =>
+        `<option value="${m.id}">${m.name}</option>`
+      ).join('');
+      addActivity('fa-user-plus', '#667eea', `${name.trim()} به تیم اضافه شد`);
+      showNotification('عضو جدید اضافه شد ✅');
+    }
+
+    // ===== حذف عضو =====
+    function removeMember(memberId) {
+      if (confirm(currentLang === 'fa' ? 'آیا از حذف این عضو اطمینان دارید؟' : 'Are you sure to remove this member?')) {
+        const member = teamMembers.find(m => m.id === memberId);
+        teamMembers = teamMembers.filter(m => m.id !== memberId);
+        renderTeam();
+        if (member) addActivity('fa-user-minus', '#ef4444', `${member.name} از تیم حذف شد`);
+        showNotification('عضو حذف شد 🗑️');
+      }
+    }
+
+    // ===== رندر فعالیت‌ها =====
+    function renderActivities() {
+      const container = document.getElementById('activityList');
+      container.innerHTML = activities.slice().reverse().map(a => `
+        <div class="activity-item">
+          <div class="icon" style="background:${a.color}"><i class="fas ${a.icon}"></i></div>
+          <div class="text">${a.text}</div>
+          <div class="time">${a.time}</div>
+        </div>
+      `).join('');
+    }
+
+    // ===== افزودن فعالیت =====
+    function addActivity(icon, color, text) {
+      const now = new Date();
+      const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+      activities.push({ id: nextActivityId++, icon, color, text, time: 'امروز ' + time });
+      renderActivities();
+    }
+
+    // ===== مودال =====
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('show');
+    }
+
+    // ===== بستن مودال با کلیک بیرون =====
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('show');
+      });
+    });
+
+    // ===== نوتیفیکیشن =====
+    let notifTimeout;
+
+    function showNotification(message) {
+      const notif = document.getElementById('notification');
+      notif.textContent = message;
+      notif.classList.add('show');
+      clearTimeout(notifTimeout);
+      notifTimeout = setTimeout(() => notif.classList.remove('show'), 2500);
+    }
+
+    // ===== تنظیم اولیه =====
+    setLanguage('fa');
+    renderBoard();
+    renderTeam();
+    renderActivities();
+
+    // اضافه کردن دکمه حذف کارت در مودال
+    document.addEventListener('DOMContentLoaded', function() {
+      const modal = document.getElementById('cardModal');
+      const actions = modal.querySelector('.form-actions');
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn-secondary';
+      deleteBtn.style.color = 'var(--danger)';
+      deleteBtn.textContent = currentLang === 'fa' ? '🗑️ حذف کارت' : '🗑️ Delete Card';
+      deleteBtn.onclick = function() {
+        const cardId = parseInt(document.getElementById('editingCardId').value);
+        closeModal('cardModal');
+        deleteCard(cardId);
+      };
+      actions.prepend(deleteBtn);
+    });
+
+    console.log('✅ سیستم مدیریت پروژه Trello Clone کامل بارگذاری شد!');
+  </script>
+</body>
+</html>

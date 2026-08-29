@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سرویس استریم موسیقی | اسپاتیفای کلون</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ===== RESET & BASE ===== */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+    :root {
+      --bg-primary: #121212;
+      --bg-secondary: #1a1a1a;
+      --bg-card: #282828;
+      --bg-hover: #3a3a3a;
+      --text-primary: #ffffff;
+      --text-secondary: #b3b3b3;
+      --text-muted: #6a6a6a;
+      --accent: #1db954;
+      --accent-hover: #1ed760;
+      --shadow: 0 8px 30px rgba(0,0,0,0.5);
+      --radius: 12px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    body {
+      background: var(--bg-primary);
+      min-height:100vh;
+      color: var(--text-primary);
+      font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    }
+
+    /* ===== دارک مود (پیش‌فرض) ===== */
+    body.light-mode {
+      --bg-primary: #f0f2f7;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --bg-hover: #e8e8e8;
+      --text-primary: #1a1a2e;
+      --text-secondary: #4a4a6a;
+      --text-muted: #8a8aa8;
+      --shadow: 0 8px 30px rgba(0,0,0,0.08);
+    }
+
+    /* ===== اسکرول ===== */
+    ::-webkit-scrollbar { width:8px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--text-muted); border-radius:10px; }
+
+    /* ===== دکمه‌های کنترل ===== */
+    .control-buttons {
+      position:fixed; top:12px; right:12px; display:flex; gap:6px; z-index:9999;
+    }
+    .theme-toggle, .lang-toggle {
+      background:var(--bg-card); border:1px solid var(--text-muted);
+      padding:6px 12px; border-radius:50px; cursor:pointer; font-size:0.65rem;
+      display:flex; align-items:center; gap:4px; transition:var(--transition);
+      box-shadow:var(--shadow); color:var(--text-primary);
+    }
+    .theme-toggle:hover, .lang-toggle:hover { transform:scale(1.05); }
+    body.ltr .control-buttons { right:auto; left:12px; }
+
+    /* ===== هدر ===== */
+    .header {
+      background:var(--bg-secondary);
+      padding:8px 20px; display:flex; justify-content:space-between; align-items:center;
+      position:sticky; top:0; z-index:100; height:60px;
+      border-bottom:1px solid var(--text-muted);
+    }
+    .header-logo {
+      display:flex; align-items:center; gap:10px; font-size:1.4rem; font-weight:700;
+      color:var(--accent); cursor:pointer;
+    }
+    .header-logo i { font-size:1.8rem; }
+    .header-search {
+      display:flex; align-items:center; background:var(--bg-primary);
+      border-radius:50px; padding:6px 14px; gap:8px; width:300px;
+      border:1px solid transparent; transition:var(--transition);
+    }
+    .header-search:focus-within { border-color:var(--accent); }
+    .header-search input {
+      border:none; background:transparent; outline:none; width:100%;
+      color:var(--text-primary); font-size:0.85rem;
+    }
+    .header-search input::placeholder { color:var(--text-muted); }
+    .header-search i { color:var(--text-muted); }
+    .header-actions { display:flex; gap:16px; align-items:center; }
+    .header-actions i {
+      font-size:1.2rem; cursor:pointer; color:var(--text-secondary);
+      transition:var(--transition);
+    }
+    .header-actions i:hover { color:var(--accent); transform:scale(1.1); }
+    .header-avatar {
+      width:32px; height:32px; border-radius:50%;
+      background:var(--accent); display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:600; font-size:0.8rem; cursor:pointer;
+    }
+
+    /* ===== محتوای اصلی ===== */
+    .main-content {
+      display:grid; grid-template-columns:220px 1fr 280px;
+      gap:0; max-width:1400px; margin:0 auto; min-height:calc(100vh - 120px);
+    }
+
+    /* ===== سایدبار ===== */
+    .sidebar {
+      padding:12px 8px; border-left:1px solid var(--text-muted);
+      height:fit-content; position:sticky; top:70px;
+    }
+    body.ltr .sidebar { border-left:none; border-right:1px solid var(--text-muted); }
+    .sidebar-item {
+      display:flex; align-items:center; gap:12px; padding:8px 12px;
+      border-radius:8px; cursor:pointer; transition:var(--transition);
+      color:var(--text-secondary); font-size:0.85rem;
+    }
+    .sidebar-item:hover { background:var(--bg-hover); color:var(--text-primary); }
+    .sidebar-item.active { background:var(--bg-hover); color:var(--text-primary); font-weight:600; }
+    .sidebar-item i { width:20px; font-size:1rem; }
+    .sidebar-item .badge {
+      margin-right:auto; background:var(--accent); color:#fff;
+      font-size:0.5rem; padding:1px 8px; border-radius:40px;
+    }
+    .sidebar-divider { height:1px; background:var(--text-muted); margin:8px 8px; }
+    .sidebar-label { font-size:0.6rem; color:var(--text-muted); padding:8px 12px 4px; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+
+    /* ===== بخش اصلی ===== */
+    .feed-section { border-left:1px solid var(--text-muted); border-right:1px solid var(--text-muted); }
+    body.ltr .feed-section { border-left:1px solid var(--text-muted); border-right:1px solid var(--text-muted); }
+
+    /* ===== تب‌ها ===== */
+    .tab-content { display:none; animation:fadeIn 0.3s ease; padding:16px; }
+    .tab-content.active { display:block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ===== کارت‌های موسیقی ===== */
+    .section-title {
+      font-size:1.2rem; font-weight:700; margin-bottom:12px;
+      display:flex; align-items:center; gap:8px;
+    }
+    .section-title .see-all {
+      font-size:0.75rem; color:var(--text-muted); cursor:pointer;
+      margin-right:auto;
+    }
+    body.ltr .section-title .see-all { margin-right:0; margin-left:auto; }
+    .section-title .see-all:hover { color:var(--accent); }
+
+    .card-grid {
+      display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));
+      gap:16px; margin-bottom:24px;
+    }
+    .music-card {
+      background:var(--bg-card); border-radius:var(--radius); padding:12px;
+      transition:var(--transition); cursor:pointer;
+      text-align:center;
+    }
+    .music-card:hover { background:var(--bg-hover); transform:translateY(-4px); box-shadow:var(--shadow); }
+    .music-card .cover {
+      width:100%; aspect-ratio:1; border-radius:8px;
+      background:linear-gradient(135deg, var(--accent), var(--text-muted));
+      display:flex; align-items:center; justify-content:center;
+      font-size:2.5rem; color:var(--text-primary); margin-bottom:8px;
+    }
+    .music-card .cover img { width:100%; height:100%; border-radius:8px; object-fit:cover; }
+    .music-card .title { font-weight:600; font-size:0.9rem; }
+    .music-card .subtitle { font-size:0.75rem; color:var(--text-secondary); }
+
+    /* ===== پخش‌کننده ===== */
+    .player {
+      position:fixed; bottom:0; left:0; right:0;
+      background:var(--bg-secondary); border-top:1px solid var(--text-muted);
+      padding:12px 24px; display:flex; align-items:center; gap:20px;
+      z-index:999; height:72px;
+    }
+    .player .track-info {
+      display:flex; align-items:center; gap:12px; min-width:180px;
+    }
+    .player .track-info .cover {
+      width:48px; height:48px; border-radius:8px;
+      background:linear-gradient(135deg, var(--accent), var(--text-muted));
+      display:flex; align-items:center; justify-content:center;
+    }
+    .player .track-info .details .name { font-weight:600; font-size:0.9rem; }
+    .player .track-info .details .artist { font-size:0.75rem; color:var(--text-secondary); }
+    .player .controls {
+      display:flex; align-items:center; gap:16px; flex:1; justify-content:center;
+    }
+    .player .controls i {
+      font-size:1.2rem; cursor:pointer; color:var(--text-secondary);
+      transition:var(--transition);
+    }
+    .player .controls i:hover { color:var(--text-primary); transform:scale(1.1); }
+    .player .controls .play-btn {
+      font-size:2rem; color:var(--text-primary);
+    }
+    .player .controls .play-btn:hover { color:var(--accent); }
+    .player .progress {
+      display:flex; align-items:center; gap:10px; flex:1; min-width:100px;
+    }
+    .player .progress .bar {
+      flex:1; height:4px; background:var(--text-muted); border-radius:4px;
+      position:relative; cursor:pointer;
+    }
+    .player .progress .bar .fill {
+      width:35%; height:100%; background:var(--accent); border-radius:4px;
+      position:relative;
+    }
+    .player .progress .bar .fill::after {
+      content:''; position:absolute; right:-4px; top:-4px;
+      width:12px; height:12px; border-radius:50%; background:var(--text-primary);
+      opacity:0; transition:var(--transition);
+    }
+    .player .progress .bar:hover .fill::after { opacity:1; }
+    .player .progress .time { font-size:0.7rem; color:var(--text-secondary); min-width:40px; }
+    .player .volume {
+      display:flex; align-items:center; gap:8px; min-width:100px;
+    }
+    .player .volume i { cursor:pointer; color:var(--text-secondary); }
+    .player .volume .bar {
+      width:80px; height:4px; background:var(--text-muted); border-radius:4px;
+      cursor:pointer;
+    }
+    .player .volume .bar .fill { width:70%; height:100%; background:var(--accent); border-radius:4px; }
+
+    /* ===== لیست پخش ===== */
+    .playlist-item {
+      display:flex; align-items:center; gap:12px; padding:8px 12px;
+      border-radius:8px; cursor:pointer; transition:var(--transition);
+    }
+    .playlist-item:hover { background:var(--bg-hover); }
+    .playlist-item .cover {
+      width:40px; height:40px; border-radius:6px;
+      background:linear-gradient(135deg, var(--accent), var(--text-muted));
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.2rem;
+    }
+    .playlist-item .info { flex:1; }
+    .playlist-item .info .name { font-weight:600; font-size:0.85rem; }
+    .playlist-item .info .count { font-size:0.7rem; color:var(--text-secondary); }
+    .playlist-item .play-btn { color:var(--text-muted); font-size:0.9rem; }
+
+    /* ===== پروفایل ===== */
+    .profile-header {
+      display:flex; gap:24px; align-items:center; padding:16px;
+      background:var(--bg-card); border-radius:var(--radius); margin-bottom:16px;
+    }
+    .profile-header .avatar {
+      width:120px; height:120px; border-radius:50%;
+      background:linear-gradient(135deg, var(--accent), var(--text-muted));
+      display:flex; align-items:center; justify-content:center;
+      font-size:3rem; color:#fff;
+    }
+    .profile-header .info .name { font-size:1.8rem; font-weight:700; }
+    .profile-header .info .username { color:var(--text-secondary); }
+    .profile-header .info .stats { display:flex; gap:20px; margin-top:8px; }
+    .profile-header .info .stats span { font-size:0.85rem; color:var(--text-secondary); }
+    .profile-header .info .stats .num { color:var(--text-primary); font-weight:600; }
+
+    /* ===== نوتیفیکیشن ===== */
+    .notification {
+      position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(20px);
+      background:var(--bg-card); color:var(--text-primary); padding:8px 18px;
+      border-radius:10px; font-size:0.8rem; z-index:9999; opacity:0;
+      transition:0.5s; pointer-events:none; box-shadow:var(--shadow);
+      border:1px solid var(--text-muted);
+    }
+    .notification.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+    /* ===== واکنش‌گرایی ===== */
+    @media (max-width:1200px) {
+      .right-panel { display:none; }
+      .main-content { grid-template-columns:220px 1fr; }
+    }
+    @media (max-width:992px) {
+      .main-content { grid-template-columns:1fr; }
+      .sidebar { display:none; }
+      .header { padding:6px 12px; height:50px; flex-wrap:wrap; gap:8px; }
+      .header-search { width:100%; order:3; }
+      .header-logo { font-size:1.1rem; }
+      .header-actions { gap:8px; }
+      .control-buttons { top:6px; right:6px; gap:4px; }
+      .theme-toggle, .lang-toggle { padding:4px 8px; font-size:0.55rem; }
+      .player { flex-wrap:wrap; height:auto; padding:8px 12px; gap:8px; }
+      .player .track-info { min-width:120px; }
+      .player .controls { order:3; flex-basis:100%; justify-content:center; }
+      .player .volume { display:none; }
+      .card-grid { grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); }
+      .profile-header { flex-direction:column; text-align:center; }
+    }
+    @media (max-width:480px) {
+      .header-logo span { display:none; }
+      .header-actions i { font-size:0.85rem; }
+      .header-avatar { width:28px; height:28px; font-size:0.6rem; }
+      .card-grid { grid-template-columns:repeat(2,1fr); }
+      .player .track-info .cover { width:36px; height:36px; }
+      .player .track-info .details .name { font-size:0.75rem; }
+      .player .controls i { font-size:1rem; }
+      .player .controls .play-btn { font-size:1.5rem; }
+      .profile-header .avatar { width:80px; height:80px; font-size:2rem; }
+      .profile-header .info .name { font-size:1.2rem; }
+    }
+
+    body.ltr { direction:ltr; text-align:left; }
+    body.ltr .sidebar-item .badge { margin-right:0; margin-left:auto; }
+    body.ltr .section-title .see-all { margin-right:0; margin-left:auto; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== دکمه‌های کنترل ===== -->
+  <div class="control-buttons">
+    <button class="theme-toggle" id="themeToggleBtn"><i class="fas fa-sun"></i> <span id="themeLabel">روشن</span></button>
+    <button class="lang-toggle" id="langToggleBtn"><i class="fas fa-globe"></i> <span id="langLabel">English</span></button>
+  </div>
+
+  <!-- ===== نوتیفیکیشن ===== -->
+  <div class="notification" id="notification"></div>
+
+  <!-- ===== هدر ===== -->
+  <header class="header">
+    <div class="header-logo"><i class="fas fa-music"></i> <span id="brandName">موسیقی</span></div>
+    <div class="header-search">
+      <i class="fas fa-search"></i>
+      <input type="text" id="searchInput" placeholder="جستجوی آهنگ، آرتیست، آلبوم ...">
+    </div>
+    <div class="header-actions">
+      <i class="fas fa-heart" onclick="showNotification('علاقه‌مندی‌ها ❤️')"></i>
+      <i class="fas fa-clock" onclick="showNotification('تاریخچه 🕐')"></i>
+      <div class="header-avatar" onclick="showTab('profile')">ع</div>
+    </div>
+  </header>
+
+  <!-- ===== محتوای اصلی ===== -->
+  <div class="main-content">
+
+    <!-- ===== سایدبار ===== -->
+    <nav class="sidebar">
+      <div class="sidebar-item active" onclick="showTab('home')"><i class="fas fa-home"></i> <span data-key="menuHome">خانه</span></div>
+      <div class="sidebar-item" onclick="showTab('search')"><i class="fas fa-search"></i> <span data-key="menuSearch">جستجو</span></div>
+      <div class="sidebar-item" onclick="showTab('library')"><i class="fas fa-library"></i> <span data-key="menuLibrary">کتابخانه</span></div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-label" data-key="labelPlaylists">لیست‌های پخش</div>
+      <div class="sidebar-item" onclick="showTab('playlists')"><i class="fas fa-list"></i> <span data-key="menuPlaylists">لیست‌های من</span> <span class="badge">3</span></div>
+      <div class="sidebar-item" onclick="showTab('liked')"><i class="fas fa-heart"></i> <span data-key="menuLiked">آهنگ‌های محبوب</span></div>
+      <div class="sidebar-item" onclick="showNotification('در حال ایجاد لیست جدید...')"><i class="fas fa-plus"></i> <span data-key="menuNewPlaylist">لیست جدید</span></div>
+    </nav>
+
+    <!-- ===== بخش اصلی ===== -->
+    <div class="feed-section">
+
+      <!-- ===== تب خانه ===== -->
+      <div class="tab-content active" id="tab-home">
+        <div class="section-title">
+          <span data-key="featuredTitle">محبوب‌ترین آهنگ‌ها</span>
+          <span class="see-all" onclick="showNotification('مشاهده همه 🎵')" data-key="seeAll">مشاهده همه</span>
+        </div>
+        <div class="card-grid" id="featuredGrid">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+
+        <div class="section-title">
+          <span data-key="artistsTitle">آرتیست‌های برتر</span>
+          <span class="see-all" onclick="showNotification('مشاهده همه 🎤')" data-key="seeAll">مشاهده همه</span>
+        </div>
+        <div class="card-grid" id="artistsGrid">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+
+        <div class="section-title">
+          <span data-key="albumsTitle">آلبوم‌های جدید</span>
+          <span class="see-all" onclick="showNotification('مشاهده همه 💿')" data-key="seeAll">مشاهده همه</span>
+        </div>
+        <div class="card-grid" id="albumsGrid">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </div>
+
+      <!-- ===== تب جستجو ===== -->
+      <div class="tab-content" id="tab-search">
+        <div class="section-title"><span data-key="searchTitle">نتایج جستجو</span></div>
+        <div id="searchResults">
+          <p style="color:var(--text-muted);" data-key="searchHint">برای جستجو از نوار جستجو استفاده کنید...</p>
+        </div>
+      </div>
+
+      <!-- ===== تب کتابخانه ===== -->
+      <div class="tab-content" id="tab-library">
+        <div class="section-title"><span data-key="libraryTitle">کتابخانه موسیقی</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+          <div class="music-card" onclick="showTab('playlists')">
+            <div class="cover" style="background:linear-gradient(135deg,#1db954,#1ed760);"><i class="fas fa-list"></i></div>
+            <div class="title" data-key="libPlaylists">لیست‌های پخش</div>
+            <div class="subtitle">۳ لیست</div>
+          </div>
+          <div class="music-card" onclick="showTab('liked')">
+            <div class="cover" style="background:linear-gradient(135deg,#f91880,#f5576c);"><i class="fas fa-heart"></i></div>
+            <div class="title" data-key="libLiked">آهنگ‌های محبوب</div>
+            <div class="subtitle">۱۲ آهنگ</div>
+          </div>
+          <div class="music-card" onclick="showTab('artists')">
+            <div class="cover" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa);"><i class="fas fa-user"></i></div>
+            <div class="title" data-key="libArtists">آرتیست‌ها</div>
+            <div class="subtitle">۸ آرتیست</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;">
+          <div class="section-title"><span data-key="recentlyPlayed">اخیراً پخش شده</span></div>
+          <div id="recentlyPlayed"></div>
+        </div>
+      </div>
+
+      <!-- ===== تب لیست‌های پخش ===== -->
+      <div class="tab-content" id="tab-playlists">
+        <div class="section-title">
+          <span data-key="playlistsTitle">لیست‌های پخش من</span>
+          <span class="see-all" onclick="showNotification('ایجاد لیست جدید ✨')" data-key="newPlaylist">+ جدید</span>
+        </div>
+        <div id="playlistsContainer">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </div>
+
+      <!-- ===== تب آهنگ‌های محبوب ===== -->
+      <div class="tab-content" id="tab-liked">
+        <div class="section-title"><span data-key="likedTitle">آهنگ‌های محبوب</span></div>
+        <div id="likedContainer">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </div>
+
+      <!-- ===== تب آرتیست‌ها ===== -->
+      <div class="tab-content" id="tab-artists">
+        <div class="section-title"><span data-key="artistsTitle">آرتیست‌ها</span></div>
+        <div class="card-grid" id="artistsFullGrid">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </div>
+
+      <!-- ===== تب پروفایل ===== -->
+      <div class="tab-content" id="tab-profile">
+        <div class="profile-header">
+          <div class="avatar">ع</div>
+          <div class="info">
+            <div class="name">علی رضایی</div>
+            <div class="username">@ali_rezaei</div>
+            <div class="stats">
+              <span><span class="num">۱۲۴</span> <span data-key="profileFollowers">دنبال‌کننده</span></span>
+              <span><span class="num">۸۹</span> <span data-key="profileFollowing">دنبال‌شونده</span></span>
+              <span><span class="num">۴۵</span> <span data-key="profilePlaylists">لیست پخش</span></span>
+            </div>
+            <button style="margin-top:8px;background:var(--accent);color:#fff;border:none;padding:6px 20px;border-radius:50px;font-weight:600;cursor:pointer;transition:var(--transition);" onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent)'" data-key="editProfile">ویرایش پروفایل</button>
+          </div>
+        </div>
+        <div class="section-title"><span data-key="favoritesTitle">علاقه‌مندی‌ها</span></div>
+        <div id="favoritesContainer"></div>
+        <div class="section-title" style="margin-top:16px;"><span data-key="historyTitle">تاریخچه پخش</span></div>
+        <div id="historyContainer"></div>
+      </div>
+
+    </div>
+
+    <!-- ===== پنل راست ===== -->
+    <div class="right-panel" style="padding:12px;">
+      <div style="background:var(--bg-card);border-radius:var(--radius);padding:12px;margin-bottom:12px;">
+        <h4 style="font-size:0.9rem;margin-bottom:8px;" data-key="recentlyPlayed">اخیراً پخش شده</h4>
+        <div id="rightRecentlyPlayed"></div>
+      </div>
+      <div style="background:var(--bg-card);border-radius:var(--radius);padding:12px;">
+        <h4 style="font-size:0.9rem;margin-bottom:8px;" data-key="recommended">پیشنهاد برای شما</h4>
+        <div id="recommendedContainer"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== پخش‌کننده ===== -->
+  <div class="player">
+    <div class="track-info">
+      <div class="cover"><i class="fas fa-music"></i></div>
+      <div class="details">
+        <div class="name" id="currentTrack">آهنگ شماره ۱</div>
+        <div class="artist" id="currentArtist">آرتیست</div>
+      </div>
+    </div>
+    <div class="controls">
+      <i class="fas fa-step-backward" onclick="prevTrack()"></i>
+      <i class="fas fa-play-circle play-btn" id="playBtn" onclick="togglePlay()"></i>
+      <i class="fas fa-step-forward" onclick="nextTrack()"></i>
+    </div>
+    <div class="progress">
+      <span class="time" id="currentTime">1:24</span>
+      <div class="bar" onclick="seekProgress(event)">
+        <div class="fill" id="progressFill"></div>
+      </div>
+      <span class="time" id="totalTime">3:45</span>
+    </div>
+    <div class="volume">
+      <i class="fas fa-volume-up" onclick="toggleMute()"></i>
+      <div class="bar" onclick="seekVolume(event)">
+        <div class="fill" id="volumeFill" style="width:70%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== دیکشنری =====
+    const dict = {
+      fa: {
+        brandName: 'موسیقی',
+        menuHome: 'خانه',
+        menuSearch: 'جستجو',
+        menuLibrary: 'کتابخانه',
+        menuPlaylists: 'لیست‌های من',
+        menuLiked: 'آهنگ‌های محبوب',
+        menuNewPlaylist: 'لیست جدید',
+        labelPlaylists: 'لیست‌های پخش',
+        featuredTitle: 'محبوب‌ترین آهنگ‌ها',
+        artistsTitle: 'آرتیست‌های برتر',
+        albumsTitle: 'آلبوم‌های جدید',
+        seeAll: 'مشاهده همه',
+        searchTitle: 'نتایج جستجو',
+        searchHint: 'برای جستجو از نوار جستجو استفاده کنید...',
+        libraryTitle: 'کتابخانه موسیقی',
+        libPlaylists: 'لیست‌های پخش',
+        libLiked: 'آهنگ‌های محبوب',
+        libArtists: 'آرتیست‌ها',
+        recentlyPlayed: 'اخیراً پخش شده',
+        playlistsTitle: 'لیست‌های پخش من',
+        newPlaylist: '+ جدید',
+        likedTitle: 'آهنگ‌های محبوب',
+        profileFollowers: 'دنبال‌کننده',
+        profileFollowing: 'دنبال‌شونده',
+        profilePlaylists: 'لیست پخش',
+        editProfile: 'ویرایش پروفایل',
+        favoritesTitle: 'علاقه‌مندی‌ها',
+        historyTitle: 'تاریخچه پخش',
+        recommended: 'پیشنهاد برای شما'
+      },
+      en: {
+        brandName: 'Music',
+        menuHome: 'Home',
+        menuSearch: 'Search',
+        menuLibrary: 'Library',
+        menuPlaylists: 'My Playlists',
+        menuLiked: 'Liked Songs',
+        menuNewPlaylist: 'New Playlist',
+        labelPlaylists: 'Playlists',
+        featuredTitle: 'Featured Songs',
+        artistsTitle: 'Top Artists',
+        albumsTitle: 'New Albums',
+        seeAll: 'See All',
+        searchTitle: 'Search Results',
+        searchHint: 'Use the search bar to find music...',
+        libraryTitle: 'Music Library',
+        libPlaylists: 'Playlists',
+        libLiked: 'Liked Songs',
+        libArtists: 'Artists',
+        recentlyPlayed: 'Recently Played',
+        playlistsTitle: 'My Playlists',
+        newPlaylist: '+ New',
+        likedTitle: 'Liked Songs',
+        profileFollowers: 'Followers',
+        profileFollowing: 'Following',
+        profilePlaylists: 'Playlists',
+        editProfile: 'Edit Profile',
+        favoritesTitle: 'Favorites',
+        historyTitle: 'Play History',
+        recommended: 'Recommended for You'
+      }
+    };
+
+    let currentLang = 'fa';
+    const body = document.body;
+    const langBtn = document.getElementById('langToggleBtn');
+    const langLabel = document.getElementById('langLabel');
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      if (lang === 'en') {
+        body.classList.add('ltr');
+        body.setAttribute('dir', 'ltr');
+        document.documentElement.lang = 'en';
+        langLabel.textContent = 'فارسی';
+      } else {
+        body.classList.remove('ltr');
+        body.setAttribute('dir', 'rtl');
+        document.documentElement.lang = 'fa';
+        langLabel.textContent = 'English';
+      }
+      const d = dict[lang];
+      document.querySelectorAll('[data-key]').forEach(el => {
+        const key = el.getAttribute('data-key');
+        if (d[key] !== undefined) el.textContent = d[key];
+      });
+      document.getElementById('brandName').textContent = d.brandName;
+    }
+
+    langBtn.addEventListener('click', function() {
+      setLanguage(currentLang === 'fa' ? 'en' : 'fa');
+    });
+
+    // ===== دارک/روشن =====
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeLabel = document.getElementById('themeLabel');
+
+    function toggleTheme() {
+      body.classList.toggle('light-mode');
+      const isLight = body.classList.contains('light-mode');
+      themeLabel.textContent = isLight ? 'دارک' : 'روشن';
+      themeToggleBtn.innerHTML = `<i class="fas ${isLight ? 'fa-moon' : 'fa-sun'}"></i> ${isLight ? 'دارک' : 'روشن'}`;
+    }
+    themeToggleBtn.addEventListener('click', toggleTheme);
+
+    // ===== داده‌های نمونه =====
+    const songs = [
+      { id: 1, title: 'آهنگ شماره ۱', artist: 'آرتیست ۱', album: 'آلبوم ۱', duration: '3:45', genre: 'پاپ' },
+      { id: 2, title: 'آهنگ شماره ۲', artist: 'آرتیست ۲', album: 'آلبوم ۲', duration: '4:20', genre: 'راک' },
+      { id: 3, title: 'آهنگ شماره ۳', artist: 'آرتیست ۳', album: 'آلبوم ۳', duration: '3:10', genre: 'جاز' },
+      { id: 4, title: 'آهنگ شماره ۴', artist: 'آرتیست ۴', album: 'آلبوم ۴', duration: '5:00', genre: 'کلاسیک' },
+      { id: 5, title: 'آهنگ شماره ۵', artist: 'آرتیست ۵', album: 'آلبوم ۵', duration: '2:55', genre: 'پاپ' },
+      { id: 6, title: 'آهنگ شماره ۶', artist: 'آرتیست ۶', album: 'آلبوم ۶', duration: '4:15', genre: 'رپ' },
+    ];
+
+    const artists = [
+      { id: 1, name: 'آرتیست ۱', genre: 'پاپ', followers: '۱۲۴K' },
+      { id: 2, name: 'آرتیست ۲', genre: 'راک', followers: '۸۹K' },
+      { id: 3, name: 'آرتیست ۳', genre: 'جاز', followers: '۵۶K' },
+      { id: 4, name: 'آرتیست ۴', genre: 'کلاسیک', followers: '۴۵K' },
+    ];
+
+    const albums = [
+      { id: 1, title: 'آلبوم ۱', artist: 'آرتیست ۱', year: '۱۴۰۴', songs: 12 },
+      { id: 2, title: 'آلبوم ۲', artist: 'آرتیست ۲', year: '۱۴۰۳', songs: 10 },
+      { id: 3, title: 'آلبوم ۳', artist: 'آرتیست ۳', year: '۱۴۰۴', songs: 8 },
+    ];
+
+    let playlists = [
+      { id: 1, name: 'لیست پخش ۱', count: 12, color: '#1db954' },
+      { id: 2, name: 'لیست پخش ۲', count: 8, color: '#f91880' },
+      { id: 3, name: 'لیست پخش ۳', count: 5, color: '#8b5cf6' },
+    ];
+
+    let likedSongs = [songs[0], songs[2], songs[4]];
+    let recentlyPlayed = [songs[5], songs[3], songs[1], songs[0]];
+    let favorites = [songs[0], songs[3]];
+    let history = [songs[5], songs[4], songs[2], songs[1], songs[0]];
+
+    let currentTrackIndex = 0;
+    let isPlaying = false;
+    let currentProgress = 35;
+
+    // ===== تب‌ها =====
+    function showTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('tab-' + tabName);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+      const map = { home: 0, search: 1, library: 2, playlists: 3, liked: 4 };
+      const items = document.querySelectorAll('.sidebar-item');
+      if (map[tabName] !== undefined) items[map[tabName]]?.classList.add('active');
+
+      if (window.innerWidth <= 992) {
+        document.querySelector('.sidebar').style.display = 'none';
+      }
+    }
+
+    // ===== رندر کارت‌ها =====
+    function renderCards(containerId, items, type) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = items.map(item => {
+        let content = '';
+        if (type === 'song') {
+          content = `
+            <div class="music-card" onclick="playSong(${item.id})">
+              <div class="cover" style="background:linear-gradient(135deg, var(--accent), var(--text-muted));">
+                <i class="fas fa-music"></i>
+              </div>
+              <div class="title">${item.title}</div>
+              <div class="subtitle">${item.artist}</div>
+            </div>
+          `;
+        } else if (type === 'artist') {
+          content = `
+            <div class="music-card" onclick="showNotification('مشاهده ${item.name}')">
+              <div class="cover" style="background:linear-gradient(135deg, #8b5cf6, #a78bfa);">
+                <i class="fas fa-user"></i>
+              </div>
+              <div class="title">${item.name}</div>
+              <div class="subtitle">${item.genre} · ${item.followers}</div>
+            </div>
+          `;
+        } else if (type === 'album') {
+          content = `
+            <div class="music-card" onclick="showNotification('مشاهده ${item.title}')">
+              <div class="cover" style="background:linear-gradient(135deg, #f59e0b, #fbbf24);">
+                <i class="fas fa-compact-disc"></i>
+              </div>
+              <div class="title">${item.title}</div>
+              <div class="subtitle">${item.artist} · ${item.year}</div>
+            </div>
+          `;
+        }
+        return content;
+      }).join('');
+    }
+
+    // ===== رندر لیست پخش =====
+    function renderPlaylists() {
+      const container = document.getElementById('playlistsContainer');
+      if (!container) return;
+      container.innerHTML = playlists.map(p => `
+        <div class="playlist-item" onclick="showNotification('باز کردن ${p.name}')">
+          <div class="cover" style="background:${p.color};">${p.name.charAt(0)}</div>
+          <div class="info">
+            <div class="name">${p.name}</div>
+            <div class="count">${p.count} آهنگ</div>
+          </div>
+          <i class="fas fa-play play-btn" onclick="event.stopPropagation();showNotification('پخش ${p.name} ▶️')"></i>
+        </div>
+      `).join('');
+    }
+
+    // ===== رندر آهنگ‌های محبوب =====
+    function renderLiked() {
+      const container = document.getElementById('likedContainer');
+      if (!container) return;
+      container.innerHTML = likedSongs.map(s => `
+        <div class="playlist-item" onclick="playSong(${s.id})">
+          <div class="cover" style="background:linear-gradient(135deg, #f91880, #f5576c);"><i class="fas fa-heart"></i></div>
+          <div class="info">
+            <div class="name">${s.title}</div>
+            <div class="count">${s.artist}</div>
+          </div>
+          <i class="fas fa-play play-btn" onclick="event.stopPropagation();playSong(${s.id})"></i>
+        </div>
+      `).join('');
+    }
+
+    // ===== رندر علاقه‌مندی‌ها و تاریخچه =====
+    function renderFavoritesAndHistory() {
+      const favContainer = document.getElementById('favoritesContainer');
+      if (favContainer) {
+        favContainer.innerHTML = favorites.map(s => `
+          <div class="playlist-item" onclick="playSong(${s.id})">
+            <div class="cover" style="background:linear-gradient(135deg, #f59e0b, #fbbf24);"><i class="fas fa-star"></i></div>
+            <div class="info">
+              <div class="name">${s.title}</div>
+              <div class="count">${s.artist}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const histContainer = document.getElementById('historyContainer');
+      if (histContainer) {
+        histContainer.innerHTML = history.slice(0, 5).map(s => `
+          <div class="playlist-item" onclick="playSong(${s.id})">
+            <div class="cover" style="background:linear-gradient(135deg, #3b82f6, #60a5fa);"><i class="fas fa-clock"></i></div>
+            <div class="info">
+              <div class="name">${s.title}</div>
+              <div class="count">${s.artist}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // ===== پخش‌کننده =====
+    function playSong(id) {
+      const song = songs.find(s => s.id === id);
+      if (!song) return;
+      document.getElementById('currentTrack').textContent = song.title;
+      document.getElementById('currentArtist').textContent = song.artist;
+      currentTrackIndex = songs.indexOf(song);
+      isPlaying = true;
+      document.getElementById('playBtn').className = 'fas fa-pause-circle play-btn';
+      showNotification('در حال پخش: ' + song.title + ' ▶️');
+    }
+
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      document.getElementById('playBtn').className = isPlaying ? 'fas fa-pause-circle play-btn' : 'fas fa-play-circle play-btn';
+      showNotification(isPlaying ? 'پخش ▶️' : 'مکث ⏸️');
+    }
+
+    function nextTrack() {
+      currentTrackIndex = (currentTrackIndex + 1) % songs.length;
+      playSong(songs[currentTrackIndex].id);
+    }
+
+    function prevTrack() {
+      currentTrackIndex = (currentTrackIndex - 1 + songs.length) % songs.length;
+      playSong(songs[currentTrackIndex].id);
+    }
+
+    function seekProgress(e) {
+      const bar = e.currentTarget;
+      const rect = bar.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const progress = Math.max(0, Math.min(1, x));
+      document.getElementById('progressFill').style.width = (progress * 100) + '%';
+      showNotification('پرش به زمان ' + Math.floor(progress * 100) + '%');
+    }
+
+    function seekVolume(e) {
+      const bar = e.currentTarget;
+      const rect = bar.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const volume = Math.max(0, Math.min(1, x));
+      document.getElementById('volumeFill').style.width = (volume * 100) + '%';
+    }
+
+    function toggleMute() {
+      const fill = document.getElementById('volumeFill');
+      const current = fill.style.width;
+      fill.style.width = current === '0%' ? '70%' : '0%';
+      showNotification(current === '0%' ? 'صدا روشن 🔊' : 'بی‌صدا 🔇');
+    }
+
+    // ===== جستجو =====
+    document.getElementById('searchInput').addEventListener('input', function() {
+      const query = this.value.trim().toLowerCase();
+      const results = document.getElementById('searchResults');
+      if (!query) {
+        results.innerHTML = '<p style="color:var(--text-muted);" data-key="searchHint">برای جستجو از نوار جستجو استفاده کنید...</p>';
+        return;
+      }
+      const filtered = songs.filter(s =>
+        s.title.toLowerCase().includes(query) ||
+        s.artist.toLowerCase().includes(query) ||
+        s.genre.toLowerCase().includes(query)
+      );
+      if (filtered.length === 0) {
+        results.innerHTML = '<p style="color:var(--text-muted);">نتیجه‌ای یافت نشد ❌</p>';
+      } else {
+        results.innerHTML = filtered.map(s => `
+          <div class="playlist-item" onclick="playSong(${s.id})">
+            <div class="cover" style="background:linear-gradient(135deg, var(--accent), var(--text-muted));"><i class="fas fa-music"></i></div>
+            <div class="info">
+              <div class="name">${s.title}</div>
+              <div class="count">${s.artist} · ${s.genre}</div>
+            </div>
+            <i class="fas fa-play play-btn" onclick="event.stopPropagation();playSong(${s.id})"></i>
+          </div>
+        `).join('');
+      }
+      showTab('search');
+    });
+
+    // ===== پنل راست =====
+    function renderRightPanel() {
+      const container = document.getElementById('rightRecentlyPlayed');
+      if (container) {
+        container.innerHTML = recentlyPlayed.slice(0, 3).map(s => `
+          <div class="playlist-item" onclick="playSong(${s.id})" style="padding:4px 0;">
+            <div class="cover" style="width:32px;height:32px;font-size:0.8rem;background:linear-gradient(135deg, var(--accent), var(--text-muted));"><i class="fas fa-music"></i></div>
+            <div class="info">
+              <div class="name" style="font-size:0.8rem;">${s.title}</div>
+              <div class="count" style="font-size:0.65rem;">${s.artist}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const recContainer = document.getElementById('recommendedContainer');
+      if (recContainer) {
+        const rec = songs.slice(2, 5);
+        recContainer.innerHTML = rec.map(s => `
+          <div class="playlist-item" onclick="playSong(${s.id})" style="padding:4px 0;">
+            <div class="cover" style="width:32px;height:32px;font-size:0.8rem;background:linear-gradient(135deg, #8b5cf6, #a78bfa);"><i class="fas fa-music"></i></div>
+            <div class="info">
+              <div class="name" style="font-size:0.8rem;">${s.title}</div>
+              <div class="count" style="font-size:0.65rem;">${s.artist}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // ===== رندر اخیراً پخش شده در کتابخانه =====
+    function renderRecentlyPlayed() {
+      const container = document.getElementById('recentlyPlayed');
+      if (!container) return;
+      container.innerHTML = recentlyPlayed.slice(0, 4).map(s => `
+        <div class="playlist-item" onclick="playSong(${s.id})">
+          <div class="cover" style="background:linear-gradient(135deg, #3b82f6, #60a5fa);"><i class="fas fa-clock"></i></div>
+          <div class="info">
+            <div class="name">${s.title}</div>
+            <div class="count">${s.artist}</div>
+          </div>
+          <i class="fas fa-play play-btn" onclick="event.stopPropagation();playSong(${s.id})"></i>
+        </div>
+      `).join('');
+    }
+
+    // ===== نوتیفیکیشن =====
+    let notifTimeout;
+
+    function showNotification(message) {
+      const notif = document.getElementById('notification');
+      notif.textContent = message;
+      notif.classList.add('show');
+      clearTimeout(notifTimeout);
+      notifTimeout = setTimeout(() => notif.classList.remove('show'), 2500);
+    }
+
+    // ===== تنظیم اولیه =====
+    function init() {
+      setLanguage('fa');
+      showTab('home');
+      renderCards('featuredGrid', songs.slice(0, 4), 'song');
+      renderCards('artistsGrid', artists.slice(0, 3), 'artist');
+      renderCards('albumsGrid', albums.slice(0, 3), 'album');
+      renderPlaylists();
+      renderLiked();
+      renderFavoritesAndHistory();
+      renderRightPanel();
+      renderRecentlyPlayed();
+      renderCards('artistsFullGrid', artists, 'artist');
+
+      // آهنگ پیش‌فرض
+      playSong(songs[0].id);
+    }
+
+    init();
+    console.log('✅ سرویس استریم موسیقی کامل بارگذاری شد!');
+  </script>
+</body>
+</html>

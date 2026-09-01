@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سیستم رزرواسیون رستوران | 3D Design</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ===== RESET & BASE ===== */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+    :root {
+      --bg-primary: #f5f0eb;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --text-primary: #2d1810;
+      --text-secondary: #5a3d2e;
+      --text-muted: #8a7a6e;
+      --border-color: #e8dcd4;
+      --accent: #c0392b;
+      --accent-hover: #a93226;
+      --accent-light: #e74c3c;
+      --success: #27ae60;
+      --warning: #f39c12;
+      --shadow: 0 8px 30px rgba(0,0,0,0.08);
+      --shadow-hover: 0 16px 50px rgba(0,0,0,0.15);
+      --radius: 16px;
+      --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    body.dark-mode {
+      --bg-primary: #1a1210;
+      --bg-secondary: #2d1a14;
+      --bg-card: #3d2820;
+      --text-primary: #f5ede8;
+      --text-secondary: #d4c4b8;
+      --text-muted: #a89080;
+      --border-color: #4d3830;
+      --shadow: 0 8px 30px rgba(0,0,0,0.4);
+      --shadow-hover: 0 16px 50px rgba(0,0,0,0.6);
+    }
+    body {
+      background: var(--bg-primary);
+      min-height:100vh;
+      transition: var(--transition);
+      color: var(--text-primary);
+    }
+
+    /* ===== 3D EFFECTS ===== */
+    .card-3d {
+      perspective: 1200px;
+    }
+    .card-3d-inner {
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card-3d:hover .card-3d-inner {
+      transform: rotateY(-4deg) rotateX(2deg) translateZ(10px);
+    }
+    .card-3d .glow {
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at center, rgba(192,57,43,0.08) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.6s;
+      pointer-events: none;
+    }
+    .card-3d:hover .glow {
+      opacity: 1;
+    }
+    .float-3d {
+      animation: float3d 6s ease-in-out infinite;
+    }
+    @keyframes float3d {
+      0%,100% { transform: translateY(0) rotateX(2deg); }
+      50% { transform: translateY(-12px) rotateX(-2deg); }
+    }
+    .tilt-3d {
+      transition: transform 0.3s ease;
+    }
+    .tilt-3d:hover {
+      transform: perspective(1000px) rotateY(-5deg) rotateX(3deg) translateZ(15px);
+    }
+
+    /* ===== اسکرول ===== */
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--accent); border-radius:10px; }
+
+    /* ===== دکمه‌های کنترل ===== */
+    .control-buttons {
+      position:fixed; top:12px; right:12px; display:flex; gap:6px; z-index:9999;
+    }
+    .theme-toggle, .lang-toggle {
+      background:var(--bg-card); border:1px solid var(--border-color);
+      padding:6px 12px; border-radius:50px; cursor:pointer; font-size:0.65rem;
+      display:flex; align-items:center; gap:4px; transition:var(--transition);
+      box-shadow:var(--shadow); color:var(--text-primary);
+      backdrop-filter:blur(10px);
+    }
+    .theme-toggle:hover, .lang-toggle:hover { transform:scale(1.05) translateZ(10px); box-shadow:var(--shadow-hover); }
+    body.ltr .control-buttons { right:auto; left:12px; }
+
+    /* ===== هدر ===== */
+    .header {
+      background:var(--bg-secondary);
+      border-bottom:3px solid var(--accent);
+      padding:10px 24px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      position:sticky;
+      top:0;
+      z-index:100;
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(20px);
+      transform-style:preserve-3d;
+    }
+    .header .logo {
+      font-size:1.6rem; font-weight:700; color:var(--accent);
+      display:flex; align-items:center; gap:10px;
+      transform: translateZ(20px);
+    }
+    .header .logo i { font-size:1.8rem; }
+    .header .nav-links {
+      display:flex; gap:16px; align-items:center;
+    }
+    .header .nav-links a {
+      color:var(--text-secondary); text-decoration:none; font-weight:500;
+      cursor:pointer; transition:var(--transition); font-size:0.85rem;
+      position:relative;
+    }
+    .header .nav-links a::after {
+      content:''; position:absolute; bottom:-4px; left:0; width:0; height:2px;
+      background:var(--accent); transition:var(--transition);
+    }
+    body.ltr .header .nav-links a::after { left:0; right:auto; }
+    .header .nav-links a:hover::after { width:100%; }
+    .header .nav-links a.active { color:var(--accent); font-weight:700; }
+    .header .nav-links a.active::after { width:100%; }
+    .header-actions {
+      display:flex; gap:16px; align-items:center;
+    }
+    .header-actions i {
+      font-size:1.2rem; cursor:pointer; color:var(--text-secondary);
+      transition:var(--transition);
+    }
+    .header-actions i:hover { color:var(--accent); transform:scale(1.1) translateZ(10px); }
+    .header-avatar {
+      width:32px; height:32px; border-radius:50%;
+      background:var(--accent); display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:600; font-size:0.8rem; cursor:pointer;
+      transition:var(--transition);
+    }
+    .header-avatar:hover { transform:scale(1.1) rotate(10deg); }
+
+    /* ===== محتوای اصلی ===== */
+    .main-content {
+      max-width:1200px; margin:0 auto; padding:20px 24px;
+    }
+
+    /* ===== تب‌ها ===== */
+    .tab-content { display:none; animation:fadeIn3D 0.6s ease; }
+    .tab-content.active { display:block; }
+    @keyframes fadeIn3D {
+      0% { opacity:0; transform:perspective(800px) rotateY(10deg) translateZ(-50px); }
+      100% { opacity:1; transform:perspective(800px) rotateY(0deg) translateZ(0); }
+    }
+
+    /* ===== منو ===== */
+    .menu-categories {
+      display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;
+    }
+    .menu-categories button {
+      padding:8px 20px; border:2px solid var(--border-color);
+      border-radius:50px; background:var(--bg-card);
+      color:var(--text-secondary); cursor:pointer;
+      transition:var(--transition); font-weight:600;
+      transform-style:preserve-3d;
+    }
+    .menu-categories button:hover { transform:translateY(-3px) translateZ(10px); box-shadow:var(--shadow); }
+    .menu-categories button.active {
+      background:var(--accent); color:#fff; border-color:var(--accent);
+    }
+
+    .menu-grid {
+      display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+      gap:20px;
+    }
+    .menu-item {
+      background:var(--bg-card); border-radius:var(--radius);
+      overflow:hidden; border:1px solid var(--border-color);
+      transition:var(--transition);
+      transform-style:preserve-3d;
+      position:relative;
+    }
+    .menu-item:hover { transform:translateY(-8px) translateZ(20px) rotateX(2deg); box-shadow:var(--shadow-hover); }
+    .menu-item .image {
+      height:160px; background:linear-gradient(135deg, var(--accent), var(--accent-hover));
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:3rem; position:relative;
+    }
+    .menu-item .image .badge {
+      position:absolute; top:12px; right:12px;
+      background:rgba(0,0,0,0.7); color:#fff; padding:4px 12px;
+      border-radius:50px; font-size:0.65rem; font-weight:600;
+    }
+    body.ltr .menu-item .image .badge { right:auto; left:12px; }
+    .menu-item .content { padding:14px; }
+    .menu-item .content .title { font-size:1rem; font-weight:700; }
+    .menu-item .content .desc { font-size:0.85rem; color:var(--text-secondary); margin:4px 0; }
+    .menu-item .content .price {
+      font-size:1.2rem; font-weight:700; color:var(--accent);
+    }
+    .menu-item .content .actions {
+      display:flex; gap:8px; margin-top:8px;
+    }
+    .menu-item .content .actions button {
+      padding:6px 16px; border:none; border-radius:8px;
+      cursor:pointer; font-weight:600; transition:var(--transition);
+    }
+    .menu-item .content .actions .order-btn {
+      background:var(--accent); color:#fff;
+    }
+    .menu-item .content .actions .order-btn:hover { background:var(--accent-hover); transform:scale(1.05); }
+    .menu-item .content .actions .order-btn.in-cart { background:var(--success); }
+
+    /* ===== رزرو میز ===== */
+    .reservation-form {
+      background:var(--bg-card); border-radius:var(--radius);
+      padding:24px; border:1px solid var(--border-color);
+      box-shadow:var(--shadow);
+      transform-style:preserve-3d;
+    }
+    .reservation-form .form-grid {
+      display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;
+    }
+    .reservation-form .form-grid .full { grid-column:1/-1; }
+    .reservation-form .form-group label {
+      display:block; font-size:0.85rem; font-weight:500; margin-bottom:4px;
+    }
+    .reservation-form .form-group input, .reservation-form .form-group select {
+      width:100%; padding:8px 12px; border:1px solid var(--border-color);
+      border-radius:8px; background:var(--bg-primary);
+      color:var(--text-primary); font-size:0.85rem;
+      transition:var(--transition);
+    }
+    .reservation-form .form-group input:focus, .reservation-form .form-group select:focus {
+      border-color:var(--accent); outline:none; box-shadow:0 0 0 4px rgba(192,57,43,0.1);
+    }
+    .reservation-form .form-actions { margin-top:16px; }
+    .reservation-form .form-actions button {
+      padding:10px 32px; background:var(--accent); color:#fff;
+      border:none; border-radius:8px; font-weight:600; cursor:pointer;
+      transition:var(--transition);
+    }
+    .reservation-form .form-actions button:hover { background:var(--accent-hover); transform:scale(1.02); }
+
+    /* ===== سفارش آنلاین ===== */
+    .order-summary {
+      background:var(--bg-card); border-radius:var(--radius);
+      padding:16px; border:1px solid var(--border-color);
+      position:sticky; top:80px;
+      transform-style:preserve-3d;
+    }
+    .order-item {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:6px 0; border-bottom:1px solid var(--border-color);
+    }
+    .order-item:last-child { border-bottom:none; }
+    .order-item .name { font-weight:500; }
+    .order-item .price { color:var(--accent); font-weight:600; }
+    .order-item .remove-btn {
+      color:var(--danger); cursor:pointer; font-size:0.8rem;
+      transition:var(--transition);
+    }
+    .order-item .remove-btn:hover { transform:scale(1.2); }
+    .order-total {
+      display:flex; justify-content:space-between; padding:10px 0;
+      font-weight:700; font-size:1.1rem; border-top:2px solid var(--border-color);
+    }
+    .order-total .total-price { color:var(--accent); }
+
+    /* ===== تقویم رزرو ===== */
+    .calendar-3d {
+      background:var(--bg-card); border-radius:var(--radius);
+      padding:20px; border:1px solid var(--border-color);
+      transform-style:preserve-3d;
+      perspective:1000px;
+    }
+    .calendar-header {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:16px;
+    }
+    .calendar-header button {
+      padding:6px 14px; background:var(--bg-primary); border:none;
+      border-radius:8px; cursor:pointer; transition:var(--transition);
+      color:var(--text-primary);
+    }
+    .calendar-header button:hover { background:var(--border-color); transform:scale(1.05); }
+    .calendar-grid {
+      display:grid; grid-template-columns:repeat(7,1fr); gap:4px;
+    }
+    .calendar-grid .day-name {
+      text-align:center; font-weight:600; font-size:0.8rem;
+      color:var(--text-muted); padding:6px 0;
+    }
+    .calendar-grid .day {
+      text-align:center; padding:8px 0; border-radius:8px;
+      font-size:0.85rem; transition:var(--transition);
+      cursor:pointer; min-height:45px; position:relative;
+      transform-style:preserve-3d;
+    }
+    .calendar-grid .day:hover { transform:translateZ(10px); background:var(--bg-primary); }
+    .calendar-grid .day.available { background:rgba(39,174,96,0.15); color:var(--success); }
+    .calendar-grid .day.booked { background:rgba(192,57,43,0.15); color:var(--accent); cursor:not-allowed; }
+    .calendar-grid .day.partial { background:rgba(243,156,18,0.15); color:var(--warning); }
+    .calendar-grid .day.today { border:2px solid var(--accent); }
+    .calendar-grid .day .table-count {
+      font-size:0.55rem; opacity:0.7; display:block;
+    }
+
+    /* ===== نوتیفیکیشن ===== */
+    .notification {
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
+      background:var(--text-primary); color:var(--bg-primary); padding:10px 20px;
+      border-radius:12px; font-size:0.85rem; z-index:9999; opacity:0;
+      transition:0.5s; pointer-events:none; box-shadow:0 8px 30px rgba(0,0,0,0.3);
+      transform-style:preserve-3d;
+    }
+    body.dark-mode .notification { background:#2a2a2a; color:#e8e8e8; }
+    .notification.show { opacity:1; transform:translateX(-50%) translateY(0) translateZ(20px); }
+
+    /* ===== واکنش‌گرایی ===== */
+    @media (max-width:992px) {
+      .header { flex-wrap:wrap; gap:8px; padding:8px 12px; }
+      .header .nav-links { flex-wrap:wrap; gap:8px; }
+      .reservation-form .form-grid { grid-template-columns:1fr; }
+      .reservation-form .form-grid .full { grid-column:1; }
+      .menu-grid { grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); }
+    }
+    @media (max-width:768px) {
+      .main-content { padding:12px; }
+      .control-buttons { top:6px; right:6px; gap:4px; }
+      .theme-toggle, .lang-toggle { padding:4px 8px; font-size:0.55rem; }
+      .menu-grid { grid-template-columns:1fr; }
+      .calendar-grid .day { font-size:0.7rem; padding:4px 0; min-height:35px; }
+    }
+    @media (max-width:480px) {
+      .header .logo span { display:none; }
+      .header .logo { font-size:1.1rem; }
+      .header-actions i { font-size:0.9rem; }
+    }
+
+    body.ltr { direction:ltr; text-align:left; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== دکمه‌های کنترل ===== -->
+  <div class="control-buttons">
+    <button class="theme-toggle" id="themeToggleBtn"><i class="fas fa-moon"></i> <span id="themeLabel">دارک</span></button>
+    <button class="lang-toggle" id="langToggleBtn"><i class="fas fa-globe"></i> <span id="langLabel">English</span></button>
+  </div>
+
+  <!-- ===== نوتیفیکیشن ===== -->
+  <div class="notification" id="notification"></div>
+
+  <!-- ===== هدر ===== -->
+  <header class="header">
+    <div class="logo"><i class="fas fa-utensils"></i> <span id="brandName">رستوران سه‌بعدی</span></div>
+    <div class="nav-links">
+      <a class="active" onclick="showTab('menu')" data-key="navMenu">منو</a>
+      <a onclick="showTab('reservation')" data-key="navReservation">رزرو میز</a>
+      <a onclick="showTab('orders')" data-key="navOrders">سفارشات</a>
+      <a onclick="showTab('calendar')" data-key="navCalendar">تقویم</a>
+      <a onclick="showTab('admin')" data-key="navAdmin">داشبورد</a>
+    </div>
+    <div class="header-actions">
+      <i class="fas fa-bell" onclick="showNotification('اعلان‌ها 🔔')"></i>
+      <div class="header-avatar" onclick="showNotification('پروفایل')">ع</div>
+    </div>
+  </header>
+
+  <!-- ===== محتوای اصلی ===== -->
+  <div class="main-content">
+
+    <!-- ===== تب منو ===== -->
+    <div class="tab-content active" id="tab-menu">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+        <h2><i class="fas fa-utensils" style="color:var(--accent);"></i> <span data-key="menuTitle">منوی رستوران</span></h2>
+        <div class="menu-categories" id="menuCategories">
+          <button class="active" onclick="filterMenu('all')">همه</button>
+          <button onclick="filterMenu('پیش‌غذا')">پیش‌غذا</button>
+          <button onclick="filterMenu('غذا')">غذا</button>
+          <button onclick="filterMenu('دسر')">دسر</button>
+          <button onclick="filterMenu('نوشیدنی')">نوشیدنی</button>
+        </div>
+      </div>
+      <div class="menu-grid" id="menuGrid">
+        <!-- توسط JS ساخته می‌شود -->
+      </div>
+    </div>
+
+    <!-- ===== تب رزرو ===== -->
+    <div class="tab-content" id="tab-reservation">
+      <h2 style="margin-bottom:16px;"><i class="fas fa-calendar-check" style="color:var(--accent);"></i> <span data-key="reserveTitle">رزرو میز</span></h2>
+      <div class="reservation-form card-3d">
+        <div class="card-3d-inner">
+          <div class="glow"></div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label data-key="lblDate">تاریخ</label>
+              <input type="date" id="reserveDate">
+            </div>
+            <div class="form-group">
+              <label data-key="lblTime">ساعت</label>
+              <select id="reserveTime">
+                <option value="12:00">۱۲:۰۰</option>
+                <option value="13:00">۱۳:۰۰</option>
+                <option value="14:00">۱۴:۰۰</option>
+                <option value="19:00">۱۹:۰۰</option>
+                <option value="20:00">۲۰:۰۰</option>
+                <option value="21:00">۲۱:۰۰</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label data-key="lblPeople">تعداد نفرات</label>
+              <select id="reservePeople">
+                <option value="1">۱</option>
+                <option value="2">۲</option>
+                <option value="3">۳</option>
+                <option value="4">۴</option>
+                <option value="5">۵</option>
+                <option value="6">۶</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label data-key="lblName">نام و نام خانوادگی</label>
+              <input type="text" id="reserveName" placeholder="نام شما ...">
+            </div>
+            <div class="form-group full">
+              <label data-key="lblPhone">شماره تماس</label>
+              <input type="text" id="reservePhone" placeholder="۰۹۱۲۱۲۳۴۵۶۷">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button onclick="makeReservation()" data-key="reserveBtn">رزرو میز</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <h4 style="margin-bottom:8px;">🪑 وضعیت میزها</h4>
+        <div id="tableStatus" style="display:flex;gap:12px;flex-wrap:wrap;">
+          <span style="padding:4px 14px;border-radius:50px;background:rgba(39,174,96,0.15);color:var(--success);">✅ موجود</span>
+          <span style="padding:4px 14px;border-radius:50px;background:rgba(192,57,43,0.15);color:var(--accent);">❌ پر</span>
+          <span style="padding:4px 14px;border-radius:50px;background:rgba(243,156,18,0.15);color:var(--warning);">⚠️ نیمه‌پر</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== تب سفارشات ===== -->
+    <div class="tab-content" id="tab-orders">
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+        <div>
+          <h3 style="margin-bottom:12px;"><i class="fas fa-shopping-cart" style="color:var(--accent);"></i> <span data-key="orderTitle">سفارش آنلاین</span></h3>
+          <div id="orderItemsContainer">
+            <!-- توسط JS ساخته می‌شود -->
+          </div>
+        </div>
+        <div>
+          <div class="order-summary card-3d">
+            <div class="card-3d-inner">
+              <div class="glow"></div>
+              <h4 style="margin-bottom:12px;" data-key="cartTitle">سبد خرید</h4>
+              <div id="cartItems">
+                <p style="color:var(--text-muted);" data-key="emptyCart">سبد خرید خالی است</p>
+              </div>
+              <div class="order-total">
+                <span data-key="total">مجموع</span>
+                <span class="total-price" id="cartTotal">۰ تومان</span>
+              </div>
+              <button onclick="submitOrder()" style="width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:var(--transition);" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'" data-key="submitOrder">ثبت سفارش</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== تب تقویم ===== -->
+    <div class="tab-content" id="tab-calendar">
+      <h2 style="margin-bottom:16px;"><i class="fas fa-calendar-alt" style="color:var(--accent);"></i> <span data-key="calendarTitle">تقویم رزرو میزها</span></h2>
+      <div class="calendar-3d">
+        <div class="calendar-header">
+          <button onclick="changeCalMonth(-1)"><i class="fas fa-chevron-right"></i></button>
+          <h3 id="calendarMonth">مهر ۱۴۰۵</h3>
+          <button onclick="changeCalMonth(1)"><i class="fas fa-chevron-left"></i></button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== تب داشبورد ===== -->
+    <div class="tab-content" id="tab-admin">
+      <h2 style="margin-bottom:16px;"><i class="fas fa-chart-bar" style="color:var(--accent);"></i> <span data-key="adminTitle">داشبورد مدیریت</span></h2>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;">
+        <div style="background:var(--bg-card);border-radius:var(--radius);padding:16px;text-align:center;border:1px solid var(--border-color);transform-style:preserve-3d;transition:var(--transition);" onmouseover="this.style.transform='translateZ(20px)'" onmouseout="this.style.transform='translateZ(0)'">
+          <div style="font-size:2rem;font-weight:700;color:var(--accent);" id="statReservations">۰</div>
+          <div style="font-size:0.85rem;color:var(--text-muted);" data-key="statReservations">کل رزروها</div>
+        </div>
+        <div style="background:var(--bg-card);border-radius:var(--radius);padding:16px;text-align:center;border:1px solid var(--border-color);transform-style:preserve-3d;transition:var(--transition);" onmouseover="this.style.transform='translateZ(20px)'" onmouseout="this.style.transform='translateZ(0)'">
+          <div style="font-size:2rem;font-weight:700;color:var(--success);" id="statOrders">۰</div>
+          <div style="font-size:0.85rem;color:var(--text-muted);" data-key="statOrders">سفارشات</div>
+        </div>
+        <div style="background:var(--bg-card);border-radius:var(--radius);padding:16px;text-align:center;border:1px solid var(--border-color);transform-style:preserve-3d;transition:var(--transition);" onmouseover="this.style.transform='translateZ(20px)'" onmouseout="this.style.transform='translateZ(0)'">
+          <div style="font-size:2rem;font-weight:700;color:var(--warning);" id="statRevenue">۰</div>
+          <div style="font-size:0.85rem;color:var(--text-muted);" data-key="statRevenue">درآمد (تومان)</div>
+        </div>
+        <div style="background:var(--bg-card);border-radius:var(--radius);padding:16px;text-align:center;border:1px solid var(--border-color);transform-style:preserve-3d;transition:var(--transition);" onmouseover="this.style.transform='translateZ(20px)'" onmouseout="this.style.transform='translateZ(0)'">
+          <div style="font-size:2rem;font-weight:700;color:var(--accent-light);" id="statReviews">۰</div>
+          <div style="font-size:0.85rem;color:var(--text-muted);" data-key="statReviews">نظرات</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div style="background:var(--bg-card);border-radius:var(--radius);padding:16px;border:1px solid var(--border-color);">
+          <h4 style="margin-bottom:12px;"><i class="fas fa-users"></i> <span data-key="reservationsList">لیست رزروها</span></h4>
+          <div id="reservationsList"></div>
+        </div>
+        <div style="background:var(--bg-card);border-radius:var(--radius);padding:16px;border:1px solid var(--border-color);">
+          <h4 style="margin-bottom:12px;"><i class="fas fa-comment"></i> <span data-key="reviewsTitle">نظرات</span></h4>
+          <div id="adminReviews"></div>
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+            <input type="text" id="reviewName" placeholder="نام ..." style="flex:1;min-width:80px;padding:6px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-primary);color:var(--text-primary);">
+            <select id="reviewRating" style="padding:6px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-primary);color:var(--text-primary);">
+              <option value="5">⭐</option><option value="4">⭐⭐</option>
+              <option value="3">⭐⭐⭐</option><option value="2">⭐⭐⭐⭐</option>
+              <option value="1">⭐⭐⭐⭐⭐</option>
+            </select>
+            <input type="text" id="reviewText" placeholder="نظر ..." style="flex:2;min-width:120px;padding:6px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-primary);color:var(--text-primary);">
+            <button onclick="addAdminReview()" style="padding:6px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;">ثبت</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ===== دیکشنری =====
+    const dict = {
+      fa: {
+        brandName: 'رستوران سه‌بعدی',
+        navMenu: 'منو',
+        navReservation: 'رزرو میز',
+        navOrders: 'سفارشات',
+        navCalendar: 'تقویم',
+        navAdmin: 'داشبورد',
+        menuTitle: 'منوی رستوران',
+        reserveTitle: 'رزرو میز',
+        orderTitle: 'سفارش آنلاین',
+        calendarTitle: 'تقویم رزرو میزها',
+        adminTitle: 'داشبورد مدیریت',
+        lblDate: 'تاریخ',
+        lblTime: 'ساعت',
+        lblPeople: 'تعداد نفرات',
+        lblName: 'نام و نام خانوادگی',
+        lblPhone: 'شماره تماس',
+        reserveBtn: 'رزرو میز',
+        cartTitle: 'سبد خرید',
+        emptyCart: 'سبد خرید خالی است',
+        total: 'مجموع',
+        submitOrder: 'ثبت سفارش',
+        statReservations: 'کل رزروها',
+        statOrders: 'سفارشات',
+        statRevenue: 'درآمد (تومان)',
+        statReviews: 'نظرات',
+        reservationsList: 'لیست رزروها',
+        reviewsTitle: 'نظرات'
+      },
+      en: {
+        brandName: '3D Restaurant',
+        navMenu: 'Menu',
+        navReservation: 'Reserve Table',
+        navOrders: 'Orders',
+        navCalendar: 'Calendar',
+        navAdmin: 'Dashboard',
+        menuTitle: 'Restaurant Menu',
+        reserveTitle: 'Reserve a Table',
+        orderTitle: 'Online Order',
+        calendarTitle: 'Reservation Calendar',
+        adminTitle: 'Management Dashboard',
+        lblDate: 'Date',
+        lblTime: 'Time',
+        lblPeople: 'People',
+        lblName: 'Full Name',
+        lblPhone: 'Phone Number',
+        reserveBtn: 'Reserve Table',
+        cartTitle: 'Cart',
+        emptyCart: 'Cart is empty',
+        total: 'Total',
+        submitOrder: 'Submit Order',
+        statReservations: 'Total Reservations',
+        statOrders: 'Orders',
+        statRevenue: 'Revenue (USD)',
+        statReviews: 'Reviews',
+        reservationsList: 'Reservations List',
+        reviewsTitle: 'Reviews'
+      }
+    };
+
+    let currentLang = 'fa';
+    const body = document.body;
+    const langBtn = document.getElementById('langToggleBtn');
+    const langLabel = document.getElementById('langLabel');
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      if (lang === 'en') {
+        body.classList.add('ltr');
+        body.setAttribute('dir', 'ltr');
+        document.documentElement.lang = 'en';
+        langLabel.textContent = 'فارسی';
+      } else {
+        body.classList.remove('ltr');
+        body.setAttribute('dir', 'rtl');
+        document.documentElement.lang = 'fa';
+        langLabel.textContent = 'English';
+      }
+      const d = dict[lang];
+      document.querySelectorAll('[data-key]').forEach(el => {
+        const key = el.getAttribute('data-key');
+        if (d[key] !== undefined) el.textContent = d[key];
+      });
+      document.getElementById('brandName').textContent = d.brandName;
+    }
+
+    langBtn.addEventListener('click', function() {
+      setLanguage(currentLang === 'fa' ? 'en' : 'fa');
+    });
+
+    // ===== دارک مود =====
+    const darkToggleBtn = document.getElementById('themeToggleBtn');
+    const themeLabel = document.getElementById('themeLabel');
+
+    function toggleDarkMode() {
+      body.classList.toggle('dark-mode');
+      const isDark = body.classList.contains('dark-mode');
+      themeLabel.textContent = isDark ? 'روشن' : 'دارک';
+      darkToggleBtn.innerHTML = `<i class="fas ${isDark ? 'fa-sun' : 'fa-moon'}"></i> ${isDark ? 'روشن' : 'دارک'}`;
+    }
+    darkToggleBtn.addEventListener('click', toggleDarkMode);
+
+    // ===== داده‌ها =====
+    let menuItems = [
+      { id: 1, name: 'کباب برگ', category: 'غذا', price: 180000, description: 'کباب برگ مخصوص با برنج زعفرانی', image: '🥩' },
+      { id: 2, name: 'زرشک پلو با مرغ', category: 'غذا', price: 150000, description: 'زرشک پلو با مرغ و زعفران', image: '🍗' },
+      { id: 3, name: 'سالاد فصل', category: 'پیش‌غذا', price: 80000, description: 'سالاد تازه با سس مخصوص', image: '🥗' },
+      { id: 4, name: 'دسر شکلاتی', category: 'دسر', price: 60000, description: 'کیک شکلاتی با بستنی وانیلی', image: '🍰' },
+      { id: 5, name: 'نوشیدنی لیموناد', category: 'نوشیدنی', price: 40000, description: 'لیموناد طبیعی با نعناع', image: '🍹' },
+      { id: 6, name: 'قورمه سبزی', category: 'غذا', price: 200000, description: 'قورمه سبزی اصیل با گوشت و سبزیجات', image: '🍲' },
+      { id: 7, name: 'سوپ کدو', category: 'پیش‌غذا', price: 70000, description: 'سوپ کدو تنبل با خامه', image: '🥣' },
+      { id: 8, name: 'بستنی سنتی', category: 'دسر', price: 50000, description: 'بستنی سنتی با زعفران و پسته', image: '🍦' }
+    ];
+
+    let cart = [];
+    let reservations = [];
+    let orders = [];
+    let reviews = [
+      { id: 1, user: 'علی رضایی', rating: 5, text: 'غذاها عالی و خدمات فوق‌العاده بود!', time: '۲ هفته پیش' },
+      { id: 2, user: 'سارا محمدی', rating: 4, text: 'محیط دلپذیر و غذاهای خوشمزه', time: '۱ ماه پیش' }
+    ];
+    let nextOrderId = 1;
+    let nextReservationId = 1;
+    let nextReviewId = 3;
+    let currentMenuFilter = 'all';
+    let calMonth = new Date().getMonth();
+    let calYear = new Date().getFullYear();
+
+    // داده‌های نمونه رزرو
+    const today = new Date();
+    for (let i = 1; i <= 5; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() + i);
+      reservations.push({
+        id: nextReservationId++,
+        date: d.toISOString().split('T')[0],
+        time: '۲۰:۰۰',
+        people: 2 + i % 3,
+        name: `مهمان ${i}`,
+        phone: `۰۹۱۲۱۲۳۴۵۶${i}`,
+        status: 'confirmed'
+      });
+    }
+
+    // ===== تب‌ها =====
+    function showTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('tab-' + tabName);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
+      const map = { menu: 0, reservation: 1, orders: 2, calendar: 3, admin: 4 };
+      const links = document.querySelectorAll('.nav-links a');
+      if (map[tabName] !== undefined) links[map[tabName]]?.classList.add('active');
+
+      if (tabName === 'menu') renderMenu();
+      if (tabName === 'orders') renderOrderItems();
+      if (tabName === 'calendar') renderCalendar();
+      if (tabName === 'admin') renderAdmin();
+    }
+
+    // ===== منو =====
+    function renderMenu(category = 'all') {
+      const grid = document.getElementById('menuGrid');
+      const filtered = category === 'all' ? menuItems : menuItems.filter(m => m.category === category);
+      grid.innerHTML = filtered.map(item => `
+        <div class="menu-item card-3d">
+          <div class="card-3d-inner">
+            <div class="glow"></div>
+            <div class="image">
+              ${item.image}
+              <span class="badge">${item.category}</span>
+            </div>
+            <div class="content">
+              <div class="title">${item.name}</div>
+              <div class="desc">${item.description}</div>
+              <div class="price">${item.price.toLocaleString()} تومان</div>
+              <div class="actions">
+                <button class="order-btn ${cart.some(c => c.id === item.id) ? 'in-cart' : ''}" onclick="toggleCart(${item.id})">
+                  ${cart.some(c => c.id === item.id) ? '✓ در سبد' : 'افزودن به سبد'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterMenu(category) {
+      currentMenuFilter = category;
+      document.querySelectorAll('.menu-categories button').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.menu-categories button').forEach(btn => {
+        if (btn.textContent.trim() === (category === 'all' ? 'همه' : category)) btn.classList.add('active');
+      });
+      renderMenu(category);
+    }
+
+    // ===== سبد خرید =====
+    function toggleCart(itemId) {
+      const item = menuItems.find(m => m.id === itemId);
+      if (!item) return;
+      const index = cart.findIndex(c => c.id === itemId);
+      if (index > -1) {
+        cart.splice(index, 1);
+        showNotification(`${item.name} از سبد خرید حذف شد`);
+      } else {
+        cart.push({ ...item, quantity: 1 });
+        showNotification(`${item.name} به سبد خرید اضافه شد ✅`);
+      }
+      renderMenu(currentMenuFilter);
+      renderOrderItems();
+    }
+
+    function renderOrderItems() {
+      const container = document.getElementById('orderItemsContainer');
+      if (cart.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted);">هیچ آیتمی در سبد خرید نیست</p>';
+        return;
+      }
+      container.innerHTML = cart.map(item => `
+        <div class="order-item" style="background:var(--bg-card);border-radius:8px;padding:8px 12px;margin-bottom:6px;border:1px solid var(--border-color);">
+          <span class="name">${item.name} × ${item.quantity}</span>
+          <span class="price">${(item.price * item.quantity).toLocaleString()} تومان</span>
+          <span class="remove-btn" onclick="toggleCart(${item.id})"><i class="fas fa-times"></i></span>
+        </div>
+      `).join('');
+
+      const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      document.getElementById('cartTotal').textContent = total.toLocaleString() + ' تومان';
+
+      const cartContainer = document.getElementById('cartItems');
+      if (cart.length === 0) {
+        cartContainer.innerHTML = '<p style="color:var(--text-muted);">سبد خرید خالی است</p>';
+      } else {
+        cartContainer.innerHTML = cart.map(item => `
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-color);font-size:0.85rem;">
+            <span>${item.name}</span>
+            <span>${item.price.toLocaleString()} تومان</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // ===== سفارش =====
+    function submitOrder() {
+      if (cart.length === 0) {
+        showNotification('❌ سبد خرید خالی است!');
+        return;
+      }
+      const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      orders.push({
+        id: nextOrderId++,
+        items: [...cart],
+        total: total,
+        date: new Date().toLocaleDateString('fa-IR'),
+        status: 'pending'
+      });
+      cart = [];
+      renderOrderItems();
+      renderAdmin();
+      showNotification('✅ سفارش شما با موفقیت ثبت شد! غذاها در حال آماده‌سازی هستند.');
+    }
+
+    // ===== رزرو میز =====
+    function makeReservation() {
+      const date = document.getElementById('reserveDate').value;
+      const time = document.getElementById('reserveTime').value;
+      const people = parseInt(document.getElementById('reservePeople').value);
+      const name = document.getElementById('reserveName').value.trim();
+      const phone = document.getElementById('reservePhone').value.trim();
+
+      if (!date || !name || !phone) {
+        showNotification('❌ لطفاً تمام فیلدها را پر کنید!');
+        return;
+      }
+
+      // بررسی تداخل رزرو
+      const conflict = reservations.some(r => r.date === date && r.time === time);
+      if (conflict) {
+        showNotification('❌ متأسفیم، در این زمان میز پر است!');
+        return;
+      }
+
+      reservations.push({
+        id: nextReservationId++,
+        date, time, people, name, phone,
+        status: 'confirmed'
+      });
+
+      document.getElementById('reserveName').value = '';
+      document.getElementById('reservePhone').value = '';
+      renderAdmin();
+      showNotification(`✅ رزرو میز برای ${name} در تاریخ ${date} ساعت ${time} با موفقیت انجام شد!`);
+    }
+
+    // ===== تقویم =====
+    function renderCalendar() {
+      const grid = document.getElementById('calendarGrid');
+      const monthNames = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+      const dayNames = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+
+      document.getElementById('calendarMonth').textContent = `${monthNames[calMonth]} ${calYear}`;
+
+      let html = dayNames.map(d => `<div class="day-name">${d}</div>`).join('');
+
+      const firstDay = new Date(calYear, calMonth, 1).getDay();
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+
+      for (let i = 0; i < firstDay; i++) {
+        html += `<div class="day" style="background:transparent;"></div>`;
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isToday = dateStr === todayStr;
+
+        const resCount = reservations.filter(r => r.date === dateStr).length;
+        let status = 'available';
+        if (resCount >= 5) status = 'booked';
+        else if (resCount > 0) status = 'partial';
+
+        const statusClass = status === 'available' ? 'available' : status === 'booked' ? 'booked' : 'partial';
+        const todayClass = isToday ? 'today' : '';
+
+        html += `
+          <div class="day ${statusClass} ${todayClass}" onclick="showDayReservations('${dateStr}')">
+            ${d}
+            <span class="table-count">${resCount}/۵ میز</span>
+          </div>
+        `;
+      }
+
+      grid.innerHTML = html;
+    }
+
+    function changeCalMonth(delta) {
+      calMonth += delta;
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      renderCalendar();
+    }
+
+    function showDayReservations(dateStr) {
+      const dayRes = reservations.filter(r => r.date === dateStr);
+      if (dayRes.length === 0) {
+        showNotification('📅 در این روز رزروی وجود ندارد');
+        return;
+      }
+      const list = dayRes.map(r => `• ${r.name} - ${r.time} (${r.people} نفر)`).join('\n');
+      alert(`📅 رزروهای ${dateStr}:\n\n${list}`);
+    }
+
+    // ===== داشبورد مدیریت =====
+    function renderAdmin() {
+      document.getElementById('statReservations').textContent = reservations.length;
+      document.getElementById('statOrders').textContent = orders.length;
+      const revenue = orders.reduce((sum, o) => sum + o.total, 0);
+      document.getElementById('statRevenue').textContent = revenue.toLocaleString();
+      document.getElementById('statReviews').textContent = reviews.length;
+
+      // لیست رزروها
+      const list = document.getElementById('reservationsList');
+      if (reservations.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted);">هیچ رزروی وجود ندارد</p>';
+      } else {
+        list.innerHTML = reservations.map(r => `
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-color);font-size:0.85rem;">
+            <span><strong>${r.name}</strong> - ${r.date} ${r.time}</span>
+            <span>${r.people} نفر <span style="color:var(--success);">✓</span></span>
+          </div>
+        `).join('');
+      }
+
+      // نظرات در ادمین
+      const reviewContainer = document.getElementById('adminReviews');
+      if (reviews.length === 0) {
+        reviewContainer.innerHTML = '<p style="color:var(--text-muted);">هنوز نظری ثبت نشده است</p>';
+      } else {
+        reviewContainer.innerHTML = reviews.map(r => `
+          <div style="padding:6px 0;border-bottom:1px solid var(--border-color);font-size:0.85rem;">
+            <div><strong>${r.user}</strong> ${'⭐'.repeat(r.rating)}</div>
+            <div style="color:var(--text-secondary);">${r.text}</div>
+            <div style="font-size:0.7rem;color:var(--text-muted);">${r.time}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // ===== افزودن نظر در داشبورد =====
+    function addAdminReview() {
+      const name = document.getElementById('reviewName').value.trim() || 'کاربر مهمان';
+      const rating = parseInt(document.getElementById('reviewRating').value);
+      const text = document.getElementById('reviewText').value.trim();
+      if (!text) { showNotification('لطفاً متن نظر را وارد کنید!'); return; }
+
+      reviews.push({
+        id: nextReviewId++,
+        user: name,
+        rating: rating,
+        text: text,
+        time: 'همین الان'
+      });
+
+      document.getElementById('reviewText').value = '';
+      renderAdmin();
+      showNotification('✅ نظر شما با موفقیت ثبت شد!');
+    }
+
+    // ===== نوتیفیکیشن =====
+    let notifTimeout;
+
+    function showNotification(message) {
+      const notif = document.getElementById('notification');
+      notif.textContent = message;
+      notif.classList.add('show');
+      clearTimeout(notifTimeout);
+      notifTimeout = setTimeout(() => notif.classList.remove('show'), 2500);
+    }
+
+    // ===== تنظیم اولیه =====
+    setLanguage('fa');
+    renderMenu();
+    renderCalendar();
+    renderAdmin();
+
+    // تنظیم تاریخ پیش‌فرض رزرو
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('reserveDate').value = tomorrow.toISOString().split('T')[0];
+
+    console.log('✅ سیستم رزرواسیون رستوران سه‌بعدی بارگذاری شد!');
+  </script>
+</body>
+</html>

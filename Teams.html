@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>پلتفرم هم‌کاری تیمی | TeamHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ===== RESET & BASE ===== */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+    :root {
+      --bg-primary: #f0f2f5;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --text-primary: #1a1a2e;
+      --text-secondary: #4a4a6a;
+      --text-muted: #8a8aa8;
+      --border-color: #e8ecf1;
+      --accent: #4f46e5;
+      --accent-hover: #4338ca;
+      --accent-light: #818cf8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 4px 20px rgba(0,0,0,0.04);
+      --shadow-hover: 0 8px 40px rgba(0,0,0,0.08);
+      --radius: 12px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    body.dark-mode {
+      --bg-primary: #0a0a1a;
+      --bg-secondary: #12122a;
+      --bg-card: #1a1a3a;
+      --text-primary: #e8edf5;
+      --text-secondary: #b0b8d0;
+      --text-muted: #6a7a9a;
+      --border-color: #2a2a4a;
+      --shadow: 0 4px 20px rgba(0,0,0,0.3);
+      --shadow-hover: 0 8px 40px rgba(0,0,0,0.5);
+    }
+    body {
+      background: var(--bg-primary);
+      min-height:100vh;
+      transition: var(--transition);
+      color: var(--text-primary);
+    }
+
+    /* ===== اسکرول ===== */
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--text-muted); border-radius:10px; }
+
+    /* ===== دکمه‌های کنترل ===== */
+    .control-buttons {
+      position:fixed; top:12px; right:12px; display:flex; gap:6px; z-index:9999;
+    }
+    .theme-toggle, .lang-toggle {
+      background:var(--bg-card); border:1px solid var(--border-color);
+      padding:6px 12px; border-radius:50px; cursor:pointer; font-size:0.65rem;
+      display:flex; align-items:center; gap:4px; transition:var(--transition);
+      box-shadow:var(--shadow); color:var(--text-primary);
+    }
+    .theme-toggle:hover, .lang-toggle:hover { transform:scale(1.05); box-shadow:var(--shadow-hover); }
+    body.ltr .control-buttons { right:auto; left:12px; }
+
+    /* ===== هدر ===== */
+    .header {
+      background:var(--bg-secondary); border-bottom:2px solid var(--accent);
+      padding:10px 24px; display:flex; justify-content:space-between; align-items:center;
+      position:sticky; top:0; z-index:100; box-shadow:var(--shadow);
+    }
+    .header .logo {
+      font-size:1.4rem; font-weight:700; color:var(--accent);
+      display:flex; align-items:center; gap:10px;
+    }
+    .header .logo i { font-size:1.6rem; }
+    .header .nav-links {
+      display:flex; gap:16px; align-items:center;
+    }
+    .header .nav-links a {
+      color:var(--text-secondary); text-decoration:none; font-weight:500;
+      cursor:pointer; transition:var(--transition); font-size:0.85rem;
+    }
+    .header .nav-links a:hover { color:var(--accent); }
+    .header .nav-links a.active { color:var(--accent); font-weight:700; }
+    .header-actions {
+      display:flex; gap:16px; align-items:center;
+    }
+    .header-actions i {
+      font-size:1.2rem; cursor:pointer; color:var(--text-secondary);
+      transition:var(--transition);
+    }
+    .header-actions i:hover { color:var(--accent); transform:scale(1.1); }
+    .header-avatar {
+      width:32px; height:32px; border-radius:50%;
+      background:var(--accent); display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:600; font-size:0.8rem; cursor:pointer;
+    }
+
+    /* ===== محتوای اصلی ===== */
+    .main-content {
+      display:grid;
+      grid-template-columns:220px 1fr 280px;
+      gap:0;
+      max-width:1400px;
+      margin:0 auto;
+      min-height:calc(100vh - 64px);
+    }
+
+    /* ===== سایدبار ===== */
+    .sidebar {
+      background:var(--bg-secondary); border-left:1px solid var(--border-color);
+      padding:12px 8px; height:calc(100vh - 64px); overflow-y:auto;
+      position:sticky; top:64px;
+    }
+    body.ltr .sidebar { border-left:none; border-right:1px solid var(--border-color); }
+    .sidebar .section-title {
+      font-size:0.65rem; text-transform:uppercase; color:var(--text-muted);
+      padding:8px 12px 4px; font-weight:700; letter-spacing:1px;
+    }
+    .sidebar-item {
+      display:flex; align-items:center; gap:10px; padding:8px 12px;
+      border-radius:8px; cursor:pointer; transition:var(--transition);
+      color:var(--text-secondary); font-size:0.85rem;
+    }
+    .sidebar-item:hover { background:var(--bg-primary); color:var(--text-primary); }
+    .sidebar-item.active { background:var(--bg-primary); color:var(--accent); font-weight:600; }
+    .sidebar-item i { width:18px; font-size:0.9rem; }
+    .sidebar-item .badge {
+      margin-right:auto; background:var(--accent); color:#fff;
+      font-size:0.55rem; padding:1px 8px; border-radius:40px;
+    }
+    .sidebar-divider { height:1px; background:var(--border-color); margin:8px 8px; }
+
+    /* ===== بخش اصلی ===== */
+    .chat-section {
+      border-left:1px solid var(--border-color); border-right:1px solid var(--border-color);
+      display:flex; flex-direction:column; height:calc(100vh - 64px);
+    }
+    body.ltr .chat-section { border-left:1px solid var(--border-color); border-right:1px solid var(--border-color); }
+
+    .chat-header {
+      padding:12px 20px; border-bottom:1px solid var(--border-color);
+      display:flex; justify-content:space-between; align-items:center;
+      background:var(--bg-secondary);
+    }
+    .chat-header .title { font-weight:700; font-size:1.1rem; }
+    .chat-header .actions { display:flex; gap:12px; }
+    .chat-header .actions i { cursor:pointer; color:var(--text-muted); transition:var(--transition); }
+    .chat-header .actions i:hover { color:var(--accent); }
+
+    .messages-container {
+      flex:1; padding:16px 20px; overflow-y:auto;
+      display:flex; flex-direction:column; gap:4px;
+      background:var(--bg-primary);
+    }
+    .message-item {
+      display:flex; gap:10px; padding:6px 0;
+      animation:msgIn 0.3s ease;
+    }
+    @keyframes msgIn {
+      from { opacity:0; transform:translateY(8px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+    .message-item .avatar {
+      width:32px; height:32px; border-radius:50%; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:600; font-size:0.7rem;
+    }
+    .message-item .body { flex:1; }
+    .message-item .body .sender {
+      font-weight:600; font-size:0.85rem; display:flex; align-items:center; gap:6px;
+    }
+    .message-item .body .sender .time {
+      font-weight:400; font-size:0.65rem; color:var(--text-muted);
+    }
+    .message-item .body .text { font-size:0.9rem; }
+    .message-item .body .file {
+      display:inline-block; padding:4px 12px; background:var(--bg-card);
+      border-radius:6px; font-size:0.8rem; border:1px solid var(--border-color);
+      margin-top:4px;
+    }
+    .message-item .body .file i { margin-left:4px; }
+
+    .message-input {
+      padding:10px 20px; border-top:1px solid var(--border-color);
+      display:flex; gap:10px; align-items:center;
+      background:var(--bg-secondary);
+    }
+    .message-input input {
+      flex:1; padding:8px 14px; border:1px solid var(--border-color);
+      border-radius:50px; outline:none; font-size:0.9rem;
+      background:var(--bg-primary); color:var(--text-primary);
+      transition:var(--transition);
+    }
+    .message-input input:focus { border-color:var(--accent); }
+    .message-input .attach-btn {
+      padding:8px 12px; background:transparent; border:none;
+      color:var(--text-muted); cursor:pointer; font-size:1.1rem;
+      transition:var(--transition);
+    }
+    .message-input .attach-btn:hover { color:var(--accent); }
+    .message-input .send-btn {
+      padding:8px 20px; background:var(--accent); color:#fff;
+      border:none; border-radius:50px; font-weight:600; cursor:pointer;
+      transition:var(--transition);
+    }
+    .message-input .send-btn:hover { background:var(--accent-hover); }
+
+    /* ===== پنل راست ===== */
+    .right-panel {
+      padding:12px 16px; height:calc(100vh - 64px); overflow-y:auto;
+      position:sticky; top:64px;
+    }
+    .right-panel .section-title {
+      font-size:0.85rem; font-weight:600; margin-bottom:8px;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .right-panel .section-title .add-btn {
+      cursor:pointer; color:var(--accent); font-size:0.8rem;
+    }
+
+    /* ===== اعضای تیم ===== */
+    .team-member {
+      display:flex; align-items:center; gap:10px;
+      padding:6px 0; border-bottom:1px solid var(--border-color);
+    }
+    .team-member:last-child { border-bottom:none; }
+    .team-member .avatar {
+      width:28px; height:28px; border-radius:50%; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:600; font-size:0.6rem;
+    }
+    .team-member .info { flex:1; }
+    .team-member .info .name { font-size:0.85rem; font-weight:500; }
+    .team-member .info .status {
+      font-size:0.6rem; color:var(--text-muted);
+    }
+    .team-member .info .status.online { color:var(--success); }
+
+    /* ===== وظایف ===== */
+    .task-item {
+      display:flex; align-items:center; gap:8px;
+      padding:6px 0; border-bottom:1px solid var(--border-color);
+    }
+    .task-item:last-child { border-bottom:none; }
+    .task-item .check {
+      width:18px; height:18px; border-radius:4px;
+      border:2px solid var(--border-color); cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition:var(--transition);
+    }
+    .task-item .check.done { background:var(--success); border-color:var(--success); color:#fff; }
+    .task-item .check.done i { font-size:0.5rem; }
+    .task-item .text { flex:1; font-size:0.85rem; }
+    .task-item .text.done { text-decoration:line-through; color:var(--text-muted); }
+    .task-item .priority {
+      font-size:0.55rem; padding:2px 8px; border-radius:40px; font-weight:600;
+    }
+    .task-item .priority.high { background:rgba(239,68,68,0.15); color:var(--danger); }
+    .task-item .priority.medium { background:rgba(245,158,11,0.15); color:var(--warning); }
+    .task-item .priority.low { background:rgba(16,185,129,0.15); color:var(--success); }
+
+    /* ===== نظرسنجی ===== */
+    .poll-item {
+      background:var(--bg-primary); border-radius:8px; padding:10px 12px;
+      margin-bottom:8px; border:1px solid var(--border-color);
+    }
+    .poll-item .question { font-weight:600; font-size:0.9rem; }
+    .poll-item .options { margin-top:4px; }
+    .poll-item .options .option {
+      display:flex; align-items:center; gap:8px; padding:2px 0;
+      font-size:0.85rem; cursor:pointer;
+    }
+    .poll-item .options .option input[type="radio"] {
+      accent-color:var(--accent); width:14px; height:14px;
+    }
+    .poll-item .options .option .bar {
+      flex:1; height:4px; background:var(--border-color); border-radius:4px;
+      overflow:hidden; max-width:100px;
+    }
+    .poll-item .options .option .bar .fill {
+      height:100%; background:var(--accent); border-radius:4px;
+    }
+    .poll-item .vote-btn {
+      margin-top:6px; padding:4px 16px; background:var(--accent);
+      color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:0.75rem;
+    }
+    .poll-item .vote-btn:hover { background:var(--accent-hover); }
+
+    /* ===== نوتیفیکیشن ===== */
+    .notification {
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
+      background:var(--text-primary); color:var(--bg-primary); padding:8px 18px;
+      border-radius:10px; font-size:0.8rem; z-index:9999; opacity:0;
+      transition:0.5s; pointer-events:none; box-shadow:0 4px 20px rgba(0,0,0,0.2);
+    }
+    body.dark-mode .notification { background:#2a2a2a; color:#e8e8e8; }
+    .notification.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+    /* ===== واکنش‌گرایی ===== */
+    @media (max-width:1200px) {
+      .right-panel { display:none; }
+      .main-content { grid-template-columns:220px 1fr; }
+    }
+    @media (max-width:992px) {
+      .main-content { grid-template-columns:1fr; }
+      .sidebar { display:none; }
+      .chat-section { height:calc(100vh - 64px); }
+      .header { flex-wrap:wrap; gap:8px; padding:8px 12px; }
+      .header .nav-links { flex-wrap:wrap; gap:8px; }
+      .control-buttons { top:6px; right:6px; gap:4px; }
+      .theme-toggle, .lang-toggle { padding:4px 8px; font-size:0.55rem; }
+    }
+    @media (max-width:480px) {
+      .header .logo span { display:none; }
+      .header .logo { font-size:1.1rem; }
+      .header-actions i { font-size:0.9rem; }
+      .chat-header { padding:8px 12px; flex-wrap:wrap; gap:8px; }
+      .messages-container { padding:8px 10px; }
+      .message-input { padding:6px 10px; flex-wrap:wrap; }
+      .message-input input { font-size:0.8rem; }
+    }
+
+    body.ltr { direction:ltr; text-align:left; }
+    body.ltr .sidebar-item .badge { margin-right:0; margin-left:auto; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== دکمه‌های کنترل ===== -->
+  <div class="control-buttons">
+    <button class="theme-toggle" id="themeToggleBtn"><i class="fas fa-moon"></i> <span id="themeLabel">دارک</span></button>
+    <button class="lang-toggle" id="langToggleBtn"><i class="fas fa-globe"></i> <span id="langLabel">English</span></button>
+  </div>
+
+  <!-- ===== نوتیفیکیشن ===== -->
+  <div class="notification" id="notification"></div>
+
+  <!-- ===== هدر ===== -->
+  <header class="header">
+    <div class="logo"><i class="fas fa-users"></i> <span id="brandName">TeamHub</span></div>
+    <div class="nav-links">
+      <a class="active" onclick="showTab('channels')" data-key="navChannels">کانال‌ها</a>
+      <a onclick="showTab('tasks')" data-key="navTasks">وظایف</a>
+      <a onclick="showTab('polls')" data-key="navPolls">نظرسنجی</a>
+      <a onclick="showTab('files')" data-key="navFiles">فایل‌ها</a>
+    </div>
+    <div class="header-actions">
+      <i class="fas fa-bell" onclick="showNotification('اعلان‌ها 🔔')"></i>
+      <div class="header-avatar" onclick="showNotification('پروفایل')">ع</div>
+    </div>
+  </header>
+
+  <!-- ===== محتوای اصلی ===== -->
+  <div class="main-content">
+
+    <!-- ===== سایدبار ===== -->
+    <nav class="sidebar" id="sidebar">
+      <div class="section-title" data-key="channelsTitle">کانال‌ها</div>
+      <div class="sidebar-item active" onclick="selectChannel(1)" data-channel="1">
+        <i class="fas fa-hashtag"></i> <span>عمومی</span>
+      </div>
+      <div class="sidebar-item" onclick="selectChannel(2)" data-channel="2">
+        <i class="fas fa-hashtag"></i> <span>توسعه</span> <span class="badge">3</span>
+      </div>
+      <div class="sidebar-item" onclick="selectChannel(3)" data-channel="3">
+        <i class="fas fa-hashtag"></i> <span>طراحی</span>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="section-title" data-key="directMessages">پیام‌های خصوصی</div>
+      <div class="sidebar-item" onclick="selectChannel(4)" data-channel="4">
+        <i class="fas fa-user"></i> <span>سارا محمدی</span>
+      </div>
+      <div class="sidebar-item" onclick="selectChannel(5)" data-channel="5">
+        <i class="fas fa-user"></i> <span>مهدی کریمی</span>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-item" onclick="showNotification('ایجاد کانال جدید')">
+        <i class="fas fa-plus"></i> <span data-key="addChannel">افزودن کانال</span>
+      </div>
+    </nav>
+
+    <!-- ===== بخش چت ===== -->
+    <div class="chat-section">
+
+      <!-- ===== تب کانال‌ها ===== -->
+      <div class="tab-content active" id="tab-channels" style="display:flex;flex-direction:column;height:100%;">
+        <div class="chat-header">
+          <div class="title"><i class="fas fa-hashtag" style="color:var(--accent);"></i> <span id="channelTitle">عمومی</span></div>
+          <div class="actions">
+            <i class="fas fa-user-plus" onclick="showNotification('افزودن عضو')"></i>
+            <i class="fas fa-info-circle" onclick="showNotification('اطلاعات کانال')"></i>
+          </div>
+        </div>
+        <div class="messages-container" id="messagesContainer">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+        <div class="message-input">
+          <button class="attach-btn" onclick="attachFile()"><i class="fas fa-paperclip"></i></button>
+          <input type="text" id="messageInput" placeholder="پیام خود را بنویسید ..." onkeydown="if(event.key==='Enter') sendMessage()">
+          <button class="send-btn" onclick="sendMessage()" data-key="sendBtn">ارسال</button>
+        </div>
+      </div>
+
+      <!-- ===== تب وظایف ===== -->
+      <div class="tab-content" id="tab-tasks" style="display:flex;flex-direction:column;height:100%;">
+        <div class="chat-header">
+          <div class="title"><i class="fas fa-tasks" style="color:var(--accent);"></i> <span data-key="tasksTitle">وظایف تیم</span></div>
+          <div class="actions">
+            <i class="fas fa-plus" onclick="addTask()" style="cursor:pointer;color:var(--accent);"></i>
+          </div>
+        </div>
+        <div class="messages-container" id="tasksContainer">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </div>
+
+      <!-- ===== تب نظرسنجی ===== -->
+      <div class="tab-content" id="tab-polls" style="display:flex;flex-direction:column;height:100%;">
+        <div class="chat-header">
+          <div class="title"><i class="fas fa-poll" style="color:var(--accent);"></i> <span data-key="pollsTitle">نظرسنجی‌ها</span></div>
+          <div class="actions">
+            <i class="fas fa-plus" onclick="addPoll()" style="cursor:pointer;color:var(--accent);"></i>
+          </div>
+        </div>
+        <div class="messages-container" id="pollsContainer">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </div>
+
+      <!-- ===== تب فایل‌ها ===== -->
+      <div class="tab-content" id="tab-files" style="display:flex;flex-direction:column;height:100%;">
+        <div class="chat-header">
+          <div class="title"><i class="fas fa-folder" style="color:var(--accent);"></i> <span data-key="filesTitle">فایل‌های اشتراک‌گذاری‌شده</span></div>
+          <div class="actions">
+            <i class="fas fa-upload" onclick="attachFile()" style="cursor:pointer;color:var(--accent);"></i>
+          </div>
+        </div>
+        <div class="messages-container" id="filesContainer">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== پنل راست ===== -->
+    <div class="right-panel">
+      <div class="section-title">
+        <span data-key="teamMembers">اعضای تیم</span>
+        <span class="add-btn" onclick="showNotification('افزودن عضو')"><i class="fas fa-plus"></i></span>
+      </div>
+      <div id="teamMembersList">
+        <!-- توسط JS ساخته می‌شود -->
+      </div>
+
+      <div style="margin-top:16px;">
+        <div class="section-title" data-key="quickTasks">وظایف سریع</div>
+        <div id="quickTasks">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ===== دیکشنری =====
+    const dict = {
+      fa: {
+        brandName: 'TeamHub',
+        navChannels: 'کانال‌ها',
+        navTasks: 'وظایف',
+        navPolls: 'نظرسنجی',
+        navFiles: 'فایل‌ها',
+        channelsTitle: 'کانال‌ها',
+        directMessages: 'پیام‌های خصوصی',
+        addChannel: 'افزودن کانال',
+        sendBtn: 'ارسال',
+        tasksTitle: 'وظایف تیم',
+        pollsTitle: 'نظرسنجی‌ها',
+        filesTitle: 'فایل‌های اشتراک‌گذاری‌شده',
+        teamMembers: 'اعضای تیم',
+        quickTasks: 'وظایف سریع'
+      },
+      en: {
+        brandName: 'TeamHub',
+        navChannels: 'Channels',
+        navTasks: 'Tasks',
+        navPolls: 'Polls',
+        navFiles: 'Files',
+        channelsTitle: 'Channels',
+        directMessages: 'Direct Messages',
+        addChannel: 'Add Channel',
+        sendBtn: 'Send',
+        tasksTitle: 'Team Tasks',
+        pollsTitle: 'Polls',
+        filesTitle: 'Shared Files',
+        teamMembers: 'Team Members',
+        quickTasks: 'Quick Tasks'
+      }
+    };
+
+    let currentLang = 'fa';
+    const body = document.body;
+    const langBtn = document.getElementById('langToggleBtn');
+    const langLabel = document.getElementById('langLabel');
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      if (lang === 'en') {
+        body.classList.add('ltr');
+        body.setAttribute('dir', 'ltr');
+        document.documentElement.lang = 'en';
+        langLabel.textContent = 'فارسی';
+      } else {
+        body.classList.remove('ltr');
+        body.setAttribute('dir', 'rtl');
+        document.documentElement.lang = 'fa';
+        langLabel.textContent = 'English';
+      }
+      const d = dict[lang];
+      document.querySelectorAll('[data-key]').forEach(el => {
+        const key = el.getAttribute('data-key');
+        if (d[key] !== undefined) el.textContent = d[key];
+      });
+      document.getElementById('brandName').textContent = d.brandName;
+    }
+
+    langBtn.addEventListener('click', function() {
+      setLanguage(currentLang === 'fa' ? 'en' : 'fa');
+    });
+
+    // ===== دارک مود =====
+    const darkToggleBtn = document.getElementById('themeToggleBtn');
+    const themeLabel = document.getElementById('themeLabel');
+
+    function toggleDarkMode() {
+      body.classList.toggle('dark-mode');
+      const isDark = body.classList.contains('dark-mode');
+      themeLabel.textContent = isDark ? 'روشن' : 'دارک';
+      darkToggleBtn.innerHTML = `<i class="fas ${isDark ? 'fa-sun' : 'fa-moon'}"></i> ${isDark ? 'روشن' : 'دارک'}`;
+    }
+    darkToggleBtn.addEventListener('click', toggleDarkMode);
+
+    // ===== داده‌ها =====
+    let teamMembers = [
+      { id: 1, name: 'علی رضایی', color: '#4f46e5', online: true },
+      { id: 2, name: 'سارا محمدی', color: '#10b981', online: true },
+      { id: 3, name: 'مهدی کریمی', color: '#f59e0b', online: false },
+      { id: 4, name: 'زهرا حسینی', color: '#ef4444', online: true }
+    ];
+
+    let channels = {
+      1: { name: 'عمومی', messages: [
+        { id: 1, userId: 1, text: 'سلام به همه! خوش آمدید به کانال عمومی 👋', time: '۱۰:۲۵', file: null },
+        { id: 2, userId: 2, text: 'سلام! امروز جلسه داریم؟', time: '۱۰:۳۰', file: null }
+      ]},
+      2: { name: 'توسعه', messages: [
+        { id: 3, userId: 1, text: 'آخرین آپدیت پروژه رو ببینید', time: '۰۹:۱۵', file: { name: 'project-update.pdf', size: '۲.۴MB' } },
+        { id: 4, userId: 3, text: 'عالیه! چه زمانی رلیز میشه؟', time: '۰۹:۲۰', file: null }
+      ]},
+      3: { name: 'طراحی', messages: [
+        { id: 5, userId: 4, text: 'طراحی جدید صفحه اصلی آماده است 🎨', time: '۱۱:۰۰', file: { name: 'homepage-design.fig', size: '۴.۸MB' } }
+      ]},
+      4: { name: 'سارا محمدی', messages: [
+        { id: 6, userId: 1, text: 'سلام سارا! پروژه چطور پیش میره؟', time: '۱۲:۳۰', file: null },
+        { id: 7, userId: 2, text: 'عالی! فردا رفع باگ‌ها رو تموم میکنم', time: '۱۲:۳۵', file: null }
+      ]},
+      5: { name: 'مهدی کریمی', messages: [
+        { id: 8, userId: 1, text: 'مهدی! جلسه ساعت ۳ یادت نره', time: '۱۳:۰۰', file: null }
+      ]}
+    };
+
+    let tasks = [
+      { id: 1, text: 'تکمیل صفحه اصلی', done: false, priority: 'high' },
+      { id: 2, text: 'رفع باگ شماره ۴۵', done: true, priority: 'medium' },
+      { id: 3, text: 'طراحی لوگو جدید', done: false, priority: 'low' }
+    ];
+
+    let polls = [
+      { id: 1, question: 'زمان جلسه هفتگی؟', options: ['شنبه', 'یکشنبه', 'دوشنبه'], votes: [2, 1, 0], voted: false },
+      { id: 2, question: 'کدام زبان برای پروژه جدید؟', options: ['Python', 'JavaScript', 'Go'], votes: [3, 2, 1], voted: false }
+    ];
+
+    let files = [
+      { id: 1, name: 'project-plan.pdf', size: '۲.۴MB', user: 'علی رضایی', date: '۱۴۰۵/۰۲/۱۰' },
+      { id: 2, name: 'design-system.fig', size: '۴.۸MB', user: 'زهرا حسینی', date: '۱۴۰۵/۰۲/۰۹' },
+      { id: 3, name: 'meeting-notes.docx', size: '۱.۲MB', user: 'سارا محمدی', date: '۱۴۰۵/۰۲/۰۸' }
+    ];
+
+    let currentChannel = 1;
+    let nextMessageId = 9;
+    let nextTaskId = 4;
+    let nextPollId = 3;
+    let nextFileId = 4;
+
+    // ===== تابع‌ها =====
+
+    // ===== تب‌ها =====
+    function showTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('tab-' + tabName);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
+      const map = { channels: 0, tasks: 1, polls: 2, files: 3 };
+      const links = document.querySelectorAll('.nav-links a');
+      if (map[tabName] !== undefined) links[map[tabName]]?.classList.add('active');
+
+      if (tabName === 'channels') renderMessages();
+      if (tabName === 'tasks') renderTasks();
+      if (tabName === 'polls') renderPolls();
+      if (tabName === 'files') renderFiles();
+    }
+
+    // ===== انتخاب کانال =====
+    function selectChannel(channelId) {
+      currentChannel = channelId;
+      document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.sidebar-item').forEach(el => {
+        if (el.dataset.channel && parseInt(el.dataset.channel) === channelId) {
+          el.classList.add('active');
+        }
+      });
+      const channel = channels[channelId];
+      if (channel) {
+        document.getElementById('channelTitle').textContent = channel.name;
+      }
+      renderMessages();
+      // نمایش سایدبار در موبایل
+      if (window.innerWidth <= 992) {
+        document.querySelector('.sidebar').style.display = 'none';
+      }
+    }
+
+    // ===== رندر پیام‌ها =====
+    function renderMessages() {
+      const container = document.getElementById('messagesContainer');
+      const channel = channels[currentChannel];
+      if (!channel) return;
+
+      container.innerHTML = channel.messages.map(msg => {
+        const user = teamMembers.find(u => u.id === msg.userId);
+        return `
+          <div class="message-item">
+            <div class="avatar" style="background:${user ? user.color : '#888'};">${user ? user.name[0] : '?'}</div>
+            <div class="body">
+              <div class="sender">
+                ${user ? user.name : 'کاربر ناشناس'}
+                <span class="time">${msg.time}</span>
+              </div>
+              <div class="text">${msg.text}</div>
+              ${msg.file ? `<div class="file"><i class="fas fa-file"></i> ${msg.file.name} (${msg.file.size})</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // ===== ارسال پیام =====
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const channel = channels[currentChannel];
+      if (!channel) return;
+
+      const now = new Date();
+      const time = now.getHours().toString().padStart(2, '0') + ':' +
+                   now.getMinutes().toString().padStart(2, '0');
+
+      channel.messages.push({
+        id: nextMessageId++,
+        userId: 1,
+        text: text,
+        time: time,
+        file: null
+      });
+
+      input.value = '';
+      renderMessages();
+      showNotification('📨 پیام ارسال شد!');
+    }
+
+    // ===== پیوست فایل =====
+    function attachFile() {
+      const name = prompt('نام فایل:');
+      if (!name || !name.trim()) return;
+      const size = prompt('حجم فایل (مثلاً ۲.۴MB):') || '۱MB';
+
+      const channel = channels[currentChannel];
+      if (!channel) return;
+
+      const now = new Date();
+      const time = now.getHours().toString().padStart(2, '0') + ':' +
+                   now.getMinutes().toString().padStart(2, '0');
+
+      channel.messages.push({
+        id: nextMessageId++,
+        userId: 1,
+        text: '📎 فایل اشتراک‌گذاری شد',
+        time: time,
+        file: { name: name.trim(), size: size }
+      });
+
+      // افزودن به لیست فایل‌ها
+      files.push({
+        id: nextFileId++,
+        name: name.trim(),
+        size: size,
+        user: 'علی رضایی',
+        date: new Date().toLocaleDateString('fa-IR')
+      });
+
+      renderMessages();
+      showNotification('📎 فایل با موفقیت آپلود شد!');
+    }
+
+    // ===== رندر اعضای تیم =====
+    function renderTeamMembers() {
+      const container = document.getElementById('teamMembersList');
+      container.innerHTML = teamMembers.map(m => `
+        <div class="team-member">
+          <div class="avatar" style="background:${m.color};">${m.name[0]}</div>
+          <div class="info">
+            <div class="name">${m.name}</div>
+            <div class="status ${m.online ? 'online' : ''}">${m.online ? '🟢 آنلاین' : '⚪ آفلاین'}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ===== رندر وظایف =====
+    function renderTasks() {
+      const container = document.getElementById('tasksContainer');
+      if (tasks.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px;">هیچ وظیفه‌ای وجود ندارد</p>';
+        return;
+      }
+      container.innerHTML = tasks.map(t => `
+        <div class="task-item">
+          <div class="check ${t.done ? 'done' : ''}" onclick="toggleTask(${t.id})">
+            ${t.done ? '<i class="fas fa-check"></i>' : ''}
+          </div>
+          <div class="text ${t.done ? 'done' : ''}">${t.text}</div>
+          <span class="priority ${t.priority}">${t.priority === 'high' ? 'بالا' : t.priority === 'medium' ? 'متوسط' : 'کم'}</span>
+        </div>
+      `).join('');
+    }
+
+    function toggleTask(taskId) {
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        task.done = !task.done;
+        renderTasks();
+        renderQuickTasks();
+        showNotification(task.done ? '✅ وظیفه انجام شد!' : '↩️ وظیفه برگردانده شد');
+      }
+    }
+
+    function addTask() {
+      const text = prompt('متن وظیفه جدید:');
+      if (!text || !text.trim()) return;
+      const priority = prompt('اولویت (high/medium/low):') || 'medium';
+      tasks.push({ id: nextTaskId++, text: text.trim(), done: false, priority: priority });
+      renderTasks();
+      renderQuickTasks();
+      showNotification('✅ وظیفه جدید اضافه شد!');
+    }
+
+    // ===== رندر وظایف سریع =====
+    function renderQuickTasks() {
+      const container = document.getElementById('quickTasks');
+      const pending = tasks.filter(t => !t.done).slice(0, 3);
+      if (pending.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">همه وظایف انجام شد 🎉</p>';
+        return;
+      }
+      container.innerHTML = pending.map(t => `
+        <div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:0.8rem;border-bottom:1px solid var(--border-color);">
+          <span>${t.text}</span>
+          <span class="priority ${t.priority}" style="font-size:0.5rem;padding:1px 6px;">${t.priority === 'high' ? '🔥' : t.priority === 'medium' ? '⚡' : '📌'}</span>
+        </div>
+      `).join('');
+    }
+
+    // ===== رندر نظرسنجی =====
+    function renderPolls() {
+      const container = document.getElementById('pollsContainer');
+      if (polls.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px;">هیچ نظرسنجی‌ای وجود ندارد</p>';
+        return;
+      }
+      container.innerHTML = polls.map(p => {
+        const total = p.votes.reduce((a, b) => a + b, 0) || 1;
+        return `
+          <div class="poll-item">
+            <div class="question">📊 ${p.question}</div>
+            <div class="options">
+              ${p.options.map((opt, idx) => `
+                <div class="option">
+                  <input type="radio" name="poll-${p.id}" value="${idx}" ${p.voted ? 'disabled' : ''}>
+                  ${opt}
+                  <div class="bar"><div class="fill" style="width:${(p.votes[idx] / total) * 100}%;"></div></div>
+                  <span style="font-size:0.7rem;color:var(--text-muted);">${p.votes[idx]}</span>
+                </div>
+              `).join('')}
+            </div>
+            ${!p.voted ? `<button class="vote-btn" onclick="votePoll(${p.id})">ثبت رای</button>` :
+              `<span style="font-size:0.7rem;color:var(--text-muted);">✅ شما رای دادید</span>`}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function votePoll(pollId) {
+      const poll = polls.find(p => p.id === pollId);
+      if (!poll || poll.voted) return;
+
+      const radios = document.querySelectorAll(`input[name="poll-${pollId}"]`);
+      let selected = -1;
+      radios.forEach((r, i) => { if (r.checked) selected = i; });
+
+      if (selected === -1) {
+        showNotification('❌ لطفاً یک گزینه را انتخاب کنید!');
+        return;
+      }
+
+      poll.votes[selected]++;
+      poll.voted = true;
+      renderPolls();
+      showNotification('✅ رای شما با موفقیت ثبت شد!');
+    }
+
+    function addPoll() {
+      const question = prompt('سوال نظرسنجی:');
+      if (!question || !question.trim()) return;
+      const options = [];
+      for (let i = 0; i < 3; i++) {
+        const opt = prompt(`گزینه ${i+1}:`);
+        if (!opt) break;
+        options.push(opt.trim());
+      }
+      if (options.length < 2) {
+        showNotification('❌ حداقل ۲ گزینه نیاز است!');
+        return;
+      }
+      polls.push({
+        id: nextPollId++,
+        question: question.trim(),
+        options: options,
+        votes: options.map(() => 0),
+        voted: false
+      });
+      renderPolls();
+      showNotification('✅ نظرسنجی ایجاد شد!');
+    }
+
+    // ===== رندر فایل‌ها =====
+    function renderFiles() {
+      const container = document.getElementById('filesContainer');
+      if (files.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px;">هیچ فایلی آپلود نشده است</p>';
+        return;
+      }
+      container.innerHTML = files.map(f => `
+        <div class="message-item" style="padding:8px 0;">
+          <div class="avatar" style="background:var(--accent);">📄</div>
+          <div class="body">
+            <div class="sender">
+              ${f.name}
+              <span class="time">${f.size}</span>
+            </div>
+            <div class="text" style="font-size:0.8rem;color:var(--text-muted);">
+              <i class="fas fa-user"></i> ${f.user} · ${f.date}
+            </div>
+            <div class="file" style="cursor:pointer;" onclick="showNotification('دانلود ${f.name} 📥')">
+              <i class="fas fa-download"></i> دانلود
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ===== نوتیفیکیشن =====
+    let notifTimeout;
+
+    function showNotification(message) {
+      const notif = document.getElementById('notification');
+      notif.textContent = message;
+      notif.classList.add('show');
+      clearTimeout(notifTimeout);
+      notifTimeout = setTimeout(() => notif.classList.remove('show'), 2500);
+    }
+
+    // ===== تنظیم اولیه =====
+    setLanguage('fa');
+    renderTeamMembers();
+    renderMessages();
+    renderTasks();
+    renderPolls();
+    renderFiles();
+    renderQuickTasks();
+
+    console.log('✅ پلتفرم هم‌کاری تیمی TeamHub کامل بارگذاری شد!');
+  </script>
+</body>
+</html>

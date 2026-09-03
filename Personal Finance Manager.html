@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سیستم مدیریت مالی شخصی | Finance Manager</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ===== RESET & BASE ===== */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+    :root {
+      --bg-primary: #f0f4f8;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --text-primary: #1a1a2e;
+      --text-secondary: #4a4a6a;
+      --text-muted: #8a8aa8;
+      --border-color: #e8ecf1;
+      --accent: #6c5ce7;
+      --accent-hover: #5a4bd1;
+      --accent-light: #a29bfe;
+      --success: #00b894;
+      --warning: #fdcb6e;
+      --danger: #e17055;
+      --shadow: 0 4px 20px rgba(0,0,0,0.04);
+      --shadow-hover: 0 8px 40px rgba(0,0,0,0.08);
+      --radius: 16px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    body.dark-mode {
+      --bg-primary: #0a0a1a;
+      --bg-secondary: #12122a;
+      --bg-card: #1a1a3a;
+      --text-primary: #e8edf5;
+      --text-secondary: #b0b8d0;
+      --text-muted: #6a7a9a;
+      --border-color: #2a2a4a;
+      --shadow: 0 4px 20px rgba(0,0,0,0.3);
+      --shadow-hover: 0 8px 40px rgba(0,0,0,0.5);
+    }
+    body {
+      background: var(--bg-primary);
+      min-height:100vh;
+      transition: var(--transition);
+      color: var(--text-primary);
+    }
+
+    /* ===== اسکرول ===== */
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--text-muted); border-radius:10px; }
+
+    /* ===== دکمه‌های کنترل ===== */
+    .control-buttons {
+      position:fixed; top:12px; right:12px; display:flex; gap:6px; z-index:9999;
+    }
+    .theme-toggle, .lang-toggle {
+      background:var(--bg-card); border:1px solid var(--border-color);
+      padding:6px 12px; border-radius:50px; cursor:pointer; font-size:0.65rem;
+      display:flex; align-items:center; gap:4px; transition:var(--transition);
+      box-shadow:var(--shadow); color:var(--text-primary);
+    }
+    .theme-toggle:hover, .lang-toggle:hover { transform:scale(1.05); box-shadow:var(--shadow-hover); }
+    body.ltr .control-buttons { right:auto; left:12px; }
+
+    /* ===== هدر ===== */
+    .header {
+      background:var(--bg-secondary); border-bottom:3px solid var(--accent);
+      padding:10px 24px; display:flex; justify-content:space-between; align-items:center;
+      position:sticky; top:0; z-index:100; box-shadow:var(--shadow);
+    }
+    .header .logo {
+      font-size:1.4rem; font-weight:700; color:var(--accent);
+      display:flex; align-items:center; gap:10px;
+    }
+    .header .logo i { font-size:1.6rem; }
+    .header .nav-links {
+      display:flex; gap:16px; align-items:center;
+    }
+    .header .nav-links a {
+      color:var(--text-secondary); text-decoration:none; font-weight:500;
+      cursor:pointer; transition:var(--transition); font-size:0.85rem;
+    }
+    .header .nav-links a:hover { color:var(--accent); }
+    .header .nav-links a.active { color:var(--accent); font-weight:700; }
+    .header-actions {
+      display:flex; gap:16px; align-items:center;
+    }
+    .header-actions i {
+      font-size:1.2rem; cursor:pointer; color:var(--text-secondary);
+      transition:var(--transition);
+    }
+    .header-actions i:hover { color:var(--accent); transform:scale(1.1); }
+    .header-avatar {
+      width:32px; height:32px; border-radius:50%;
+      background:var(--accent); display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:600; font-size:0.8rem; cursor:pointer;
+    }
+
+    /* ===== محتوای اصلی ===== */
+    .main-content {
+      max-width:1200px; margin:0 auto; padding:20px 24px;
+    }
+
+    /* ===== تب‌ها ===== */
+    .tab-content { display:none; animation:fadeIn 0.3s ease; }
+    .tab-content.active { display:block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ===== کارت‌های خلاصه ===== */
+    .summary-grid {
+      display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px;
+    }
+    .summary-card {
+      background:var(--bg-card); border-radius:var(--radius);
+      padding:16px; border:1px solid var(--border-color);
+      text-align:center;
+    }
+    .summary-card .number { font-size:1.6rem; font-weight:700; }
+    .summary-card .number.positive { color:var(--success); }
+    .summary-card .number.negative { color:var(--danger); }
+    .summary-card .label { font-size:0.8rem; color:var(--text-muted); }
+
+    /* ===== نمودارها ===== */
+    .chart-container {
+      background:var(--bg-card); border-radius:var(--radius);
+      padding:16px; border:1px solid var(--border-color);
+      margin-bottom:20px;
+    }
+    .chart-container h3 { margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+    .chart-bars {
+      display:flex; align-items:flex-end; gap:6px; height:150px; padding-top:8px;
+    }
+    .chart-bar {
+      flex:1; border-radius:4px 4px 0 0; min-height:8px;
+      background:var(--accent); transition:0.5s; position:relative;
+    }
+    .chart-bar:hover { opacity:0.7; transform:scaleY(1.02); }
+    .chart-bar .value {
+      position:absolute; top:-18px; left:50%; transform:translateX(-50%);
+      font-size:0.6rem; color:var(--text-muted);
+    }
+    .chart-labels {
+      display:flex; gap:6px; margin-top:6px; font-size:0.6rem; color:var(--text-muted);
+    }
+    .chart-labels span { flex:1; text-align:center; }
+
+    /* ===== فرم ===== */
+    .form-section {
+      background:var(--bg-card); border-radius:var(--radius);
+      padding:24px; border:1px solid var(--border-color);
+    }
+    .form-section h2 { margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+    .form-grid {
+      display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;
+    }
+    .form-grid .full { grid-column:1/-1; }
+    .form-group { margin-bottom:4px; }
+    .form-group label { display:block; font-size:0.85rem; font-weight:500; margin-bottom:4px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width:100%; padding:8px 12px; border:1px solid var(--border-color);
+      border-radius:8px; background:var(--bg-primary);
+      color:var(--text-primary); font-size:0.85rem;
+      transition:var(--transition);
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color:var(--accent); outline:none;
+    }
+    .form-actions { display:flex; gap:10px; margin-top:16px; }
+    .form-actions button {
+      padding:8px 24px; border:none; border-radius:8px; font-weight:600;
+      cursor:pointer; transition:var(--transition);
+    }
+    .form-actions .btn-primary { background:var(--accent); color:#fff; }
+    .form-actions .btn-primary:hover { background:var(--accent-hover); }
+    .form-actions .btn-secondary { background:var(--bg-primary); color:var(--text-secondary); }
+
+    /* ===== جدول تراکنش‌ها ===== */
+    .table-wrap { overflow-x:auto; }
+    .table-wrap table {
+      width:100%; border-collapse:collapse; font-size:0.85rem;
+    }
+    .table-wrap th {
+      text-align:right; padding:10px 8px; color:var(--text-muted);
+      border-bottom:2px solid var(--border-color); font-weight:600;
+      font-size:0.7rem; text-transform:uppercase;
+    }
+    .table-wrap td {
+      padding:10px 8px; border-bottom:1px solid var(--border-color);
+      color:var(--text-secondary);
+    }
+    .table-wrap tr:hover td { background:var(--bg-primary); }
+    .table-wrap .type-badge {
+      padding:2px 12px; border-radius:50px; font-size:0.65rem; font-weight:600;
+    }
+    .table-wrap .type-badge.income { background:rgba(0,184,148,0.15); color:var(--success); }
+    .table-wrap .type-badge.expense { background:rgba(225,112,85,0.15); color:var(--danger); }
+    .table-wrap .actions i {
+      cursor:pointer; margin:0 4px; transition:var(--transition);
+    }
+    .table-wrap .actions i:hover { color:var(--accent); transform:scale(1.1); }
+
+    /* ===== بودجه ===== */
+    .budget-item {
+      display:flex; align-items:center; gap:12px;
+      padding:8px 0; border-bottom:1px solid var(--border-color);
+    }
+    .budget-item:last-child { border-bottom:none; }
+    .budget-item .info { flex:1; }
+    .budget-item .info .name { font-weight:600; font-size:0.9rem; }
+    .budget-item .info .amount { font-size:0.8rem; color:var(--text-muted); }
+    .budget-item .bar {
+      width:120px; height:6px; background:var(--bg-primary); border-radius:10px;
+      overflow:hidden; flex-shrink:0;
+    }
+    .budget-item .bar .fill {
+      height:100%; border-radius:10px;
+      background:var(--accent); transition:width 1s ease;
+    }
+    .budget-item .status {
+      font-size:0.7rem; font-weight:600; min-width:60px; text-align:center;
+    }
+    .budget-item .status.good { color:var(--success); }
+    .budget-item .status.warning { color:var(--warning); }
+    .budget-item .status.danger { color:var(--danger); }
+
+    /* ===== اهداف مالی ===== */
+    .goal-item {
+      background:var(--bg-card); border-radius:var(--radius);
+      padding:16px; border:1px solid var(--border-color);
+      margin-bottom:10px;
+    }
+    .goal-item .header {
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .goal-item .header .title { font-weight:600; font-size:1rem; }
+    .goal-item .header .target { font-weight:700; color:var(--accent); }
+    .goal-item .progress-text { font-size:0.85rem; color:var(--text-muted); margin:4px 0; }
+    .goal-item .bar {
+      height:6px; background:var(--bg-primary); border-radius:10px; overflow:hidden;
+    }
+    .goal-item .bar .fill {
+      height:100%; border-radius:10px;
+      background:linear-gradient(90deg, var(--accent), var(--accent-light));
+      transition:width 1s ease;
+    }
+    .goal-item .actions button {
+      padding:4px 12px; border:none; border-radius:6px; cursor:pointer;
+      font-size:0.7rem; font-weight:600; transition:var(--transition);
+    }
+    .goal-item .actions .add-btn { background:var(--success); color:#fff; }
+    .goal-item .actions .add-btn:hover { opacity:0.8; }
+    .goal-item .actions .delete-btn { background:var(--danger); color:#fff; }
+    .goal-item .actions .delete-btn:hover { opacity:0.8; }
+
+    /* ===== گزارش ===== */
+    .report-actions {
+      display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;
+    }
+    .report-actions button {
+      padding:8px 20px; border:none; border-radius:8px; font-weight:600;
+      cursor:pointer; transition:var(--transition);
+    }
+    .report-actions .excel-btn { background:var(--success); color:#fff; }
+    .report-actions .excel-btn:hover { opacity:0.8; }
+    .report-actions .pdf-btn { background:var(--danger); color:#fff; }
+    .report-actions .pdf-btn:hover { opacity:0.8; }
+
+    /* ===== نوتیفیکیشن ===== */
+    .notification {
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
+      background:var(--text-primary); color:var(--bg-primary); padding:8px 18px;
+      border-radius:10px; font-size:0.8rem; z-index:9999; opacity:0;
+      transition:0.5s; pointer-events:none; box-shadow:0 4px 20px rgba(0,0,0,0.2);
+    }
+    body.dark-mode .notification { background:#2a2a2a; color:#e8e8e8; }
+    .notification.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+    /* ===== واکنش‌گرایی ===== */
+    @media (max-width:992px) {
+      .header { flex-wrap:wrap; gap:8px; padding:8px 12px; }
+      .header .nav-links { flex-wrap:wrap; gap:8px; }
+      .form-grid { grid-template-columns:1fr 1fr; }
+      .summary-grid { grid-template-columns:repeat(2,1fr); }
+    }
+    @media (max-width:768px) {
+      .main-content { padding:12px; }
+      .control-buttons { top:6px; right:6px; gap:4px; }
+      .theme-toggle, .lang-toggle { padding:4px 8px; font-size:0.55rem; }
+      .form-grid { grid-template-columns:1fr; }
+      .summary-grid { grid-template-columns:1fr; }
+      .chart-bars { height:100px; }
+    }
+    @media (max-width:480px) {
+      .header .logo span { display:none; }
+      .header .logo { font-size:1.1rem; }
+      .header-actions i { font-size:0.9rem; }
+      .budget-item { flex-wrap:wrap; }
+      .budget-item .bar { width:100%; }
+    }
+
+    body.ltr { direction:ltr; text-align:left; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== دکمه‌های کنترل ===== -->
+  <div class="control-buttons">
+    <button class="theme-toggle" id="themeToggleBtn"><i class="fas fa-moon"></i> <span id="themeLabel">دارک</span></button>
+    <button class="lang-toggle" id="langToggleBtn"><i class="fas fa-globe"></i> <span id="langLabel">English</span></button>
+  </div>
+
+  <!-- ===== نوتیفیکیشن ===== -->
+  <div class="notification" id="notification"></div>
+
+  <!-- ===== هدر ===== -->
+  <header class="header">
+    <div class="logo"><i class="fas fa-wallet"></i> <span id="brandName">مدیریت مالی</span></div>
+    <div class="nav-links">
+      <a class="active" onclick="showTab('dashboard')" data-key="navDashboard">داشبورد</a>
+      <a onclick="showTab('transactions')" data-key="navTransactions">تراکنش‌ها</a>
+      <a onclick="showTab('budget')" data-key="navBudget">بودجه</a>
+      <a onclick="showTab('goals')" data-key="navGoals">اهداف</a>
+      <a onclick="showTab('reports')" data-key="navReports">گزارش‌ها</a>
+    </div>
+    <div class="header-actions">
+      <i class="fas fa-bell" onclick="showNotification('اعلان‌ها 🔔')"></i>
+      <div class="header-avatar" onclick="showNotification('پروفایل')">ع</div>
+    </div>
+  </header>
+
+  <!-- ===== محتوای اصلی ===== -->
+  <div class="main-content">
+
+    <!-- ===== تب داشبورد ===== -->
+    <div class="tab-content active" id="tab-dashboard">
+      <h2 style="margin-bottom:16px;"><i class="fas fa-chart-pie" style="color:var(--accent);"></i> <span data-key="dashboardTitle">خلاصه مالی</span></h2>
+      <div class="summary-grid" id="summaryGrid">
+        <!-- توسط JS ساخته می‌شود -->
+      </div>
+
+      <div class="chart-container">
+        <h3><i class="fas fa-chart-bar" style="color:var(--accent);"></i> <span data-key="monthlyTrend">روند هزینه‌ها (ماهانه)</span></h3>
+        <div class="chart-bars" id="monthlyChart">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+        <div class="chart-labels" id="monthlyLabels">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div style="background:var(--bg-card);border-radius:var(--radius);padding:16px;border:1px solid var(--border-color);">
+          <h4 style="margin-bottom:8px;"><i class="fas fa-tag"></i> <span data-key="topCategories">پرخرج‌ترین دسته‌ها</span></h4>
+          <div id="topCategories"></div>
+        </div>
+        <div style="background:var(--bg-card);border-radius:var(--radius);padding:16px;border:1px solid var(--border-color);">
+          <h4 style="margin-bottom:8px;"><i class="fas fa-clock"></i> <span data-key="recentTransactions">تراکنش‌های اخیر</span></h4>
+          <div id="recentTransactions"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== تب تراکنش‌ها ===== -->
+    <div class="tab-content" id="tab-transactions">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+        <h2><i class="fas fa-list" style="color:var(--accent);"></i> <span data-key="transactionsTitle">مدیریت تراکنش‌ها</span></h2>
+        <button onclick="showTab('addTransaction')" style="padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:var(--transition);" onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent)'" data-key="addTransactionBtn">+ افزودن تراکنش</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th data-key="thDate">تاریخ</th><th data-key="thCategory">دسته</th><th data-key="thDescription">توضیحات</th><th data-key="thType">نوع</th><th data-key="thAmount">مبلغ</th><th data-key="thActions">عملیات</th></tr></thead>
+          <tbody id="transactionsTable">
+            <!-- توسط JS ساخته می‌شود -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== تب افزودن تراکنش ===== -->
+    <div class="tab-content" id="tab-addTransaction">
+      <div class="form-section">
+        <h2><i class="fas fa-plus-circle" style="color:var(--accent);"></i> <span data-key="addTransactionTitle">ثبت تراکنش جدید</span></h2>
+        <div class="form-grid">
+          <div class="form-group">
+            <label data-key="lblDate">تاریخ</label>
+            <input type="date" id="txDate">
+          </div>
+          <div class="form-group">
+            <label data-key="lblCategory">دسته‌بندی</label>
+            <select id="txCategory">
+              <option value="غذا">غذا</option>
+              <option value="حمل و نقل">حمل و نقل</option>
+              <option value="قبض">قبض</option>
+              <option value="خرید">خرید</option>
+              <option value="سرگرمی">سرگرمی</option>
+              <option value="سلامت">سلامت</option>
+              <option value="آموزش">آموزش</option>
+              <option value="سایر">سایر</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label data-key="lblType">نوع</label>
+            <select id="txType">
+              <option value="expense">هزینه</option>
+              <option value="income">درآمد</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label data-key="lblDescription">توضیحات</label>
+            <input type="text" id="txDescription" placeholder="توضیحات ...">
+          </div>
+          <div class="form-group">
+            <label data-key="lblAmount">مبلغ</label>
+            <input type="number" id="txAmount" placeholder="۰">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-primary" onclick="addTransaction()" data-key="saveBtn">ثبت تراکنش</button>
+          <button class="btn-secondary" onclick="clearTransactionForm()" data-key="cancelBtn">انصراف</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== تب بودجه ===== -->
+    <div class="tab-content" id="tab-budget">
+      <h2 style="margin-bottom:16px;"><i class="fas fa-calculator" style="color:var(--accent);"></i> <span data-key="budgetTitle">بودجه‌بندی دسته‌ها</span></h2>
+      <div style="background:var(--bg-card);border-radius:var(--radius);padding:16px;border:1px solid var(--border-color);">
+        <div id="budgetList">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <select id="budgetCategory" style="padding:6px 12px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-primary);color:var(--text-primary);">
+            <option value="غذا">غذا</option>
+            <option value="حمل و نقل">حمل و نقل</option>
+            <option value="قبض">قبض</option>
+            <option value="خرید">خرید</option>
+            <option value="سرگرمی">سرگرمی</option>
+            <option value="سلامت">سلامت</option>
+            <option value="آموزش">آموزش</option>
+            <option value="سایر">سایر</option>
+          </select>
+          <input type="number" id="budgetAmount" placeholder="مبلغ بودجه ..." style="padding:6px 12px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-primary);color:var(--text-primary);">
+          <button onclick="setBudget()" style="padding:6px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;">تنظیم بودجه</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== تب اهداف مالی ===== -->
+    <div class="tab-content" id="tab-goals">
+      <h2 style="margin-bottom:16px;"><i class="fas fa-bullseye" style="color:var(--accent);"></i> <span data-key="goalsTitle">اهداف مالی</span></h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+        <button onclick="addGoal()" style="padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;">+ هدف جدید</button>
+      </div>
+      <div id="goalsList">
+        <!-- توسط JS ساخته می‌شود -->
+      </div>
+    </div>
+
+    <!-- ===== تب گزارش‌ها ===== -->
+    <div class="tab-content" id="tab-reports">
+      <h2 style="margin-bottom:16px;"><i class="fas fa-file-alt" style="color:var(--accent);"></i> <span data-key="reportsTitle">گزارش‌های مالی</span></h2>
+      <div class="report-actions">
+        <button class="excel-btn" onclick="exportReport('excel')"><i class="fas fa-file-excel"></i> خروجی اکسل</button>
+        <button class="pdf-btn" onclick="exportReport('pdf')"><i class="fas fa-file-pdf"></i> خروجی PDF</button>
+      </div>
+      <div style="background:var(--bg-card);border-radius:var(--radius);padding:16px;border:1px solid var(--border-color);">
+        <h4 style="margin-bottom:12px;"><i class="fas fa-calendar"></i> <span data-key="reportSummary">خلاصه گزارش</span></h4>
+        <div id="reportSummary">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ===== دیکشنری =====
+    const dict = {
+      fa: {
+        brandName: 'مدیریت مالی',
+        navDashboard: 'داشبورد',
+        navTransactions: 'تراکنش‌ها',
+        navBudget: 'بودجه',
+        navGoals: 'اهداف',
+        navReports: 'گزارش‌ها',
+        dashboardTitle: 'خلاصه مالی',
+        monthlyTrend: 'روند هزینه‌ها (ماهانه)',
+        topCategories: 'پرخرج‌ترین دسته‌ها',
+        recentTransactions: 'تراکنش‌های اخیر',
+        transactionsTitle: 'مدیریت تراکنش‌ها',
+        addTransactionBtn: '+ افزودن تراکنش',
+        addTransactionTitle: 'ثبت تراکنش جدید',
+        lblDate: 'تاریخ',
+        lblCategory: 'دسته‌بندی',
+        lblType: 'نوع',
+        lblDescription: 'توضیحات',
+        lblAmount: 'مبلغ',
+        saveBtn: 'ثبت تراکنش',
+        cancelBtn: 'انصراف',
+        budgetTitle: 'بودجه‌بندی دسته‌ها',
+        goalsTitle: 'اهداف مالی',
+        reportsTitle: 'گزارش‌های مالی',
+        reportSummary: 'خلاصه گزارش',
+        thDate: 'تاریخ',
+        thCategory: 'دسته',
+        thDescription: 'توضیحات',
+        thType: 'نوع',
+        thAmount: 'مبلغ',
+        thActions: 'عملیات'
+      },
+      en: {
+        brandName: 'Finance Manager',
+        navDashboard: 'Dashboard',
+        navTransactions: 'Transactions',
+        navBudget: 'Budget',
+        navGoals: 'Goals',
+        navReports: 'Reports',
+        dashboardTitle: 'Financial Summary',
+        monthlyTrend: 'Monthly Expense Trend',
+        topCategories: 'Top Spending Categories',
+        recentTransactions: 'Recent Transactions',
+        transactionsTitle: 'Transaction Management',
+        addTransactionBtn: '+ Add Transaction',
+        addTransactionTitle: 'Add New Transaction',
+        lblDate: 'Date',
+        lblCategory: 'Category',
+        lblType: 'Type',
+        lblDescription: 'Description',
+        lblAmount: 'Amount',
+        saveBtn: 'Save Transaction',
+        cancelBtn: 'Cancel',
+        budgetTitle: 'Category Budgeting',
+        goalsTitle: 'Financial Goals',
+        reportsTitle: 'Financial Reports',
+        reportSummary: 'Report Summary',
+        thDate: 'Date',
+        thCategory: 'Category',
+        thDescription: 'Description',
+        thType: 'Type',
+        thAmount: 'Amount',
+        thActions: 'Actions'
+      }
+    };
+
+    let currentLang = 'fa';
+    const body = document.body;
+    const langBtn = document.getElementById('langToggleBtn');
+    const langLabel = document.getElementById('langLabel');
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      if (lang === 'en') {
+        body.classList.add('ltr');
+        body.setAttribute('dir', 'ltr');
+        document.documentElement.lang = 'en';
+        langLabel.textContent = 'فارسی';
+      } else {
+        body.classList.remove('ltr');
+        body.setAttribute('dir', 'rtl');
+        document.documentElement.lang = 'fa';
+        langLabel.textContent = 'English';
+      }
+      const d = dict[lang];
+      document.querySelectorAll('[data-key]').forEach(el => {
+        const key = el.getAttribute('data-key');
+        if (d[key] !== undefined) el.textContent = d[key];
+      });
+      document.getElementById('brandName').textContent = d.brandName;
+    }
+
+    langBtn.addEventListener('click', function() {
+      setLanguage(currentLang === 'fa' ? 'en' : 'fa');
+    });
+
+    // ===== دارک مود =====
+    const darkToggleBtn = document.getElementById('themeToggleBtn');
+    const themeLabel = document.getElementById('themeLabel');
+
+    function toggleDarkMode() {
+      body.classList.toggle('dark-mode');
+      const isDark = body.classList.contains('dark-mode');
+      themeLabel.textContent = isDark ? 'روشن' : 'دارک';
+      darkToggleBtn.innerHTML = `<i class="fas ${isDark ? 'fa-sun' : 'fa-moon'}"></i> ${isDark ? 'روشن' : 'دارک'}`;
+    }
+    darkToggleBtn.addEventListener('click', toggleDarkMode);
+
+    // ===== داده‌ها =====
+    let transactions = [];
+    let budgets = {};
+    let goals = [];
+    let nextTxId = 1;
+    let nextGoalId = 1;
+
+    // داده‌های نمونه
+    function initSampleData() {
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0];
+      const lastMonth = new Date(today);
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      const lastMonthStr = lastMonth.toISOString().split('T')[0];
+
+      transactions = [
+        { id: 1, date: dateStr, category: 'غذا', description: 'خرید ناهار', type: 'expense', amount: 250000 },
+        { id: 2, date: dateStr, category: 'حمل و نقل', description: 'بنزین', type: 'expense', amount: 500000 },
+        { id: 3, date: lastMonthStr, category: 'قبض', description: 'قبض برق', type: 'expense', amount: 1200000 },
+        { id: 4, date: lastMonthStr, category: 'درآمد', description: 'حقوق ماهانه', type: 'income', amount: 15000000 },
+        { id: 5, date: dateStr, category: 'سرگرمی', description: 'سینما', type: 'expense', amount: 300000 }
+      ];
+
+      budgets = {
+        'غذا': 3000000,
+        'حمل و نقل': 2000000,
+        'قبض': 1500000,
+        'خرید': 4000000,
+        'سرگرمی': 1000000,
+        'سلامت': 800000,
+        'آموزش': 1200000,
+        'سایر': 1000000
+      };
+
+      goals = [
+        { id: 1, title: 'خرید گوشی جدید', target: 20000000, saved: 7500000 },
+        { id: 2, title: 'سفر تابستانی', target: 30000000, saved: 12000000 }
+      ];
+
+      nextTxId = 6;
+      nextGoalId = 3;
+    }
+
+    // ===== تب‌ها =====
+    function showTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('tab-' + tabName);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
+      const map = { dashboard: 0, transactions: 1, addTransaction: 1, budget: 2, goals: 3, reports: 4 };
+      const links = document.querySelectorAll('.nav-links a');
+      if (map[tabName] !== undefined) links[map[tabName]]?.classList.add('active');
+
+      if (tabName === 'dashboard') renderDashboard();
+      if (tabName === 'transactions') renderTransactions();
+      if (tabName === 'budget') renderBudget();
+      if (tabName === 'goals') renderGoals();
+      if (tabName === 'reports') renderReports();
+    }
+
+    // ===== داشبورد =====
+    function renderDashboard() {
+      const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+      const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      const balance = totalIncome - totalExpense;
+      const txCount = transactions.length;
+
+      document.getElementById('summaryGrid').innerHTML = `
+        <div class="summary-card"><div class="number positive">${totalIncome.toLocaleString()}</div><div class="label">کل درآمد</div></div>
+        <div class="summary-card"><div class="number negative">${totalExpense.toLocaleString()}</div><div class="label">کل هزینه</div></div>
+        <div class="summary-card"><div class="number ${balance >= 0 ? 'positive' : 'negative'}">${balance.toLocaleString()}</div><div class="label">موجودی</div></div>
+        <div class="summary-card"><div class="number">${txCount}</div><div class="label">تعداد تراکنش‌ها</div></div>
+      `;
+
+      // نمودار ماهانه
+      renderMonthlyChart();
+
+      // دسته‌های پرخرج
+      const expenseByCategory = {};
+      transactions.filter(t => t.type === 'expense').forEach(t => {
+        expenseByCategory[t.category] = (expenseByCategory[t.category] || 0) + t.amount;
+      });
+      const sorted = Object.entries(expenseByCategory).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const topContainer = document.getElementById('topCategories');
+      topContainer.innerHTML = sorted.map(([cat, amt]) => `
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-color);font-size:0.85rem;">
+          <span>${cat}</span>
+          <span style="color:var(--danger);">${amt.toLocaleString()}</span>
+        </div>
+      `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">هیچ هزینه‌ای ثبت نشده است</p>';
+
+      // تراکنش‌های اخیر
+      const recent = document.getElementById('recentTransactions');
+      recent.innerHTML = transactions.slice(-5).reverse().map(t => `
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-color);font-size:0.85rem;">
+          <span>${t.description}</span>
+          <span style="color:${t.type === 'income' ? 'var(--success)' : 'var(--danger)'};">${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString()}</span>
+        </div>
+      `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">هیچ تراکنشی ثبت نشده است</p>';
+    }
+
+    // ===== نمودار ماهانه =====
+    function renderMonthlyChart() {
+      const container = document.getElementById('monthlyChart');
+      const labels = document.getElementById('monthlyLabels');
+
+      const months = [];
+      const monthlyData = [];
+      const monthNames = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        months.push(key);
+        monthlyData.push(0);
+      }
+
+      transactions.filter(t => t.type === 'expense').forEach(t => {
+        const key = t.date.substring(0, 7);
+        const idx = months.indexOf(key);
+        if (idx !== -1) monthlyData[idx] += t.amount;
+      });
+
+      const max = Math.max(...monthlyData, 1);
+      container.innerHTML = monthlyData.map(val => `
+        <div class="chart-bar" style="height:${(val/max)*100}%;background:${val > 0 ? 'var(--accent)' : 'var(--border-color)'};">
+          <span class="value">${val > 0 ? (val/1000).toFixed(0)+'K' : ''}</span>
+        </div>
+      `).join('');
+
+      labels.innerHTML = months.map(m => {
+        const parts = m.split('-');
+        return `<span>${monthNames[parseInt(parts[1])-1]}</span>`;
+      }).join('');
+    }
+
+    // ===== تراکنش‌ها =====
+    function renderTransactions() {
+      const tbody = document.getElementById('transactionsTable');
+      if (transactions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">هیچ تراکنشی ثبت نشده است</td></tr>';
+        return;
+      }
+      tbody.innerHTML = transactions.slice().reverse().map(t => `
+        <tr>
+          <td>${t.date}</td>
+          <td>${t.category}</td>
+          <td>${t.description}</td>
+          <td><span class="type-badge ${t.type}">${t.type === 'income' ? 'درآمد' : 'هزینه'}</span></td>
+          <td style="color:${t.type === 'income' ? 'var(--success)' : 'var(--danger)'};">${t.amount.toLocaleString()}</td>
+          <td class="actions">
+            <i class="fas fa-edit" onclick="editTransaction(${t.id})"></i>
+            <i class="fas fa-trash" onclick="deleteTransaction(${t.id})" style="color:var(--danger);"></i>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // ===== افزودن تراکنش =====
+    function addTransaction() {
+      const date = document.getElementById('txDate').value;
+      const category = document.getElementById('txCategory').value;
+      const type = document.getElementById('txType').value;
+      const description = document.getElementById('txDescription').value.trim();
+      const amount = parseInt(document.getElementById('txAmount').value);
+
+      if (!date || !description || !amount) {
+        showNotification('❌ لطفاً تمام فیلدها را پر کنید!');
+        return;
+      }
+
+      transactions.push({
+        id: nextTxId++,
+        date, category, description, type, amount
+      });
+
+      clearTransactionForm();
+      renderTransactions();
+      renderDashboard();
+      renderBudget();
+      renderReports();
+      showNotification('✅ تراکنش با موفقیت ثبت شد!');
+      showTab('transactions');
+    }
+
+    function clearTransactionForm() {
+      document.getElementById('txDate').value = '';
+      document.getElementById('txDescription').value = '';
+      document.getElementById('txAmount').value = '';
+    }
+
+    // ===== ویرایش و حذف تراکنش =====
+    function editTransaction(id) {
+      const tx = transactions.find(t => t.id === id);
+      if (!tx) return;
+      const newDesc = prompt('توضیحات جدید:', tx.description);
+      if (newDesc && newDesc.trim()) tx.description = newDesc.trim();
+      const newAmount = prompt('مبلغ جدید:', tx.amount);
+      if (newAmount && !isNaN(newAmount)) tx.amount = parseInt(newAmount);
+      renderTransactions();
+      renderDashboard();
+      renderBudget();
+      renderReports();
+      showNotification('✅ تراکنش به‌روزرسانی شد!');
+    }
+
+    function deleteTransaction(id) {
+      if (confirm('آیا از حذف این تراکنش اطمینان دارید؟')) {
+        transactions = transactions.filter(t => t.id !== id);
+        renderTransactions();
+        renderDashboard();
+        renderBudget();
+        renderReports();
+        showNotification('🗑️ تراکنش حذف شد');
+      }
+    }
+
+    // ===== بودجه =====
+    function renderBudget() {
+      const container = document.getElementById('budgetList');
+      const expenseByCategory = {};
+      transactions.filter(t => t.type === 'expense').forEach(t => {
+        expenseByCategory[t.category] = (expenseByCategory[t.category] || 0) + t.amount;
+      });
+
+      container.innerHTML = Object.entries(budgets).map(([cat, budget]) => {
+        const spent = expenseByCategory[cat] || 0;
+        const percentage = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
+        const status = percentage < 70 ? 'good' : percentage < 90 ? 'warning' : 'danger';
+        const statusText = percentage < 70 ? '✅ خوب' : percentage < 90 ? '⚠️ نزدیک' : '❌ بیش از حد';
+        return `
+          <div class="budget-item">
+            <div class="info">
+              <div class="name">${cat}</div>
+              <div class="amount">${spent.toLocaleString()} / ${budget.toLocaleString()}</div>
+            </div>
+            <div class="bar"><div class="fill" style="width:${percentage}%;background:${percentage < 70 ? 'var(--success)' : percentage < 90 ? 'var(--warning)' : 'var(--danger)'};"></div></div>
+            <div class="status ${status}">${statusText}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function setBudget() {
+      const category = document.getElementById('budgetCategory').value;
+      const amount = parseInt(document.getElementById('budgetAmount').value);
+      if (!amount || amount <= 0) {
+        showNotification('❌ لطفاً مبلغ معتبر وارد کنید!');
+        return;
+      }
+      budgets[category] = amount;
+      document.getElementById('budgetAmount').value = '';
+      renderBudget();
+      showNotification(`✅ بودجه ${category} تنظیم شد!`);
+    }
+
+    // ===== اهداف مالی =====
+    function renderGoals() {
+      const container = document.getElementById('goalsList');
+      if (goals.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted);">هیچ هدفی تعیین نشده است</p>';
+        return;
+      }
+      container.innerHTML = goals.map(g => {
+        const percentage = g.target > 0 ? Math.min((g.saved / g.target) * 100, 100) : 0;
+        return `
+          <div class="goal-item">
+            <div class="header">
+              <span class="title">🎯 ${g.title}</span>
+              <span class="target">${g.target.toLocaleString()} تومان</span>
+            </div>
+            <div class="progress-text">${g.saved.toLocaleString()} تومان از ${g.target.toLocaleString()} تومان (${Math.round(percentage)}%)</div>
+            <div class="bar"><div class="fill" style="width:${percentage}%;"></div></div>
+            <div class="actions" style="margin-top:8px;display:flex;gap:6px;">
+              <button class="add-btn" onclick="addToGoal(${g.id})"><i class="fas fa-plus"></i> افزودن</button>
+              <button class="delete-btn" onclick="deleteGoal(${g.id})"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addGoal() {
+      const title = prompt('عنوان هدف:');
+      if (!title || !title.trim()) return;
+      const target = parseInt(prompt('مبلغ هدف (تومان):'));
+      if (!target || target <= 0) { showNotification('❌ مبلغ نامعتبر!'); return; }
+      goals.push({ id: nextGoalId++, title: title.trim(), target, saved: 0 });
+      renderGoals();
+      showNotification('✅ هدف جدید ایجاد شد!');
+    }
+
+    function addToGoal(goalId) {
+      const goal = goals.find(g => g.id === goalId);
+      if (!goal) return;
+      const amount = parseInt(prompt('مبلغ اضافه‌شده به هدف:'));
+      if (!amount || amount <= 0) { showNotification('❌ مبلغ نامعتبر!'); return; }
+      goal.saved += amount;
+      renderGoals();
+      showNotification(`✅ ${amount.toLocaleString()} تومان به هدف اضافه شد!`);
+    }
+
+    function deleteGoal(goalId) {
+      if (confirm('آیا از حذف این هدف اطمینان دارید؟')) {
+        goals = goals.filter(g => g.id !== goalId);
+        renderGoals();
+        showNotification('🗑️ هدف حذف شد');
+      }
+    }
+
+    // ===== گزارش‌ها =====
+    function renderReports() {
+      const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+      const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      const balance = totalIncome - totalExpense;
+      const txCount = transactions.length;
+
+      document.getElementById('reportSummary').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          <div><strong>کل درآمد:</strong> <span style="color:var(--success);">${totalIncome.toLocaleString()} تومان</span></div>
+          <div><strong>کل هزینه:</strong> <span style="color:var(--danger);">${totalExpense.toLocaleString()} تومان</span></div>
+          <div><strong>موجودی:</strong> <span style="color:${balance >= 0 ? 'var(--success)' : 'var(--danger)'};">${balance.toLocaleString()} تومان</span></div>
+          <div><strong>تعداد تراکنش‌ها:</strong> ${txCount}</div>
+          <div><strong>تاریخ گزارش:</strong> ${new Date().toLocaleDateString('fa-IR')}</div>
+        </div>
+      `;
+    }
+
+    // ===== خروجی گزارش =====
+    function exportReport(type) {
+      let text = '📊 گزارش مالی شخصی\n';
+      text += '='.repeat(50) + '\n\n';
+      text += `تاریخ: ${new Date().toLocaleDateString('fa-IR')}\n\n`;
+      text += '📋 لیست تراکنش‌ها:\n';
+      transactions.forEach(t => {
+        text += `- ${t.date} | ${t.category} | ${t.description} | ${t.type === 'income' ? 'درآمد' : 'هزینه'} | ${t.amount.toLocaleString()} تومان\n`;
+      });
+      text += '\n📊 خلاصه:\n';
+      const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+      const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      text += `کل درآمد: ${totalIncome.toLocaleString()} تومان\n`;
+      text += `کل هزینه: ${totalExpense.toLocaleString()} تومان\n`;
+      text += `موجودی: ${(totalIncome - totalExpense).toLocaleString()} تومان\n`;
+
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `گزارش_مالی_${type}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showNotification(`📥 گزارش ${type} دانلود شد!`);
+    }
+
+    // ===== نوتیفیکیشن =====
+    let notifTimeout;
+
+    function showNotification(message) {
+      const notif = document.getElementById('notification');
+      notif.textContent = message;
+      notif.classList.add('show');
+      clearTimeout(notifTimeout);
+      notifTimeout = setTimeout(() => notif.classList.remove('show'), 2500);
+    }
+
+    // ===== تنظیم اولیه =====
+    initSampleData();
+    setLanguage('fa');
+    renderDashboard();
+    renderTransactions();
+    renderBudget();
+    renderGoals();
+    renderReports();
+
+    // تنظیم تاریخ پیش‌فرض
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('txDate').value = today;
+
+    console.log('✅ سیستم مدیریت مالی شخصی کامل بارگذاری شد!');
+  </script>
+</body>
+</html>

@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>آژانس هواپیمایی | Fly3D</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ===== RESET & BASE ===== */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #12182b;
+      --bg-card: rgba(255,255,255,0.05);
+      --text-primary: #ffffff;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border-color: rgba(255,255,255,0.08);
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-glow: rgba(59,130,246,0.3);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+      --shadow-hover: 0 16px 48px rgba(0,0,0,0.6);
+      --radius: 16px;
+      --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    body {
+      background: var(--bg-primary);
+      min-height:100vh;
+      color: var(--text-primary);
+      overflow-x:hidden;
+    }
+
+    /* ===== 3D Background ===== */
+    #bg-canvas {
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      z-index:0;
+      pointer-events:none;
+    }
+
+    /* ===== اسکرول ===== */
+    ::-webkit-scrollbar { width:8px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:linear-gradient(180deg, var(--accent), #6366f1); border-radius:10px; }
+
+    /* ===== دکمه‌های کنترل ===== */
+    .control-buttons {
+      position:fixed; top:16px; right:16px; display:flex; gap:8px; z-index:9999;
+    }
+    .theme-toggle, .lang-toggle {
+      background:rgba(255,255,255,0.05);
+      backdrop-filter:blur(20px);
+      border:1px solid var(--border-color);
+      padding:8px 14px;
+      border-radius:50px;
+      cursor:pointer;
+      font-size:0.7rem;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      transition:var(--transition);
+      box-shadow:var(--shadow);
+      color:var(--text-primary);
+    }
+    .theme-toggle:hover, .lang-toggle:hover { transform:scale(1.05); background:rgba(255,255,255,0.1); }
+    body.ltr .control-buttons { right:auto; left:16px; }
+
+    /* ===== هدر ===== */
+    .header {
+      position:relative;
+      z-index:10;
+      padding:16px 32px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background:rgba(10,14,26,0.8);
+      backdrop-filter:blur(30px);
+      border-bottom:1px solid var(--border-color);
+      position:sticky;
+      top:0;
+      z-index:100;
+    }
+    .header .logo {
+      font-size:1.6rem;
+      font-weight:700;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:var(--text-primary);
+    }
+    .header .logo span { color:var(--accent); }
+    .header .logo i {
+      font-size:2rem;
+      color:var(--accent);
+      animation:planeFloat 4s ease-in-out infinite;
+    }
+    @keyframes planeFloat {
+      0%,100% { transform:translateY(0) rotate(-5deg); }
+      50% { transform:translateY(-8px) rotate(5deg); }
+    }
+    .header .nav-links {
+      display:flex;
+      gap:24px;
+      align-items:center;
+    }
+    .header .nav-links a {
+      color:var(--text-secondary);
+      text-decoration:none;
+      font-weight:500;
+      cursor:pointer;
+      transition:var(--transition);
+      font-size:0.9rem;
+      position:relative;
+    }
+    .header .nav-links a::after {
+      content:'';
+      position:absolute;
+      bottom:-4px;
+      left:0;
+      width:0;
+      height:2px;
+      background:var(--accent);
+      transition:var(--transition);
+    }
+    body.ltr .header .nav-links a::after { left:0; right:auto; }
+    .header .nav-links a:hover::after { width:100%; }
+    .header .nav-links a:hover { color:var(--text-primary); }
+    .header .nav-links a.active { color:var(--accent); }
+    .header .nav-links a.active::after { width:100%; }
+    .header-actions {
+      display:flex;
+      gap:16px;
+      align-items:center;
+    }
+    .header-actions i {
+      font-size:1.2rem;
+      cursor:pointer;
+      color:var(--text-secondary);
+      transition:var(--transition);
+    }
+    .header-actions i:hover { color:var(--accent); transform:scale(1.1) translateZ(10px); }
+    .header-avatar {
+      width:36px;
+      height:36px;
+      border-radius:50%;
+      background:linear-gradient(135deg, var(--accent), #6366f1);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-weight:600;
+      font-size:0.8rem;
+      cursor:pointer;
+      box-shadow:0 4px 20px var(--accent-glow);
+      transition:var(--transition);
+    }
+    .header-avatar:hover { transform:scale(1.1) rotate(10deg); }
+
+    /* ===== Hero Section ===== */
+    .hero {
+      position:relative;
+      z-index:10;
+      padding:60px 32px 80px;
+      text-align:center;
+      min-height:80vh;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+    }
+    .hero .badge {
+      display:inline-block;
+      padding:6px 20px;
+      border-radius:50px;
+      background:rgba(59,130,246,0.15);
+      color:var(--accent);
+      font-size:0.8rem;
+      font-weight:600;
+      border:1px solid rgba(59,130,246,0.2);
+      margin-bottom:16px;
+      animation:pulseBadge 2s ease-in-out infinite;
+    }
+    @keyframes pulseBadge {
+      0%,100% { box-shadow:0 0 20px rgba(59,130,246,0.1); }
+      50% { box-shadow:0 0 40px rgba(59,130,246,0.3); }
+    }
+    .hero h1 {
+      font-size:4rem;
+      font-weight:800;
+      line-height:1.1;
+      margin-bottom:20px;
+      background:linear-gradient(135deg, #ffffff 30%, var(--accent) 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+    .hero p {
+      font-size:1.2rem;
+      color:var(--text-secondary);
+      max-width:600px;
+      margin:0 auto 32px;
+      line-height:1.8;
+    }
+    .hero .search-box {
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      justify-content:center;
+      max-width:700px;
+      margin:0 auto;
+      background:rgba(255,255,255,0.05);
+      backdrop-filter:blur(20px);
+      padding:20px 24px;
+      border-radius:var(--radius);
+      border:1px solid var(--border-color);
+    }
+    .hero .search-box .input-group {
+      flex:1;
+      min-width:140px;
+    }
+    .hero .search-box .input-group label {
+      display:block;
+      font-size:0.7rem;
+      color:var(--text-muted);
+      margin-bottom:4px;
+      text-align:right;
+    }
+    body.ltr .hero .search-box .input-group label { text-align:left; }
+    .hero .search-box .input-group input,
+    .hero .search-box .input-group select {
+      width:100%;
+      padding:8px 12px;
+      border:1px solid var(--border-color);
+      border-radius:8px;
+      background:rgba(255,255,255,0.05);
+      color:var(--text-primary);
+      font-size:0.9rem;
+      transition:var(--transition);
+    }
+    .hero .search-box .input-group input:focus,
+    .hero .search-box .input-group select:focus {
+      border-color:var(--accent);
+      outline:none;
+      box-shadow:0 0 0 4px var(--accent-glow);
+    }
+    .hero .search-box .input-group input::placeholder {
+      color:var(--text-muted);
+    }
+    .hero .search-box .search-btn {
+      padding:10px 32px;
+      background:linear-gradient(135deg, var(--accent), #6366f1);
+      color:#fff;
+      border:none;
+      border-radius:8px;
+      font-weight:600;
+      cursor:pointer;
+      transition:var(--transition);
+      font-size:0.95rem;
+      align-self:flex-end;
+      min-width:120px;
+    }
+    .hero .search-box .search-btn:hover {
+      transform:scale(1.05);
+      box-shadow:0 8px 30px var(--accent-glow);
+    }
+
+    /* ===== 3D Plane ===== */
+    .plane-3d {
+      position:relative;
+      z-index:10;
+      margin:40px auto 0;
+      width:200px;
+      height:200px;
+      perspective:800px;
+    }
+    .plane-3d .plane-wrapper {
+      width:100%;
+      height:100%;
+      animation:planeRotate 8s ease-in-out infinite;
+      transform-style:preserve-3d;
+    }
+    @keyframes planeRotate {
+      0%,100% { transform:rotateY(0deg) rotateX(5deg); }
+      50% { transform:rotateY(360deg) rotateX(-5deg); }
+    }
+    .plane-3d .plane {
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:8rem;
+      color:var(--accent);
+      text-shadow:0 0 60px var(--accent-glow);
+      animation:planeGlow 3s ease-in-out infinite;
+    }
+    @keyframes planeGlow {
+      0%,100% { text-shadow:0 0 40px rgba(59,130,246,0.3); }
+      50% { text-shadow:0 0 80px rgba(59,130,246,0.6); }
+    }
+
+    /* ===== مقاصد ===== */
+    .section {
+      position:relative;
+      z-index:10;
+      padding:60px 32px;
+    }
+    .section-header {
+      text-align:center;
+      margin-bottom:40px;
+    }
+    .section-header h2 {
+      font-size:2.4rem;
+      font-weight:700;
+      margin-bottom:8px;
+    }
+    .section-header p {
+      color:var(--text-secondary);
+      font-size:1rem;
+    }
+
+    .destinations-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+      gap:24px;
+    }
+    .destination-card {
+      background:var(--bg-card);
+      backdrop-filter:blur(20px);
+      border-radius:var(--radius);
+      padding:20px;
+      border:1px solid var(--border-color);
+      transition:var(--transition);
+      cursor:pointer;
+      position:relative;
+      overflow:hidden;
+    }
+    .destination-card::before {
+      content:'';
+      position:absolute;
+      top:-50%;
+      left:-50%;
+      width:200%;
+      height:200%;
+      background:radial-gradient(circle at center, rgba(59,130,246,0.05) 0%, transparent 70%);
+      opacity:0;
+      transition:var(--transition);
+    }
+    .destination-card:hover::before { opacity:1; }
+    .destination-card:hover {
+      transform:translateY(-8px) scale(1.02);
+      box-shadow:var(--shadow-hover);
+      border-color:rgba(59,130,246,0.3);
+    }
+    .destination-card .icon {
+      font-size:2.5rem;
+      margin-bottom:8px;
+    }
+    .destination-card .name {
+      font-size:1.1rem;
+      font-weight:600;
+    }
+    .destination-card .price {
+      color:var(--accent);
+      font-size:1rem;
+      font-weight:600;
+    }
+    .destination-card .info {
+      color:var(--text-muted);
+      font-size:0.8rem;
+    }
+
+    /* ===== پروازها ===== */
+    .flight-item {
+      background:var(--bg-card);
+      backdrop-filter:blur(20px);
+      border-radius:var(--radius);
+      padding:16px 20px;
+      border:1px solid var(--border-color);
+      margin-bottom:12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      transition:var(--transition);
+      cursor:pointer;
+    }
+    .flight-item:hover {
+      transform:translateX(-4px) scale(1.01);
+      border-color:rgba(59,130,246,0.3);
+    }
+    body.ltr .flight-item:hover { transform:translateX(4px) scale(1.01); }
+    .flight-item .info {
+      display:flex;
+      align-items:center;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+    .flight-item .info .airline {
+      font-weight:600;
+      font-size:0.95rem;
+    }
+    .flight-item .info .route {
+      color:var(--text-secondary);
+      font-size:0.85rem;
+    }
+    .flight-item .info .time {
+      color:var(--text-muted);
+      font-size:0.8rem;
+    }
+    .flight-item .price {
+      font-weight:700;
+      color:var(--accent);
+      font-size:1.1rem;
+    }
+    .flight-item .book-btn {
+      padding:6px 20px;
+      background:var(--accent);
+      color:#fff;
+      border:none;
+      border-radius:50px;
+      font-weight:600;
+      cursor:pointer;
+      transition:var(--transition);
+    }
+    .flight-item .book-btn:hover {
+      background:var(--accent-hover);
+      transform:scale(1.05);
+    }
+
+    /* ===== خدمات ===== */
+    .services-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+      gap:20px;
+    }
+    .service-card {
+      background:var(--bg-card);
+      backdrop-filter:blur(20px);
+      border-radius:var(--radius);
+      padding:24px;
+      text-align:center;
+      border:1px solid var(--border-color);
+      transition:var(--transition);
+    }
+    .service-card:hover {
+      transform:translateY(-6px);
+      box-shadow:var(--shadow-hover);
+      border-color:rgba(59,130,246,0.2);
+    }
+    .service-card .icon {
+      font-size:2.5rem;
+      margin-bottom:8px;
+      color:var(--accent);
+    }
+    .service-card .title {
+      font-weight:600;
+      font-size:1rem;
+    }
+    .service-card .desc {
+      color:var(--text-secondary);
+      font-size:0.85rem;
+      margin-top:4px;
+    }
+
+    /* ===== نظرات ===== */
+    .testimonial-item {
+      background:var(--bg-card);
+      backdrop-filter:blur(20px);
+      border-radius:var(--radius);
+      padding:20px;
+      border:1px solid var(--border-color);
+      text-align:center;
+    }
+    .testimonial-item .avatar {
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      margin:0 auto 8px;
+      background:linear-gradient(135deg, var(--accent), #6366f1);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:1.4rem;
+      color:#fff;
+      font-weight:700;
+    }
+    .testimonial-item .text {
+      color:var(--text-secondary);
+      font-size:0.95rem;
+      line-height:1.6;
+    }
+    .testimonial-item .name {
+      font-weight:600;
+      margin-top:8px;
+    }
+    .testimonial-item .stars {
+      color:var(--warning);
+      font-size:0.9rem;
+    }
+
+    /* ===== فوتر ===== */
+    .footer {
+      position:relative;
+      z-index:10;
+      padding:40px 32px 20px;
+      border-top:1px solid var(--border-color);
+      background:rgba(10,14,26,0.8);
+      backdrop-filter:blur(30px);
+    }
+    .footer-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+      gap:24px;
+      margin-bottom:24px;
+    }
+    .footer-grid .col h4 {
+      margin-bottom:12px;
+      font-size:1rem;
+    }
+    .footer-grid .col a {
+      display:block;
+      color:var(--text-secondary);
+      text-decoration:none;
+      font-size:0.85rem;
+      margin-bottom:6px;
+      transition:var(--transition);
+      cursor:pointer;
+    }
+    .footer-grid .col a:hover { color:var(--accent); }
+    .footer-bottom {
+      text-align:center;
+      color:var(--text-muted);
+      font-size:0.8rem;
+      border-top:1px solid var(--border-color);
+      padding-top:16px;
+    }
+
+    /* ===== نوتیفیکیشن ===== */
+    .notification {
+      position:fixed;
+      bottom:20px;
+      left:50%;
+      transform:translateX(-50%) translateY(20px);
+      background:rgba(26,26,46,0.95);
+      backdrop-filter:blur(20px);
+      color:var(--text-primary);
+      padding:10px 22px;
+      border-radius:12px;
+      font-size:0.85rem;
+      z-index:9999;
+      opacity:0;
+      transition:0.5s;
+      pointer-events:none;
+      box-shadow:var(--shadow);
+      border:1px solid var(--border-color);
+    }
+    .notification.show {
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+
+    /* ===== واکنش‌گرایی ===== */
+    @media (max-width:992px) {
+      .hero h1 { font-size:2.8rem; }
+      .header .nav-links { gap:12px; }
+      .header .nav-links a { font-size:0.8rem; }
+      .hero .search-box { flex-direction:column; align-items:stretch; }
+      .hero .search-box .search-btn { align-self:stretch; }
+      .section { padding:40px 16px; }
+    }
+    @media (max-width:768px) {
+      .header { flex-wrap:wrap; gap:10px; padding:12px 16px; }
+      .header .nav-links { flex-wrap:wrap; gap:8px; }
+      .hero h1 { font-size:2rem; }
+      .hero p { font-size:1rem; }
+      .plane-3d { width:120px; height:120px; }
+      .plane-3d .plane { font-size:5rem; }
+      .destinations-grid { grid-template-columns:1fr 1fr; }
+      .services-grid { grid-template-columns:1fr 1fr; }
+      .flight-item { flex-direction:column; align-items:stretch; gap:8px; text-align:center; }
+      .flight-item .info { justify-content:center; }
+      .control-buttons { top:8px; right:8px; gap:4px; }
+      .theme-toggle, .lang-toggle { padding:4px 10px; font-size:0.55rem; }
+    }
+    @media (max-width:480px) {
+      .header .logo { font-size:1.2rem; }
+      .header .logo i { font-size:1.4rem; }
+      .hero h1 { font-size:1.6rem; }
+      .destinations-grid { grid-template-columns:1fr; }
+      .services-grid { grid-template-columns:1fr; }
+      .section-header h2 { font-size:1.6rem; }
+    }
+
+    body.ltr {
+      direction:ltr;
+      text-align:left;
+    }
+    body.ltr .hero .search-box .input-group label { text-align:left; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== پس‌زمینه سه‌بعدی ===== -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- ===== دکمه‌های کنترل ===== -->
+  <div class="control-buttons">
+    <button class="theme-toggle" id="themeToggleBtn"><i class="fas fa-sun"></i> <span id="themeLabel">روشن</span></button>
+    <button class="lang-toggle" id="langToggleBtn"><i class="fas fa-globe"></i> <span id="langLabel">English</span></button>
+  </div>
+
+  <!-- ===== نوتیفیکیشن ===== -->
+  <div class="notification" id="notification"></div>
+
+  <!-- ===== هدر ===== -->
+  <header class="header">
+    <div class="logo"><i class="fas fa-plane"></i> <span>Fly<span>3D</span></span></div>
+    <div class="nav-links">
+      <a class="active" onclick="showTab('home')" data-key="navHome">خانه</a>
+      <a onclick="showTab('flights')" data-key="navFlights">پروازها</a>
+      <a onclick="showTab('destinations')" data-key="navDestinations">مقاصد</a>
+      <a onclick="showTab('services')" data-key="navServices">خدمات</a>
+      <a onclick="showTab('reviews')" data-key="navReviews">نظرات</a>
+    </div>
+    <div class="header-actions">
+      <i class="fas fa-search" onclick="showNotification('جستجو 🔍')"></i>
+      <i class="fas fa-bell" onclick="showNotification('اعلان‌ها 🔔')"></i>
+      <div class="header-avatar" onclick="showNotification('پروفایل')">ع</div>
+    </div>
+  </header>
+
+  <!-- ===== محتوای اصلی ===== -->
+  <div class="main-content">
+
+    <!-- ===== تب خانه ===== -->
+    <div class="tab-content active" id="tab-home">
+      <section class="hero">
+        <div class="badge"><i class="fas fa-rocket"></i> <span data-key="badge">پروازهای ایمن و مدرن</span></div>
+        <h1 data-key="heroTitle">سفرهای هوایی<br>با <span style="color:var(--accent);">Fly3D</span></h1>
+        <p data-key="heroDesc">بهترین تجربه پرواز با مدرن‌ترین ناوگان هوایی، خدمات بین‌المللی و قیمت‌های رقابتی</p>
+
+        <div class="search-box">
+          <div class="input-group">
+            <label data-key="lblFrom">مبدا</label>
+            <input type="text" placeholder="تهران" id="searchFrom">
+          </div>
+          <div class="input-group">
+            <label data-key="lblTo">مقصد</label>
+            <input type="text" placeholder="دبی" id="searchTo">
+          </div>
+          <div class="input-group">
+            <label data-key="lblDate">تاریخ</label>
+            <input type="date" id="searchDate">
+          </div>
+          <div class="input-group">
+            <label data-key="lblPassengers">مسافران</label>
+            <select id="searchPassengers">
+              <option value="1">۱ نفر</option>
+              <option value="2">۲ نفر</option>
+              <option value="3">۳ نفر</option>
+              <option value="4">۴ نفر</option>
+              <option value="5">۵ نفر</option>
+            </select>
+          </div>
+          <button class="search-btn" onclick="searchFlights()" data-key="searchBtn">جستجو پرواز</button>
+        </div>
+
+        <div class="plane-3d">
+          <div class="plane-wrapper">
+            <div class="plane"><i class="fas fa-plane"></i></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="section-destinations">
+        <div class="section-header">
+          <h2 data-key="destTitle">🌍 مقاصد محبوب</h2>
+          <p data-key="destDesc">بهترین مسیرهای هوایی با قیمت‌های ویژه</p>
+        </div>
+        <div class="destinations-grid" id="destinationsGrid">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== تب پروازها ===== -->
+    <div class="tab-content" id="tab-flights">
+      <section class="section">
+        <div class="section-header">
+          <h2 data-key="flightsTitle">✈️ پروازهای موجود</h2>
+          <p data-key="flightsDesc">لیست پروازهای امروز با بهترین قیمت‌ها</p>
+        </div>
+        <div id="flightsList">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== تب مقاصد ===== -->
+    <div class="tab-content" id="tab-destinations">
+      <section class="section">
+        <div class="section-header">
+          <h2 data-key="destTitle">🌍 مقاصد ما</h2>
+          <p data-key="destDesc">سفر به بهترین شهرهای جهان با Fly3D</p>
+        </div>
+        <div class="destinations-grid" id="destinationsFullGrid">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== تب خدمات ===== -->
+    <div class="tab-content" id="tab-services">
+      <section class="section">
+        <div class="section-header">
+          <h2 data-key="servicesTitle">🛎️ خدمات ما</h2>
+          <p data-key="servicesDesc">خدمات ویژه و منحصر‌به‌فرد برای مسافران</p>
+        </div>
+        <div class="services-grid" id="servicesGrid">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== تب نظرات ===== -->
+    <div class="tab-content" id="tab-reviews">
+      <section class="section">
+        <div class="section-header">
+          <h2 data-key="reviewsTitle">⭐ نظرات مسافران</h2>
+          <p data-key="reviewsDesc">تجربه سفر با Fly3D از زبان مسافران</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:20px;" id="reviewsGrid">
+          <!-- توسط JS ساخته می‌شود -->
+        </div>
+      </section>
+    </div>
+
+  </div>
+
+  <!-- ===== فوتر ===== -->
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="col">
+        <h4 data-key="footerCompany">شرکت</h4>
+        <a onclick="showNotification('درباره ما')" data-key="aboutUs">درباره ما</a>
+        <a onclick="showNotification('تماس با ما')" data-key="contactUs">تماس با ما</a>
+        <a onclick="showNotification('فرصت‌های شغلی')" data-key="careers">فرصت‌های شغلی</a>
+      </div>
+      <div class="col">
+        <h4 data-key="footerServices">خدمات</h4>
+        <a onclick="showNotification('پروازهای داخلی')" data-key="domestic">پروازهای داخلی</a>
+        <a onclick="showNotification('پروازهای بین‌المللی')" data-key="international">پروازهای بین‌المللی</a>
+        <a onclick="showNotification('چارت‌ر')" data-key="charter">چارت‌ر</a>
+      </div>
+      <div class="col">
+        <h4 data-key="footerSupport">پشتیبانی</h4>
+        <a onclick="showNotification('مرکز تماس')" data-key="callCenter">مرکز تماس</a>
+        <a onclick="showNotification('سوالات متداول')" data-key="faq">سوالات متداول</a>
+        <a onclick="showNotification('بازگشت وجه')" data-key="refund">بازگشت وجه</a>
+      </div>
+      <div class="col">
+        <h4 data-key="footerSocial">شبکه‌های اجتماعی</h4>
+        <a onclick="showNotification('اینستاگرام')"><i class="fab fa-instagram"></i> Instagram</a>
+        <a onclick="showNotification('تلگرام')"><i class="fab fa-telegram"></i> Telegram</a>
+        <a onclick="showNotification('توییتر')"><i class="fab fa-twitter"></i> Twitter</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© ۱۴۰۴ <span data-key="footerCopy">آژانس هواپیمایی Fly3D | تمامی حقوق محفوظ است</span></span>
+    </div>
+  </footer>
+
+  <script>
+    // ===== دیکشنری =====
+    const dict = {
+      fa: {
+        brandName: 'Fly3D',
+        navHome: 'خانه',
+        navFlights: 'پروازها',
+        navDestinations: 'مقاصد',
+        navServices: 'خدمات',
+        navReviews: 'نظرات',
+        badge: 'پروازهای ایمن و مدرن',
+        heroTitle: 'سفرهای هوایی با Fly3D',
+        heroDesc: 'بهترین تجربه پرواز با مدرن‌ترین ناوگان هوایی، خدمات بین‌المللی و قیمت‌های رقابتی',
+        lblFrom: 'مبدا',
+        lblTo: 'مقصد',
+        lblDate: 'تاریخ',
+        lblPassengers: 'مسافران',
+        searchBtn: 'جستجو پرواز',
+        destTitle: '🌍 مقاصد محبوب',
+        destDesc: 'بهترین مسیرهای هوایی با قیمت‌های ویژه',
+        flightsTitle: '✈️ پروازهای موجود',
+        flightsDesc: 'لیست پروازهای امروز با بهترین قیمت‌ها',
+        servicesTitle: '🛎️ خدمات ما',
+        servicesDesc: 'خدمات ویژه و منحصر‌به‌فرد برای مسافران',
+        reviewsTitle: '⭐ نظرات مسافران',
+        reviewsDesc: 'تجربه سفر با Fly3D از زبان مسافران',
+        footerCompany: 'شرکت',
+        aboutUs: 'درباره ما',
+        contactUs: 'تماس با ما',
+        careers: 'فرصت‌های شغلی',
+        footerServices: 'خدمات',
+        domestic: 'پروازهای داخلی',
+        international: 'پروازهای بین‌المللی',
+        charter: 'چارت‌ر',
+        footerSupport: 'پشتیبانی',
+        callCenter: 'مرکز تماس',
+        faq: 'سوالات متداول',
+        refund: 'بازگشت وجه',
+        footerSocial: 'شبکه‌های اجتماعی',
+        footerCopy: 'آژانس هواپیمایی Fly3D | تمامی حقوق محفوظ است'
+      },
+      en: {
+        brandName: 'Fly3D',
+        navHome: 'Home',
+        navFlights: 'Flights',
+        navDestinations: 'Destinations',
+        navServices: 'Services',
+        navReviews: 'Reviews',
+        badge: 'Safe & Modern Flights',
+        heroTitle: 'Air Travel with Fly3D',
+        heroDesc: 'Best flight experience with modern fleet, international services and competitive prices',
+        lblFrom: 'From',
+        lblTo: 'To',
+        lblDate: 'Date',
+        lblPassengers: 'Passengers',
+        searchBtn: 'Search Flights',
+        destTitle: '🌍 Popular Destinations',
+        destDesc: 'Best routes with special prices',
+        flightsTitle: '✈️ Available Flights',
+        flightsDesc: 'Today\'s flight list with best prices',
+        servicesTitle: '🛎️ Our Services',
+        servicesDesc: 'Special and unique services for passengers',
+        reviewsTitle: '⭐ Passenger Reviews',
+        reviewsDesc: 'Travel experience with Fly3D from passengers',
+        footerCompany: 'Company',
+        aboutUs: 'About Us',
+        contactUs: 'Contact Us',
+        careers: 'Careers',
+        footerServices: 'Services',
+        domestic: 'Domestic Flights',
+        international: 'International Flights',
+        charter: 'Charter',
+        footerSupport: 'Support',
+        callCenter: 'Call Center',
+        faq: 'FAQ',
+        refund: 'Refund',
+        footerSocial: 'Social Media',
+        footerCopy: 'Fly3D Airlines | All rights reserved'
+      }
+    };
+
+    let currentLang = 'fa';
+    const body = document.body;
+    const langBtn = document.getElementById('langToggleBtn');
+    const langLabel = document.getElementById('langLabel');
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      if (lang === 'en') {
+        body.classList.add('ltr');
+        body.setAttribute('dir', 'ltr');
+        document.documentElement.lang = 'en';
+        langLabel.textContent = 'فارسی';
+      } else {
+        body.classList.remove('ltr');
+        body.setAttribute('dir', 'rtl');
+        document.documentElement.lang = 'fa';
+        langLabel.textContent = 'English';
+      }
+      const d = dict[lang];
+      document.querySelectorAll('[data-key]').forEach(el => {
+        const key = el.getAttribute('data-key');
+        if (d[key] !== undefined) el.textContent = d[key];
+      });
+    }
+
+    langBtn.addEventListener('click', function() {
+      setLanguage(currentLang === 'fa' ? 'en' : 'fa');
+    });
+
+    // ===== دارک/روشن =====
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeLabel = document.getElementById('themeLabel');
+
+    function toggleTheme() {
+      const isLight = document.body.style.background === '#f0f4f8' || document.body.classList.contains('light-mode');
+      document.body.classList.toggle('light-mode');
+      if (!document.body.classList.contains('light-mode')) {
+        document.body.style.background = '#0a0e1a';
+        themeLabel.textContent = 'روشن';
+        themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i> روشن';
+      } else {
+        document.body.style.background = '#f0f4f8';
+        themeLabel.textContent = 'دارک';
+        themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i> دارک';
+      }
+    }
+    themeToggleBtn.addEventListener('click', toggleTheme);
+
+    // ===== داده‌ها =====
+    const destinations = [
+      { name: 'دبی', icon: '🏙️', price: '۲,۵۰۰,۰۰۰', info: '۳ پرواز روزانه' },
+      { name: 'استانبول', icon: '🕌', price: '۳,۲۰۰,۰۰۰', info: '۲ پرواز روزانه' },
+      { name: 'لندن', icon: '🇬🇧', price: '۱۲,۰۰۰,۰۰۰', info: '۱ پرواز روزانه' },
+      { name: 'کیش', icon: '🏝️', price: '۱,۸۰۰,۰۰۰', info: '۴ پرواز روزانه' },
+      { name: 'مشهد', icon: '🕌', price: '۱,۲۰۰,۰۰۰', info: '۶ پرواز روزانه' },
+      { name: 'پاریس', icon: '🗼', price: '۱۴,۰۰۰,۰۰۰', info: '۱ پرواز روزانه' }
+    ];
+
+    const flights = [
+      { airline: 'هواپیمایی جمهوری', route: 'تهران → دبی', time: '۱۰:۳۰', price: '۲,۵۰۰,۰۰۰' },
+      { airline: 'هواپیمایی ماهان', route: 'تهران → استانبول', time: '۱۴:۰۰', price: '۳,۲۰۰,۰۰۰' },
+      { airline: 'هواپیمایی قشم', route: 'تهران → کیش', time: '۰۸:۰۰', price: '۱,۸۰۰,۰۰۰' },
+      { airline: 'هواپیمایی آسمان', route: 'تهران → مشهد', time: '۱۶:۳۰', price: '۱,۲۰۰,۰۰۰' },
+      { airline: 'هواپیمایی امارات', route: 'تهران → دبی', time: '۲۲:۰۰', price: '۲,۸۰۰,۰۰۰' },
+      { airline: 'هواپیمایی ترکیش', route: 'تهران → استانبول', time: '۰۶:۰۰', price: '۳,۵۰۰,۰۰۰' }
+    ];
+
+    const services = [
+      { icon: '🛡️', title: 'بیمه مسافرتی', desc: 'پوشش کامل بیمه در طول سفر' },
+      { icon: '🛄', title: 'بار اضافی', desc: 'امکان حمل بار اضافی با هزینه مناسب' },
+      { icon: '🍽️', title: 'وعده غذایی', desc: 'غذاهای متنوع و با کیفیت در پرواز' },
+      { icon: '💺', title: 'صندلی ویژه', desc: 'انتخاب صندلی با فضای بیشتر' },
+      { icon: '🚐', title: 'ترانسفر', desc: 'سرویس رفت و برگشت به فرودگاه' },
+      { icon: '🎫', title: 'تخفیف ویژه', desc: 'تخفیف‌های ویژه برای مسافران دائمی' }
+    ];
+
+    const testimonials = [
+      { name: 'علی رضایی', text: 'تجربه فوق‌العاده‌ای بود. پرواز راحت و خدمات عالی.', stars: 5 },
+      { name: 'سارا محمدی', text: 'قیمت‌های مناسب و پشتیبانی عالی، حتماً دوباره استفاده می‌کنم.', stars: 5 },
+      { name: 'مهدی کریمی', text: 'پرواز با Fly3D بهترین تجربه سفر هوایی من بود.', stars: 4 },
+      { name: 'زهرا حسینی', text: 'خدمات عالی و کادر پرواز بسیار حرفه‌ای و خوش‌برخورد.', stars: 5 }
+    ];
+
+    // ===== تابع‌ها =====
+
+    // ===== تب‌ها =====
+    function showTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('tab-' + tabName);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
+      const map = { home: 0, flights: 1, destinations: 2, services: 3, reviews: 4 };
+      const links = document.querySelectorAll('.nav-links a');
+      if (map[tabName] !== undefined) links[map[tabName]]?.classList.add('active');
+
+      if (tabName === 'home') renderHome();
+      if (tabName === 'flights') renderFlights();
+      if (tabName === 'destinations') renderAllDestinations();
+      if (tabName === 'services') renderServices();
+      if (tabName === 'reviews') renderReviews();
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ===== رندرها =====
+    function renderHome() {
+      const grid = document.getElementById('destinationsGrid');
+      grid.innerHTML = destinations.slice(0, 4).map(d => `
+        <div class="destination-card" onclick="showNotification('مشاهده ${d.name}')">
+          <div class="icon">${d.icon}</div>
+          <div class="name">${d.name}</div>
+          <div class="price">${d.price} تومان</div>
+          <div class="info">${d.info}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderFlights() {
+      const container = document.getElementById('flightsList');
+      container.innerHTML = flights.map(f => `
+        <div class="flight-item" onclick="showNotification('رزرو ${f.airline}')">
+          <div class="info">
+            <div class="airline">${f.airline}</div>
+            <div class="route">${f.route}</div>
+            <div class="time"><i class="fas fa-clock"></i> ${f.time}</div>
+          </div>
+          <div class="price">${f.price} تومان</div>
+          <button class="book-btn" onclick="event.stopPropagation();showNotification('رزرو ${f.airline} انجام شد ✅')">رزرو</button>
+        </div>
+      `).join('');
+    }
+
+    function renderAllDestinations() {
+      const grid = document.getElementById('destinationsFullGrid');
+      grid.innerHTML = destinations.map(d => `
+        <div class="destination-card" onclick="showNotification('مشاهده ${d.name}')">
+          <div class="icon">${d.icon}</div>
+          <div class="name">${d.name}</div>
+          <div class="price">${d.price} تومان</div>
+          <div class="info">${d.info}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderServices() {
+      const grid = document.getElementById('servicesGrid');
+      grid.innerHTML = services.map(s => `
+        <div class="service-card">
+          <div class="icon">${s.icon}</div>
+          <div class="title">${s.title}</div>
+          <div class="desc">${s.desc}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderReviews() {
+      const grid = document.getElementById('reviewsGrid');
+      grid.innerHTML = testimonials.map(t => `
+        <div class="testimonial-item">
+          <div class="avatar">${t.name[0]}</div>
+          <div class="stars">${'⭐'.repeat(t.stars)}</div>
+          <div class="text">"${t.text}"</div>
+          <div class="name">${t.name}</div>
+        </div>
+      `).join('');
+    }
+
+    // ===== جستجو =====
+    function searchFlights() {
+      const from = document.getElementById('searchFrom').value || 'تهران';
+      const to = document.getElementById('searchTo').value || 'دبی';
+      const date = document.getElementById('searchDate').value || 'امروز';
+      const passengers = document.getElementById('searchPassengers').value;
+      showNotification(`🔍 جستجوی پرواز از ${from} به ${to} در تاریخ ${date} برای ${passengers} نفر`);
+    }
+
+    // ===== نوتیفیکیشن =====
+    let notifTimeout;
+
+    function showNotification(message) {
+      const notif = document.getElementById('notification');
+      notif.textContent = message;
+      notif.classList.add('show');
+      clearTimeout(notifTimeout);
+      notifTimeout = setTimeout(() => notif.classList.remove('show'), 2500);
+    }
+
+    // ===== پس‌زمینه سه‌بعدی =====
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles3d = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    class Particle3D {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.z = Math.random() * 300 - 150;
+        this.size = Math.random() * 3 + 1;
+        this.speedX = (Math.random() - 0.5) * 0.3;
+        this.speedY = (Math.random() - 0.5) * 0.3;
+        this.speedZ = (Math.random() - 0.5) * 0.2;
+        this.color = `hsl(${Math.random() * 60 + 210}, 70%, 60%)`;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.z += this.speedZ;
+        if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
+        if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
+        if (this.z > 150 || this.z < -150) this.speedZ *= -1;
+      }
+      draw() {
+        const scale = 1 + this.z / 300;
+        const size = this.size * scale;
+        const opacity = 0.2 + (this.z + 150) / 300 * 0.4;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = opacity;
+        ctx.fill();
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 15 * scale;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    for (let i = 0; i < 80; i++) particles3d.push(new Particle3D());
+
+    function animate3d() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles3d.forEach(p => { p.update(); p.draw(); });
+
+      // اتصال ذرات
+      for (let i = 0; i < particles3d.length; i++) {
+        for (let j = i; j < particles3d.length; j++) {
+          const dx = particles3d[i].x - particles3d[j].x;
+          const dy = particles3d[i].y - particles3d[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < 120) {
+            const opacity = (120 - dist) / 120 * 0.1;
+            ctx.beginPath();
+            ctx.moveTo(particles3d[i].x, particles3d[i].y);
+            ctx.lineTo(particles3d[j].x, particles3d[j].y);
+            ctx.strokeStyle = `rgba(59, 130, 246, ${opacity})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(animate3d);
+    }
+    animate3d();
+
+    // ===== تنظیم تاریخ پیش‌فرض =====
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('searchDate').value = today;
+
+    // ===== تنظیم اولیه =====
+    setLanguage('fa');
+    renderHome();
+    renderFlights();
+    renderAllDestinations();
+    renderServices();
+    renderReviews();
+
+    console.log('✅ آژانس هواپیمایی Fly3D سه‌بعدی بارگذاری شد!');
+  </script>
+</body>
+</html>

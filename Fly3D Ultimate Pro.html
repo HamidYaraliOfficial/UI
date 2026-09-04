@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>آژانس هواپیمایی | Fly3D Ultimate Pro</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+    :root{--bg-primary:#050a18;--bg-secondary:#0c1628;--bg-card:rgba(255,255,255,0.03);--text-primary:#ffffff;--text-secondary:#94a3b8;--text-muted:#64748b;--border-color:rgba(255,255,255,0.06);--accent:#3b82f6;--accent-hover:#2563eb;--accent-light:#60a5fa;--accent-glow:rgba(59,130,246,0.2);--purple:#8b5cf6;--pink:#ec4899;--success:#10b981;--warning:#f59e0b;--shadow:0 8px 50px rgba(0,0,0,0.5);--shadow-hover:0 16px 70px rgba(0,0,0,0.7);--radius:20px;--transition:all 0.6s cubic-bezier(0.23,1,0.32,1)}
+    body{background:var(--bg-primary);min-height:100vh;color:var(--text-primary);overflow-x:hidden}
+    #three-container{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+    ::-webkit-scrollbar{width:8px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--accent),var(--purple));border-radius:10px}
+    html{scroll-behavior:smooth}
+    .control-buttons{position:fixed;top:16px;right:16px;display:flex;gap:8px;z-index:9999}
+    .theme-toggle,.lang-toggle{background:rgba(255,255,255,0.05);backdrop-filter:blur(30px);border:1px solid var(--border-color);padding:8px 18px;border-radius:50px;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;gap:6px;transition:var(--transition);box-shadow:var(--shadow);color:var(--text-primary)}
+    .theme-toggle:hover,.lang-toggle:hover{transform:scale(1.05);background:rgba(255,255,255,0.08)}
+    body.ltr .control-buttons{right:auto;left:16px}
+    .header{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 40px;display:flex;justify-content:space-between;align-items:center;background:rgba(5,10,24,0.6);backdrop-filter:blur(40px);border-bottom:1px solid var(--border-color);transition:var(--transition)}
+    .header.scrolled{background:rgba(5,10,24,0.95);box-shadow:0 4px 40px rgba(0,0,0,0.4)}
+    .header .logo{font-size:1.8rem;font-weight:800;display:flex;align-items:center;gap:12px;color:var(--text-primary);cursor:pointer}
+    .header .logo span{background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .header .logo i{font-size:2.2rem;color:var(--accent);animation:planeFloat 4s ease-in-out infinite}
+    @keyframes planeFloat{0%,100%{transform:translateY(0) rotate(-5deg) scale(1)}50%{transform:translateY(-12px) rotate(5deg) scale(1.08)}}
+    .header .nav-links{display:flex;gap:32px;align-items:center}
+    .header .nav-links a{color:var(--text-secondary);text-decoration:none;font-weight:500;cursor:pointer;transition:var(--transition);font-size:0.95rem;position:relative}
+    .header .nav-links a::after{content:'';position:absolute;bottom:-6px;left:0;width:0;height:2.5px;background:linear-gradient(90deg,var(--accent),var(--purple),var(--pink));transition:var(--transition);border-radius:4px}
+    .header .nav-links a:hover::after{width:100%}
+    .header .nav-links a:hover{color:var(--text-primary)}
+    .header .nav-links a.active{color:var(--accent)}
+    .header .nav-links a.active::after{width:100%}
+    .header-actions{display:flex;gap:18px;align-items:center}
+    .header-actions i{font-size:1.3rem;cursor:pointer;color:var(--text-secondary);transition:var(--transition)}
+    .header-actions i:hover{color:var(--accent);transform:scale(1.1)}
+    .header-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.9rem;cursor:pointer;box-shadow:0 4px 30px var(--accent-glow);transition:var(--transition)}
+    .header-avatar:hover{transform:scale(1.1) rotate(10deg)}
+    .hero{position:relative;z-index:10;min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:140px 40px 80px;text-align:center}
+    .hero .badge{display:inline-block;padding:10px 28px;border-radius:50px;background:rgba(59,130,246,0.1);color:var(--accent);font-size:0.85rem;font-weight:600;border:1px solid rgba(59,130,246,0.15);margin-bottom:24px;animation:pulseBadge 3s ease-in-out infinite;backdrop-filter:blur(10px)}
+    @keyframes pulseBadge{0%,100%{box-shadow:0 0 20px rgba(59,130,246,0.1)}50%{box-shadow:0 0 60px rgba(59,130,246,0.2)}}
+    .hero h1{font-size:5rem;font-weight:900;line-height:1.05;margin-bottom:16px;background:linear-gradient(135deg,#ffffff 20%,var(--accent) 50%,var(--purple) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:heroFade 1.5s ease}
+    @keyframes heroFade{0%{opacity:0;transform:translateY(50px) scale(0.95)}100%{opacity:1;transform:translateY(0) scale(1)}}
+    .hero p{font-size:1.3rem;color:var(--text-secondary);max-width:650px;margin:0 auto 36px;line-height:1.9;animation:heroFade 1.8s ease}
+    .hero .search-box{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;max-width:800px;margin:0 auto;background:rgba(255,255,255,0.03);backdrop-filter:blur(40px);padding:28px 32px;border-radius:var(--radius);border:1px solid var(--border-color);animation:heroFade 2s ease;transition:var(--transition)}
+    .hero .search-box:hover{border-color:rgba(59,130,246,0.2);box-shadow:0 0 80px rgba(59,130,246,0.05)}
+    .hero .search-box .input-group{flex:1;min-width:150px}
+    .hero .search-box .input-group label{display:block;font-size:0.7rem;color:var(--text-muted);margin-bottom:6px;text-align:right;font-weight:600;letter-spacing:0.5px;text-transform:uppercase}
+    body.ltr .hero .search-box .input-group label{text-align:left}
+    .hero .search-box .input-group input,.hero .search-box .input-group select{width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:12px;background:rgba(255,255,255,0.04);color:var(--text-primary);font-size:0.95rem;transition:var(--transition)}
+    .hero .search-box .input-group input:focus,.hero .search-box .input-group select:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 4px var(--accent-glow);background:rgba(255,255,255,0.06)}
+    .hero .search-box .search-btn{padding:14px 40px;background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;transition:var(--transition);font-size:1rem;align-self:flex-end;min-width:140px;box-shadow:0 4px 30px var(--accent-glow)}
+    .hero .search-box .search-btn:hover{transform:scale(1.05) translateY(-3px);box-shadow:0 8px 50px var(--accent-glow)}
+    .plane-3d-container{position:relative;z-index:10;width:100%;max-width:550px;height:280px;margin:40px auto 0;perspective:1200px}
+    .plane-3d{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12rem;background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:planeRotate3D 15s ease-in-out infinite;transform-style:preserve-3d;filter:drop-shadow(0 0 80px var(--accent-glow))}
+    @keyframes planeRotate3D{0%{transform:rotateY(0deg) rotateX(3deg) scale(1)}25%{transform:rotateY(90deg) rotateX(1deg) scale(1.06)}50%{transform:rotateY(180deg) rotateX(-3deg) scale(1)}75%{transform:rotateY(270deg) rotateX(-1deg) scale(1.06)}100%{transform:rotateY(360deg) rotateX(3deg) scale(1)}}
+    .section{position:relative;z-index:10;padding:100px 40px}
+    .section-header{text-align:center;margin-bottom:56px}
+    .section-header h2{font-size:3rem;font-weight:800;margin-bottom:12px}
+    .section-header h2 span{background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .section-header p{color:var(--text-secondary);font-size:1.1rem;max-width:600px;margin:0 auto}
+    .destinations-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:28px}
+    .destination-card{background:var(--bg-card);backdrop-filter:blur(30px);border-radius:var(--radius);padding:28px 24px;border:1px solid var(--border-color);transition:var(--transition);cursor:pointer;position:relative;overflow:hidden;transform-style:preserve-3d}
+    .destination-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at center,rgba(59,130,246,0.06) 0%,transparent 70%);opacity:0;transition:var(--transition)}
+    .destination-card:hover::before{opacity:1}
+    .destination-card:hover{transform:translateY(-14px) scale(1.02) rotateX(3deg);box-shadow:var(--shadow-hover);border-color:rgba(59,130,246,0.2)}
+    .destination-card .icon{font-size:3rem;margin-bottom:12px;display:block}
+    .destination-card .name{font-size:1.2rem;font-weight:700}
+    .destination-card .price{color:var(--accent);font-size:1.1rem;font-weight:700}
+    .destination-card .info{color:var(--text-muted);font-size:0.85rem}
+    .destination-card .flight-badge{display:inline-block;padding:3px 16px;border-radius:50px;background:rgba(59,130,246,0.1);color:var(--accent);font-size:0.7rem;font-weight:600;margin-top:8px}
+    .flight-item{background:var(--bg-card);backdrop-filter:blur(30px);border-radius:var(--radius);padding:20px 28px;border:1px solid var(--border-color);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;transition:var(--transition);cursor:pointer;transform-style:preserve-3d;position:relative;overflow:hidden}
+    .flight-item::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--accent),var(--purple));opacity:0;transition:var(--transition)}
+    body.ltr .flight-item::before{left:0;right:auto}
+    .flight-item:hover::before{opacity:1}
+    .flight-item:hover{transform:translateX(-6px) scale(1.01);border-color:rgba(59,130,246,0.15);box-shadow:var(--shadow-hover)}
+    body.ltr .flight-item:hover{transform:translateX(6px) scale(1.01)}
+    .flight-item .info{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+    .flight-item .info .airline{font-weight:700;font-size:1.05rem;display:flex;align-items:center;gap:8px}
+    .flight-item .info .airline i{color:var(--accent)}
+    .flight-item .info .route{color:var(--text-secondary);font-size:0.95rem;display:flex;align-items:center;gap:6px}
+    .flight-item .info .time{color:var(--text-muted);font-size:0.85rem;display:flex;align-items:center;gap:6px}
+    .flight-item .price{font-weight:800;color:var(--accent);font-size:1.2rem}
+    .flight-item .book-btn{padding:10px 28px;background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;border:none;border-radius:50px;font-weight:700;cursor:pointer;transition:var(--transition);box-shadow:0 4px 25px var(--accent-glow);font-size:0.9rem}
+    .flight-item .book-btn:hover{transform:scale(1.05);box-shadow:0 8px 40px var(--accent-glow)}
+    .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:24px}
+    .service-card{background:var(--bg-card);backdrop-filter:blur(30px);border-radius:var(--radius);padding:32px 24px;text-align:center;border:1px solid var(--border-color);transition:var(--transition);transform-style:preserve-3d;position:relative;overflow:hidden}
+    .service-card .glow{position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),var(--purple),transparent);opacity:0;transition:var(--transition)}
+    .service-card:hover .glow{opacity:1}
+    .service-card:hover{transform:translateY(-10px) scale(1.02) rotateX(2deg);box-shadow:var(--shadow-hover);border-color:rgba(59,130,246,0.1)}
+    .service-card .icon{font-size:3.5rem;margin-bottom:12px;display:block}
+    .service-card .title{font-weight:700;font-size:1.1rem}
+    .service-card .desc{color:var(--text-secondary);font-size:0.9rem;margin-top:6px;line-height:1.6}
+    .testimonial-card{background:var(--bg-card);backdrop-filter:blur(30px);border-radius:var(--radius);padding:28px;border:1px solid var(--border-color);text-align:center;transition:var(--transition)}
+    .testimonial-card:hover{transform:translateY(-8px);box-shadow:var(--shadow-hover);border-color:rgba(59,130,246,0.1)}
+    .testimonial-card .avatar{width:72px;height:72px;border-radius:50%;margin:0 auto 12px;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:2rem;color:#fff;font-weight:700;box-shadow:0 4px 30px var(--accent-glow)}
+    .testimonial-card .stars{color:var(--warning);font-size:1.1rem;margin:6px 0}
+    .testimonial-card .text{color:var(--text-secondary);font-size:0.95rem;line-height:1.8;font-style:italic}
+    .testimonial-card .name{font-weight:700;margin-top:10px;font-size:1.05rem}
+    .testimonial-card .position{color:var(--text-muted);font-size:0.85rem}
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+    .stat-item{text-align:center;padding:24px;background:var(--bg-card);backdrop-filter:blur(30px);border-radius:var(--radius);border:1px solid var(--border-color);transition:var(--transition)}
+    .stat-item:hover{transform:translateY(-6px) scale(1.02);border-color:rgba(59,130,246,0.1);box-shadow:var(--shadow-hover)}
+    .stat-item .number{font-size:3rem;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .stat-item .label{color:var(--text-secondary);font-size:0.95rem;margin-top:4px;font-weight:500}
+    .footer{position:relative;z-index:10;padding:60px 40px 28px;border-top:1px solid var(--border-color);background:rgba(5,10,24,0.8);backdrop-filter:blur(30px)}
+    .footer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:32px;margin-bottom:32px}
+    .footer-grid .col h4{margin-bottom:16px;font-size:1.1rem;color:var(--text-primary);font-weight:700}
+    .footer-grid .col a{display:block;color:var(--text-secondary);text-decoration:none;font-size:0.9rem;margin-bottom:10px;transition:var(--transition);cursor:pointer}
+    .footer-grid .col a:hover{color:var(--accent);transform:translateX(-4px)}
+    body.ltr .footer-grid .col a:hover{transform:translateX(4px)}
+    .footer-grid .col .social-icons{display:flex;gap:14px;margin-top:10px}
+    .footer-grid .col .social-icons i{font-size:1.6rem;color:var(--text-secondary);cursor:pointer;transition:var(--transition)}
+    .footer-grid .col .social-icons i:hover{color:var(--accent);transform:scale(1.2) translateY(-3px)}
+    .footer-bottom{text-align:center;color:var(--text-muted);font-size:0.85rem;border-top:1px solid var(--border-color);padding-top:20px}
+    .notification{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(30px);background:rgba(12,22,40,0.95);backdrop-filter:blur(30px);color:var(--text-primary);padding:14px 32px;border-radius:16px;font-size:0.9rem;z-index:9999;opacity:0;transition:0.6s cubic-bezier(0.23,1,0.32,1);pointer-events:none;box-shadow:var(--shadow);border:1px solid var(--border-color)}
+    .notification.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    @media(max-width:992px){.hero h1{font-size:3.5rem}.header .nav-links{gap:18px}.header .nav-links a{font-size:0.85rem}.hero .search-box{flex-direction:column;align-items:stretch}.hero .search-box .search-btn{align-self:stretch}.stats-grid{grid-template-columns:repeat(2,1fr)}.section{padding:60px 20px}.section-header h2{font-size:2.4rem}.plane-3d-container{height:200px}.plane-3d{font-size:8rem}}
+    @media(max-width:768px){.header{padding:12px 16px;flex-wrap:wrap;gap:10px}.header .nav-links{flex-wrap:wrap;gap:10px}.header .nav-links a{font-size:0.8rem}.hero h1{font-size:2.6rem}.hero p{font-size:1rem}.hero .search-box{padding:20px}.destinations-grid{grid-template-columns:1fr 1fr}.services-grid{grid-template-columns:1fr 1fr}.flight-item{flex-direction:column;align-items:stretch;gap:12px;text-align:center}.flight-item .info{justify-content:center;flex-wrap:wrap}.stats-grid{grid-template-columns:1fr 1fr}.control-buttons{top:8px;right:8px;gap:4px}.theme-toggle,.lang-toggle{padding:4px 10px;font-size:0.55rem}.section-header h2{font-size:2rem}}
+    @media(max-width:480px){.header .logo{font-size:1.2rem}.header .logo i{font-size:1.4rem}.hero h1{font-size:1.8rem}.destinations-grid{grid-template-columns:1fr}.services-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr}.testimonial-card{padding:16px}.section{padding:40px 12px}}
+    body.ltr{direction:ltr;text-align:left}
+    body.ltr .hero .search-box .input-group label{text-align:left}
+    body.ltr .header .nav-links a::after{left:0;right:auto}
+    .scroll-indicator{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:10;animation:bounceDown 2s ease-in-out infinite;cursor:pointer;color:var(--text-muted);font-size:1.5rem}
+    @keyframes bounceDown{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(15px)}}
+  </style>
+</head>
+<body>
+  <div id="three-container"></div>
+  <div class="control-buttons">
+    <button class="theme-toggle" id="themeToggleBtn"><i class="fas fa-sun"></i> <span id="themeLabel">روشن</span></button>
+    <button class="lang-toggle" id="langToggleBtn"><i class="fas fa-globe"></i> <span id="langLabel">English</span></button>
+  </div>
+  <div class="notification" id="notification"></div>
+  <header class="header" id="header">
+    <div class="logo"><i class="fas fa-plane"></i> <span>Fly<span>3D</span></span></div>
+    <div class="nav-links">
+      <a class="active" onclick="showTab('home')" data-key="navHome">خانه</a>
+      <a onclick="showTab('flights')" data-key="navFlights">پروازها</a>
+      <a onclick="showTab('destinations')" data-key="navDestinations">مقاصد</a>
+      <a onclick="showTab('services')" data-key="navServices">خدمات</a>
+      <a onclick="showTab('reviews')" data-key="navReviews">نظرات</a>
+      <a onclick="showTab('about')" data-key="navAbout">درباره ما</a>
+      <a onclick="showTab('contact')" data-key="navContact">تماس</a>
+    </div>
+    <div class="header-actions"><i class="fas fa-search" onclick="showNotification('جستجو 🔍')"></i><i class="fas fa-bell" onclick="showNotification('اعلان‌ها 🔔')"></i><div class="header-avatar" onclick="showNotification('پروفایل')">ع</div></div>
+  </header>
+  <div class="main-content">
+    <div class="tab-content active" id="tab-home">
+      <section class="hero">
+        <div class="badge"><i class="fas fa-rocket"></i> <span data-key="badge">پروازهای مدرن و ایمن</span></div>
+        <h1 data-key="heroTitle">با <span style="color:var(--accent);">Fly3D</span> به<br>هر جای دنیا</h1>
+        <p data-key="heroDesc">تجربه‌ای بی‌نظیر از پرواز با مدرن‌ترین ناوگان هوایی، خدمات بین‌المللی و قیمت‌های فوق‌رقابتی با ضمانت بهترین کیفیت</p>
+        <div class="search-box">
+          <div class="input-group"><label data-key="lblFrom">مبدا</label><input type="text" placeholder="تهران" id="searchFrom"></div>
+          <div class="input-group"><label data-key="lblTo">مقصد</label><input type="text" placeholder="دبی" id="searchTo"></div>
+          <div class="input-group"><label data-key="lblDate">تاریخ</label><input type="date" id="searchDate"></div>
+          <div class="input-group"><label data-key="lblPassengers">مسافران</label><select id="searchPassengers"><option value="1">۱ نفر</option><option value="2">۲ نفر</option><option value="3">۳ نفر</option><option value="4">۴ نفر</option><option value="5">۵ نفر</option><option value="6">۶ نفر</option></select></div>
+          <button class="search-btn" onclick="searchFlights()" data-key="searchBtn">جستجو پرواز</button>
+        </div>
+        <div class="plane-3d-container"><div class="plane-3d"><i class="fas fa-plane"></i></div></div>
+        <div class="scroll-indicator" onclick="document.getElementById('statsSection').scrollIntoView({behavior:'smooth'})"><i class="fas fa-chevron-down"></i></div>
+      </section>
+      <section class="section" id="statsSection" style="padding-top:20px;">
+        <div class="stats-grid">
+          <div class="stat-item"><div class="number">۱۵۰+</div><div class="label" data-key="statDestinations">مقصد</div></div>
+          <div class="stat-item"><div class="number">۴۲۰</div><div class="label" data-key="statFlights">پرواز روزانه</div></div>
+          <div class="stat-item"><div class="number">۳.۲M</div><div class="label" data-key="statPassengers">مسافران</div></div>
+          <div class="stat-item"><div class="number">۹۹%</div><div class="label" data-key="statSatisfaction">رضایت</div></div>
+        </div>
+      </section>
+      <section class="section">
+        <div class="section-header"><h2 data-key="destTitle">🌍 <span>مقاصد</span> محبوب</h2><p data-key="destDesc">بهترین مسیرهای هوایی با قیمت‌های ویژه و تخفیف‌های شگفت‌انگیز</p></div>
+        <div class="destinations-grid" id="destinationsGrid"></div>
+      </section>
+    </div>
+    <div class="tab-content" id="tab-flights">
+      <section class="section">
+        <div class="section-header"><h2 data-key="flightsTitle">✈️ <span>پروازهای</span> موجود</h2><p data-key="flightsDesc">لیست پروازهای امروز با بهترین قیمت‌ها و تخفیف‌های ویژه</p></div>
+        <div id="flightsList"></div>
+      </section>
+    </div>
+    <div class="tab-content" id="tab-destinations">
+      <section class="section">
+        <div class="section-header"><h2 data-key="destTitle">🌍 <span>همه</span> مقاصد</h2><p data-key="destDesc">سفر به بهترین شهرهای جهان با Fly3D و خدمات منحصر‌به‌فرد</p></div>
+        <div class="destinations-grid" id="destinationsFullGrid"></div>
+      </section>
+    </div>
+    <div class="tab-content" id="tab-services">
+      <section class="section">
+        <div class="section-header"><h2 data-key="servicesTitle">🛎️ <span>خدمات</span> ویژه</h2><p data-key="servicesDesc">خدمات منحصر‌به‌فرد و لوکس برای مسافران پروازهای Fly3D</p></div>
+        <div class="services-grid" id="servicesGrid"></div>
+      </section>
+    </div>
+    <div class="tab-content" id="tab-reviews">
+      <section class="section">
+        <div class="section-header"><h2 data-key="reviewsTitle">⭐ <span>نظرات</span> مسافران</h2><p data-key="reviewsDesc">تجربه سفر با Fly3D از زبان مسافران عزیز</p></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px" id="reviewsGrid"></div>
+      </section>
+    </div>
+    <div class="tab-content" id="tab-about">
+      <section class="section">
+        <div class="section-header"><h2 data-key="aboutTitle">✈️ <span>درباره</span> ما</h2><p data-key="aboutDesc">آشنایی با آژانس هواپیمایی Fly3D و افتخارات ما</p></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;max-width:1000px;margin:0 auto">
+          <div style="background:var(--bg-card);backdrop-filter:blur(30px);border-radius:var(--radius);padding:32px;border:1px solid var(--border-color)"><div style="font-size:3rem;margin-bottom:12px">🏢</div><h3 style="font-size:1.4rem;margin-bottom:8px" data-key="aboutMission">ماموریت ما</h3><p style="color:var(--text-secondary);line-height:1.8" data-key="aboutMissionText">ارائه بهترین خدمات پروازی با بالاترین استانداردهای ایمنی و کیفیت، همراه با قیمت‌های مناسب و رضایت کامل مسافران.</p></div>
+          <div style="background:var(--bg-card);backdrop-filter:blur(30px);border-radius:var(--radius);padding:32px;border:1px solid var(--border-color)"><div style="font-size:3rem;margin-bottom:12px">👨‍✈️</div><h3 style="font-size:1.4rem;margin-bottom:8px" data-key="aboutTeam">تیم حرفه‌ای</h3><p style="color:var(--text-secondary);line-height:1.8" data-key="aboutTeamText">تیم مجرب و حرفه‌ای Fly3D با سال‌ها تجربه در صنعت هوانوردی، آماده خدمت‌رسانی به شما عزیزان است.</p></div>
+          <div style="background:var(--bg-card);backdrop-filter:blur(30px);border-radius:var(--radius);padding:32px;border:1px solid var(--border-color);grid-column:1/3"><div style="font-size:3rem;margin-bottom:12px">🌟</div><h3 style="font-size:1.4rem;margin-bottom:8px" data-key="aboutValues">ارزش‌های ما</h3><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;color:var(--text-secondary)"><div style="text-align:center;padding:12px;background:rgba(255,255,255,0.03);border-radius:12px"><span style="font-size:2rem">🛡️</span><br>ایمنی</div><div style="text-align:center;padding:12px;background:rgba(255,255,255,0.03);border-radius:12px"><span style="font-size:2rem">🤝</span><br>اعتماد</div><div style="text-align:center;padding:12px;background:rgba(255,255,255,0.03);border-radius:12px"><span style="font-size:2rem">⭐</span><br>کیفیت</div></div></div>
+        </div>
+      </section>
+    </div>
+    <div class="tab-content" id="tab-contact">
+      <section class="section">
+        <div class="section-header"><h2 data-key="contactTitle">📞 <span>تماس</span> با ما</h2><p data-key="contactDesc">ارتباط با تیم پشتیبانی Fly3D</p></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;max-width:900px;margin:0 auto">
+          <div style="background:var(--bg-card);backdrop-filter:blur(30px);border-radius:var(--radius);padding:32px;border:1px solid var(--border-color)">
+            <h3 style="margin-bottom:16px" data-key="contactInfo">اطلاعات تماس</h3>
+            <div style="color:var(--text-secondary);line-height:2.2"><i class="fas fa-phone" style="color:var(--accent);width:30px"></i> ۰۲۱-۱۲۳۴۵۶۷۸<br><i class="fas fa-envelope" style="color:var(--accent);width:30px"></i> info@fly3d.com<br><i class="fas fa-map-marker-alt" style="color:var(--accent);width:30px"></i> تهران، خیابان ولیعصر، پلاک ۱۲۳</div>
+            <div class="social-icons" style="margin-top:16px;display:flex;gap:14px"><i class="fab fa-instagram" onclick="showNotification('اینستاگرام')"></i><i class="fab fa-telegram" onclick="showNotification('تلگرام')"></i><i class="fab fa-twitter" onclick="showNotification('توییتر')"></i><i class="fab fa-youtube" onclick="showNotification('یوتیوب')"></i></div>
+          </div>
+          <div style="background:var(--bg-card);backdrop-filter:blur(30px);border-radius:var(--radius);padding:32px;border:1px solid var(--border-color)">
+            <h3 style="margin-bottom:16px" data-key="sendMsg">ارسال پیام</h3>
+            <div class="form-group" style="margin-bottom:12px"><input type="text" placeholder="نام شما" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:12px;background:rgba(255,255,255,0.04);color:var(--text-primary)"></div>
+            <div class="form-group" style="margin-bottom:12px"><input type="email" placeholder="ایمیل" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:12px;background:rgba(255,255,255,0.04);color:var(--text-primary)"></div>
+            <div class="form-group" style="margin-bottom:12px"><textarea placeholder="متن پیام ..." rows="4" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:12px;background:rgba(255,255,255,0.04);color:var(--text-primary);resize:vertical"></textarea></div>
+            <button onclick="showNotification('✅ پیام شما ارسال شد!')" style="padding:12px 32px;background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;width:100%">ارسال پیام</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="col"><h4 data-key="footerCompany">شرکت</h4><a onclick="showNotification('درباره ما')" data-key="aboutUs">درباره ما</a><a onclick="showNotification('تماس با ما')" data-key="contactUs">تماس با ما</a><a onclick="showNotification('فرصت‌های شغلی')" data-key="careers">فرصت‌های شغلی</a></div>
+      <div class="col"><h4 data-key="footerServices">خدمات</h4><a onclick="showNotification('پروازهای داخلی')" data-key="domestic">پروازهای داخلی</a><a onclick="showNotification('پروازهای بین‌المللی')" data-key="international">پروازهای بین‌المللی</a><a onclick="showNotification('چارت‌ر')" data-key="charter">چارت‌ر</a></div>
+      <div class="col"><h4 data-key="footerSupport">پشتیبانی</h4><a onclick="showNotification('مرکز تماس')" data-key="callCenter">مرکز تماس</a><a onclick="showNotification('سوالات متداول')" data-key="faq">سوالات متداول</a><a onclick="showNotification('بازگشت وجه')" data-key="refund">بازگشت وجه</a></div>
+      <div class="col"><h4 data-key="footerSocial">شبکه‌های اجتماعی</h4><div class="social-icons"><i class="fab fa-instagram" onclick="showNotification('اینستاگرام')"></i><i class="fab fa-telegram" onclick="showNotification('تلگرام')"></i><i class="fab fa-twitter" onclick="showNotification('توییتر')"></i><i class="fab fa-youtube" onclick="showNotification('یوتیوب')"></i><i class="fab fa-linkedin" onclick="showNotification('لینکدین')"></i></div><div style="margin-top:14px;color:var(--text-muted);font-size:0.9rem"><i class="fas fa-phone"></i> ۰۲۱-۱۲۳۴۵۶۷۸<br><i class="fas fa-envelope"></i> info@fly3d.com</div></div>
+    </div>
+    <div class="footer-bottom"><span>© ۱۴۰۴ <span data-key="footerCopy">آژانس هواپیمایی Fly3D | تمامی حقوق محفوظ است</span></span></div>
+  </footer>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    const dict={fa:{navHome:'خانه',navFlights:'پروازها',navDestinations:'مقاصد',navServices:'خدمات',navReviews:'نظرات',navAbout:'درباره ما',navContact:'تماس',badge:'پروازهای مدرن و ایمن',heroTitle:'با Fly3D به هر جای دنیا',heroDesc:'تجربه‌ای بی‌نظیر از پرواز با مدرن‌ترین ناوگان هوایی، خدمات بین‌المللی و قیمت‌های فوق‌رقابتی با ضمانت بهترین کیفیت',lblFrom:'مبدا',lblTo:'مقصد',lblDate:'تاریخ',lblPassengers:'مسافران',searchBtn:'جستجو پرواز',destTitle:'مقاصد محبوب',destDesc:'بهترین مسیرهای هوایی با قیمت‌های ویژه',flightsTitle:'پروازهای موجود',flightsDesc:'لیست پروازهای امروز با بهترین قیمت‌ها',servicesTitle:'خدمات ویژه',servicesDesc:'خدمات منحصر‌به‌فرد و لوکس برای مسافران',reviewsTitle:'نظرات مسافران',reviewsDesc:'تجربه سفر با Fly3D از زبان مسافران',aboutTitle:'درباره ما',aboutDesc:'آشنایی با آژانس هواپیمایی Fly3D',aboutMission:'ماموریت ما',aboutMissionText:'ارائه بهترین خدمات پروازی با بالاترین استانداردهای ایمنی و کیفیت',aboutTeam:'تیم حرفه‌ای',aboutTeamText:'تیم مجرب و حرفه‌ای Fly3D با سال‌ها تجربه',aboutValues:'ارزش‌های ما',contactTitle:'تماس با ما',contactDesc:'ارتباط با تیم پشتیبانی Fly3D',contactInfo:'اطلاعات تماس',sendMsg:'ارسال پیام',statDestinations:'مقصد',statFlights:'پرواز روزانه',statPassengers:'مسافران',statSatisfaction:'رضایت',footerCompany:'شرکت',aboutUs:'درباره ما',contactUs:'تماس با ما',careers:'فرصت‌های شغلی',footerServices:'خدمات',domestic:'پروازهای داخلی',international:'پروازهای بین‌المللی',charter:'چارت‌ر',footerSupport:'پشتیبانی',callCenter:'مرکز تماس',faq:'سوالات متداول',refund:'بازگشت وجه',footerSocial:'شبکه‌های اجتماعی',footerCopy:'آژانس هواپیمایی Fly3D | تمامی حقوق محفوظ است'},en:{navHome:'Home',navFlights:'Flights',navDestinations:'Destinations',navServices:'Services',navReviews:'Reviews',navAbout:'About',navContact:'Contact',badge:'Modern & Safe Flights',heroTitle:'Fly anywhere with Fly3D',heroDesc:'Unique flight experience with modern fleet, international services and competitive prices',lblFrom:'From',lblTo:'To',lblDate:'Date',lblPassengers:'Passengers',searchBtn:'Search Flights',destTitle:'Popular Destinations',destDesc:'Best routes with special prices',flightsTitle:'Available Flights',flightsDesc:'Today\'s flights with best prices',servicesTitle:'Special Services',servicesDesc:'Unique and luxury services for passengers',reviewsTitle:'Passenger Reviews',reviewsDesc:'Travel experience with Fly3D from our passengers',aboutTitle:'About Us',aboutDesc:'Learn about Fly3D Airlines',aboutMission:'Our Mission',aboutMissionText:'Providing the best flight services with highest safety and quality standards',aboutTeam:'Professional Team',aboutTeamText:'Fly3D\'s experienced professional team with years of aviation industry experience',aboutValues:'Our Values',contactTitle:'Contact Us',contactDesc:'Connect with Fly3D support team',contactInfo:'Contact Information',sendMsg:'Send Message',statDestinations:'Destinations',statFlights:'Daily Flights',statPassengers:'Passengers',statSatisfaction:'Satisfaction',footerCompany:'Company',aboutUs:'About Us',contactUs:'Contact Us',careers:'Careers',footerServices:'Services',domestic:'Domestic Flights',international:'International Flights',charter:'Charter',footerSupport:'Support',callCenter:'Call Center',faq:'FAQ',refund:'Refund',footerSocial:'Social Media',footerCopy:'Fly3D Airlines | All rights reserved'}};
+    let currentLang='fa';const body=document.body,langBtn=document.getElementById('langToggleBtn'),langLabel=document.getElementById('langLabel');
+    function setLanguage(lang){currentLang=lang;if(lang==='en'){body.classList.add('ltr');body.setAttribute('dir','ltr');document.documentElement.lang='en';langLabel.textContent='فارسی'}else{body.classList.remove('ltr');body.setAttribute('dir','rtl');document.documentElement.lang='fa';langLabel.textContent='English'}const d=dict[lang];document.querySelectorAll('[data-key]').forEach(el=>{const key=el.getAttribute('data-key');if(d[key]!==undefined)el.textContent=d[key]})}
+    langBtn.addEventListener('click',function(){setLanguage(currentLang==='fa'?'en':'fa')});
+    const themeToggleBtn=document.getElementById('themeToggleBtn'),themeLabel=document.getElementById('themeLabel');
+    function toggleTheme(){document.body.classList.toggle('light-mode');if(!document.body.classList.contains('light-mode')){document.body.style.background='#050a18';themeLabel.textContent='روشن';themeToggleBtn.innerHTML='<i class="fas fa-sun"></i> روشن'}else{document.body.style.background='#f0f4f8';themeLabel.textContent='دارک';themeToggleBtn.innerHTML='<i class="fas fa-moon"></i> دارک'}}
+    themeToggleBtn.addEventListener('click',toggleTheme);
+    const destinations=[{name:'دبی',icon:'🏙️',price:'۲,۵۰۰,۰۰۰',info:'۳ پرواز روزانه',badge:'محبوب'},{name:'استانبول',icon:'🕌',price:'۳,۲۰۰,۰۰۰',info:'۲ پرواز روزانه',badge:'ویژه'},{name:'لندن',icon:'🇬🇧',price:'۱۲,۰۰۰,۰۰۰',info:'۱ پرواز روزانه',badge:''},{name:'کیش',icon:'🏝️',price:'۱,۸۰۰,۰۰۰',info:'۴ پرواز روزانه',badge:'تخفیف'},{name:'مشهد',icon:'🕌',price:'۱,۲۰۰,۰۰۰',info:'۶ پرواز روزانه',badge:''},{name:'پاریس',icon:'🗼',price:'۱۴,۰۰۰,۰۰۰',info:'۱ پرواز روزانه',badge:'لوکس'},{name:'آنتالیا',icon:'🌊',price:'۴,۵۰۰,۰۰۰',info:'۲ پرواز روزانه',badge:'تخفیف'},{name:'کوالالامپور',icon:'🌴',price:'۸,۰۰۰,۰۰۰',info:'۱ پرواز روزانه',badge:''},{name:'تایلند',icon:'🐘',price:'۹,۰۰۰,۰۰۰',info:'۱ پرواز روزانه',badge:'جدید'},{name:'دوحه',icon:'🏢',price:'۳,۸۰۰,۰۰۰',info:'۳ پرواز روزانه',badge:''}];
+    const flights=[{airline:'هواپیمایی جمهوری',route:'تهران → دبی',time:'۱۰:۳۰',price:'۲,۵۰۰,۰۰۰'},{airline:'هواپیمایی ماهان',route:'تهران → استانبول',time:'۱۴:۰۰',price:'۳,۲۰۰,۰۰۰'},{airline:'هواپیمایی قشم',route:'تهران → کیش',time:'۰۸:۰۰',price:'۱,۸۰۰,۰۰۰'},{airline:'هواپیمایی آسمان',route:'تهران → مشهد',time:'۱۶:۳۰',price:'۱,۲۰۰,۰۰۰'},{airline:'هواپیمایی امارات',route:'تهران → دبی',time:'۲۲:۰۰',price:'۲,۸۰۰,۰۰۰'},{airline:'هواپیمایی ترکیش',route:'تهران → استانبول',time:'۰۶:۰۰',price:'۳,۵۰۰,۰۰۰'},{airline:'هواپیمایی قطر',route:'تهران → دوحه',time:'۱۲:۰۰',price:'۴,۲۰۰,۰۰۰'},{airline:'هواپیمایی لوفتهانزا',route:'تهران → فرانکفورت',time:'۲۰:۰۰',price:'۱۵,۰۰۰,۰۰۰'},{airline:'هواپیمایی بریتیش',route:'تهران → لندن',time:'۱۸:۳۰',price:'۱۲,۰۰۰,۰۰۰'},{airline:'هواپیمایی ایرفرانس',route:'تهران → پاریس',time:'۰۹:۰۰',price:'۱۴,۰۰۰,۰۰۰'}];
+    const services=[{icon:'🛡️',title:'بیمه مسافرتی',desc:'پوشش کامل بیمه در طول سفر با بهترین شرکت‌ها'},{icon:'🛄',title:'بار اضافی',desc:'امکان حمل بار اضافی با هزینه‌های مناسب'},{icon:'🍽️',title:'وعده غذایی',desc:'غذاهای متنوع و با کیفیت عالی'},{icon:'💺',title:'صندلی ویژه',desc:'انتخاب صندلی با فضای بیشتر'},{icon:'🚐',title:'ترانسفر',desc:'سرویس رفت و برگشت به فرودگاه'},{icon:'🎫',title:'تخفیف ویژه',desc:'تخفیف‌های ویژه برای مسافران دائمی'},{icon:'📱',title:'اپلیکیشن',desc:'رزرو آسان از طریق اپلیکیشن'},{icon:'🎧',title:'سرگرمی',desc:'سیستم سرگرمی پیشرفته در پرواز'}];
+    const testimonials=[{name:'علی رضایی',text:'تجربه فوق‌العاده‌ای بود. پرواز راحت و خدمات عالی.',stars:5,position:'مدیر فناوری'},{name:'سارا محمدی',text:'قیمت‌های مناسب و پشتیبانی عالی، بهترین تجربه سفر هوایی من بود.',stars:5,position:'طراح گرافیک'},{name:'مهدی کریمی',text:'پرواز با Fly3D بهترین تجربه سفر هوایی من بود.',stars:4,position:'توسعه‌دهنده'},{name:'زهرا حسینی',text:'خدمات عالی و کادر پرواز بسیار حرفه‌ای و خوش‌برخورد.',stars:5,position:'مدیر بازاریابی'},{name:'رضا نوروزی',text:'از همه جهات راضی بودم. پرواز راحت و خدمات فوق‌العاده.',stars:5,position:'کارآفرین'},{name:'نگار احمدی',text:'اولین بار بود با Fly3D پرواز کردم و واقعاً تحت تأثیر کیفیت خدمات قرار گرفتم.',stars:4,position:'مشاور کسب و کار'}];
+    function initThree(){const container=document.getElementById('three-container'),scene=new THREE.Scene,camera=new THREE.PerspectiveCamera(60,container.clientWidth/container.clientHeight,0.1,1000),renderer=new THREE.WebGLRenderer({alpha:true,antialias:true});renderer.setSize(container.clientWidth,container.clientHeight);renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));container.appendChild(renderer.domElement);const pc=600,p=new Float32Array(pc*3),c=new Float32Array(pc*3),s=new Float32Array(pc*3);for(let i=0;i<pc;i++){p[i*3]=(Math.random()-0.5)*120;p[i*3+1]=(Math.random()-0.5)*70;p[i*3+2]=(Math.random()-0.5)*60-20;const col=new THREE.Color;col.setHSL(0.58+Math.random()*0.12,0.8,0.5+Math.random()*0.3);c[i*3]=col.r;c[i*3+1]=col.g;c[i*3+2]=col.b;s[i]=Math.random()*0.6+0.2}const geo=new THREE.BufferGeometry;geo.setAttribute('position',new THREE.BufferAttribute(p,3));geo.setAttribute('color',new THREE.BufferAttribute(c,3));geo.setAttribute('size',new THREE.BufferAttribute(s,1));const mat=new THREE.PointsMaterial({size:0.25,vertexColors:true,transparent:true,opacity:0.9,blending:THREE.AdditiveBlending,sizeAttenuation:true}),particles=new THREE.Points(geo,mat);scene.add(particles);const sc=1000,sp=new Float32Array(sc*3);for(let i=0;i<sc*3;i++)sp[i]=(Math.random()-0.5)*250;const sg=new THREE.BufferGeometry;sg.setAttribute('position',new THREE.BufferAttribute(sp,3));const sm=new THREE.PointsMaterial({color:0x60a5fa,size:0.06,transparent:true,opacity:0.4,blending:THREE.AdditiveBlending}),stars=new THREE.Points(sg,sm);scene.add(stars);const pc2=200,pp=new Float32Array(pc2*3);for(let i=0;i<pc2*3;i++)pp[i]=(Math.random()-0.5)*100;const pg=new THREE.BufferGeometry;pg.setAttribute('position',new THREE.BufferAttribute(pp,3));const pm=new THREE.PointsMaterial({color:0x8b5cf6,size:0.08,transparent:true,opacity:0.3,blending:THREE.AdditiveBlending}),purpleStars=new THREE.Points(pg,pm);scene.add(purpleStars);camera.position.z=35;let mx=0,my=0;document.addEventListener('mousemove',e=>{mx=(e.clientX/window.innerWidth)*2-1;my=-(e.clientY/window.innerHeight)*2+1});let t=0;function animate(){requestAnimationFrame(animate);t+=0.002;particles.rotation.x+=0.0003;particles.rotation.y+=0.0005;stars.rotation.x+=0.0001;stars.rotation.y+=0.0002;purpleStars.rotation.x+=0.0002;purpleStars.rotation.y-=0.0003;particles.rotation.x+=my*0.0002;particles.rotation.y+=mx*0.0002;const pos=particles.geometry.attributes.position.array;for(let i=0;i<pos.length;i+=3){pos[i+1]+=Math.sin(t+pos[i]*0.02)*0.0003}particles.geometry.attributes.position.needsUpdate=true;camera.position.x+=(mx*2-camera.position.x)*0.01;camera.position.y+=(my*2-camera.position.y)*0.01;camera.lookAt(0,0,0);renderer.render(scene,camera)}animate();window.addEventListener('resize',()=>{const w=container.clientWidth,h=container.clientHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)});return{scene,camera,renderer}}initThree();
+    function showTab(tabName){document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));const target=document.getElementById('tab-'+tabName);if(target)target.classList.add('active');document.querySelectorAll('.nav-links a').forEach(el=>el.classList.remove('active'));const map={home:0,flights:1,destinations:2,services:3,reviews:4,about:5,contact:6};const links=document.querySelectorAll('.nav-links a');if(map[tabName]!==undefined)links[map[tabName]]?.classList.add('active');if(tabName==='home')renderHome();if(tabName==='flights')renderFlights();if(tabName==='destinations')renderAllDestinations();if(tabName==='services')renderServices();if(tabName==='reviews')renderReviews();window.scrollTo({top:0,behavior:'smooth'})}
+    function renderHome(){const grid=document.getElementById('destinationsGrid');grid.innerHTML=destinations.slice(0,6).map(d=>`<div class="destination-card" onclick="showNotification('مشاهده ${d.name}')"><span class="icon">${d.icon}</span><div class="name">${d.name}</div><div class="price">${d.price} تومان</div><div class="info">${d.info}</div>${d.badge?`<span class="flight-badge">${d.badge}</span>`:''}</div>`).join('')}
+    function renderFlights(){const container=document.getElementById('flightsList');container.innerHTML=flights.map(f=>`<div class="flight-item" onclick="showNotification('رزرو ${f.airline}')"><div class="info"><div class="airline"><i class="fas fa-plane"></i> ${f.airline}</div><div class="route"><i class="fas fa-arrow-right"></i> ${f.route}</div><div class="time"><i class="fas fa-clock"></i> ${f.time}</div></div><div class="price">${f.price} تومان</div><button class="book-btn" onclick="event.stopPropagation();showNotification('✅ رزرو ${f.airline} انجام شد! کد: FLY-${Math.floor(1000+Math.random()*9000)}')">رزرو</button></div>`).join('')}
+    function renderAllDestinations(){const grid=document.getElementById('destinationsFullGrid');grid.innerHTML=destinations.map(d=>`<div class="destination-card" onclick="showNotification('مشاهده ${d.name}')"><span class="icon">${d.icon}</span><div class="name">${d.name}</div><div class="price">${d.price} تومان</div><div class="info">${d.info}</div>${d.badge?`<span class="flight-badge">${d.badge}</span>`:''}</div>`).join('')}
+    function renderServices(){const grid=document.getElementById('servicesGrid');grid.innerHTML=services.map(s=>`<div class="service-card"><div class="glow"></div><span class="icon">${s.icon}</span><div class="title">${s.title}</div><div class="desc">${s.desc}</div></div>`).join('')}
+    function renderReviews(){const grid=document.getElementById('reviewsGrid');grid.innerHTML=testimonials.map(t=>`<div class="testimonial-card"><div class="avatar">${t.name[0]}</div><div class="stars">${'⭐'.repeat(t.stars)}</div><div class="text">"${t.text}"</div><div class="name">${t.name}</div><div class="position">${t.position}</div></div>`).join('')}
+    function searchFlights(){const from=document.getElementById('searchFrom').value||'تهران',to=document.getElementById('searchTo').value||'دبی',date=document.getElementById('searchDate').value||'امروز',passengers=document.getElementById('searchPassengers').value;showNotification(`🔍 جستجوی پرواز از ${from} به ${to} در تاریخ ${date} برای ${passengers} نفر`)}
+    window.addEventListener('scroll',()=>{const header=document.getElementById('header');if(window.scrollY>50)header.classList.add('scrolled');else header.classList.remove('scrolled')});
+    let notifTimeout;function showNotification(message){const notif=document.getElementById('notification');notif.textContent=message;notif.classList.add('show');clearTimeout(notifTimeout);notifTimeout=setTimeout(()=>notif.classList.remove('show'),3000)}
+    const today=new Date().toISOString().split('T')[0];document.getElementById('searchDate').value=today;
+    setLanguage('fa');renderHome();renderFlights();renderAllDestinations();renderServices();renderReviews();
+    console.log('✅ Fly3D Ultimate Pro با ۷ صفحه کامل و Three.js بارگذاری شد!');
+  </script>
+</body>
+</html>

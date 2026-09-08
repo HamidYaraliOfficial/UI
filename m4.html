@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>🎯 تیراندازی سه‌بعدی | تفنگ گردان + چندین سلاح</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a0a1a; user-select: none; cursor: none; }
+    #score {
+      position: absolute; top: 30px; right: 40px; color: #fff; font-size: 28px;
+      background: rgba(0,0,0,0.85); padding: 12px 30px; border-radius: 50px;
+      backdrop-filter: blur(10px); border: 1px solid rgba(255,215,0,0.5);
+      box-shadow: 0 0 40px rgba(255,215,0,0.3); z-index: 30; font-weight: bold;
+      letter-spacing: 2px; pointer-events: none;
+    }
+    #score::before { content: "🎯 "; filter: drop-shadow(0 0 10px gold); }
+    #crosshair {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      color: rgba(0, 255, 200, 0.9); font-size: 44px; text-shadow: 0 0 20px #0ff, 0 0 40px #0af, 0 0 80px #0af;
+      pointer-events: none; z-index: 20; opacity: 0.9; font-weight: 100; letter-spacing: -8px;
+    }
+    #info {
+      position: absolute; bottom: 30px; left: 0; width: 100%; text-align: center;
+      color: #fff; text-shadow: 0 0 20px rgba(0,200,255,0.7); pointer-events: none; z-index: 10;
+      font-size: 1.1rem; letter-spacing: 2px;
+      background: linear-gradient(90deg, transparent, rgba(0,150,255,0.15), transparent);
+      padding: 12px 0; backdrop-filter: blur(4px);
+    }
+    #info span { display: inline-block; margin: 0 15px; padding: 6px 20px; background: rgba(0,0,0,0.5); border-radius: 40px; border: 1px solid rgba(255,255,255,0.1); }
+    #gun-status {
+      position: absolute; bottom: 30px; right: 40px; color: #aaa; font-size: 16px;
+      background: rgba(0,0,0,0.6); padding: 8px 18px; border-radius: 30px;
+      backdrop-filter: blur(6px); border: 1px solid #444; z-index: 30; pointer-events: none;
+    }
+    #gun-status i { color: #0ff; margin-right: 8px; }
+    #ammo {
+      position: absolute; top: 30px; left: 40px; color: #fff; font-size: 22px;
+      background: rgba(0,0,0,0.7); padding: 10px 25px; border-radius: 50px;
+      backdrop-filter: blur(8px); border: 1px solid rgba(255,100,0,0.4);
+      z-index: 30; pointer-events: none; font-family: monospace;
+    }
+    #weapon-select {
+      position: absolute; top: 100px; left: 40px; z-index: 30;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .weapon-btn {
+      background: rgba(0,0,0,0.7); color: #fff; border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 16px; border-radius: 30px; backdrop-filter: blur(6px);
+      cursor: pointer; font-size: 14px; transition: all 0.3s;
+      font-family: 'Segoe UI', sans-serif; letter-spacing: 1px;
+    }
+    .weapon-btn:hover { background: rgba(0,150,255,0.3); border-color: #0ff; transform: scale(1.05); }
+    .weapon-btn.active { background: rgba(0,200,255,0.3); border-color: #0ff; box-shadow: 0 0 20px rgba(0,200,255,0.2); }
+    @media (max-width: 600px) { #info span { font-size: 0.8rem; padding: 4px 10px; } #score { font-size: 20px; padding: 6px 18px; } #ammo { font-size: 16px; padding: 6px 15px; } .weapon-btn { font-size: 12px; padding: 6px 12px; } }
+  </style>
+</head>
+<body>
+  <div id="score">0</div>
+  <div id="ammo">🔫 ∞</div>
+  <div id="crosshair">✦</div>
+  <div id="info"><span>🔫 کلیک چپ = شلیک</span><span>🔄 حرکت ماوس = چرخش 360°</span></div>
+  <div id="gun-status"><i>⚡</i> تفنگ M4A1</div>
+  <div id="weapon-select">
+    <button class="weapon-btn active" data-weapon="0">🔫 M4A1</button>
+    <button class="weapon-btn" data-weapon="1">🔫狙击步枪</button>
+    <button class="weapon-btn" data-weapon="2">🔫 تفنگ شاتگان</button>
+    <button class="weapon-btn" data-weapon="3">🔫 پیستول</button>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+    // === صحنه، دوربین، رندرها ===
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a1a);
+    scene.fog = new THREE.FogExp2(0x0a0a1a, 0.0035);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 2.8, 8);
+    camera.lookAt(0, 1.8, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.bias = 0.00005;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    document.body.appendChild(renderer.domElement);
+
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0px';
+    labelRenderer.domElement.style.left = '0px';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    document.body.appendChild(labelRenderer.domElement);
+
+    // === نورپردازی ===
+    const ambient = new THREE.AmbientLight(0x404070, 0.5);
+    scene.add(ambient);
+    const mainLight = new THREE.DirectionalLight(0xffeedd, 1.8);
+    mainLight.position.set(8, 15, 10);
+    mainLight.castShadow = true;
+    mainLight.shadow.mapSize.width = 2048;
+    mainLight.shadow.mapSize.height = 2048;
+    mainLight.shadow.bias = -0.0005;
+    mainLight.shadow.normalBias = 0.02;
+    scene.add(mainLight);
+    const fillLight = new THREE.DirectionalLight(0x4488ff, 0.6);
+    fillLight.position.set(-8, 3, 8);
+    scene.add(fillLight);
+    const backLight = new THREE.DirectionalLight(0xff8844, 0.5);
+    backLight.position.set(-4, 5, -10);
+    scene.add(backLight);
+    const rimLight = new THREE.DirectionalLight(0x88ddff, 0.4);
+    rimLight.position.set(0, 6, -8);
+    scene.add(rimLight);
+    const hemiLight = new THREE.HemisphereLight(0x4466ff, 0x442200, 0.6);
+    scene.add(hemiLight);
+
+    // === محیط ===
+    const groundGeo = new THREE.PlaneGeometry(60, 60);
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.9, metalness: 0.0 });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.3;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const grid = new THREE.GridHelper(50, 50, 0x4488ff, 0x2255aa);
+    grid.position.y = -0.25;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.15;
+    scene.add(grid);
+
+    // ساختمان‌ها
+    function createBuilding(x, z, w, h, d, color) {
+      const geo = new THREE.BoxGeometry(w, h, d);
+      const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.2, emissive: new THREE.Color(color).multiplyScalar(0.05) });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(x, h/2 - 0.3, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+      const windowMat = new THREE.MeshStandardMaterial({ color: 0xffaa44, emissive: 0xff8800, emissiveIntensity: 0.15 });
+      for (let i = 0; i < 4; i++) {
+        const win = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.6), windowMat);
+        win.position.set(x + (i-1.5)*0.8, h*0.5, z + d/2 + 0.01);
+        scene.add(win);
+        const win2 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.6), windowMat);
+        win2.position.set(x + (i-1.5)*0.8, h*0.5, z - d/2 - 0.01);
+        win2.rotation.y = Math.PI;
+        scene.add(win2);
+      }
+    }
+    createBuilding(-8, -6, 1.8, 4.5, 1.8, 0x445577);
+    createBuilding(-7, -8, 1.4, 5.0, 1.4, 0x556688);
+    createBuilding(8, -7, 2.0, 3.5, 2.0, 0x334466);
+    createBuilding(9, -9, 1.6, 4.0, 1.6, 0x445566);
+    createBuilding(-9, 4, 2.2, 5.5, 2.2, 0x3a4a6a);
+    createBuilding(7, 5, 1.8, 3.8, 1.8, 0x4a5a7a);
+    createBuilding(-10, -10, 2.5, 6.0, 2.5, 0x2a3a5a);
+    createBuilding(10, 3, 2.0, 4.5, 2.0, 0x3a5a7a);
+    createBuilding(-5, 8, 1.5, 3.0, 1.5, 0x5a6a8a);
+    createBuilding(5, -10, 1.8, 4.0, 1.8, 0x4a5a7a);
+
+    // درختان
+    function createTree(x, z) {
+      const group = new THREE.Group();
+      const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5a3a2a, roughness: 0.9 });
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 0.8, 6), trunkMat);
+      trunk.position.y = 0.1;
+      trunk.castShadow = true;
+      group.add(trunk);
+      const leafMat = new THREE.MeshStandardMaterial({ color: 0x2a6a2a, roughness: 0.8, emissive: 0x1a4a1a, emissiveIntensity: 0.1 });
+      const leaf1 = new THREE.Mesh(new THREE.SphereGeometry(0.5, 6, 6), leafMat);
+      leaf1.position.y = 0.6;
+      leaf1.castShadow = true;
+      group.add(leaf1);
+      const leaf2 = new THREE.Mesh(new THREE.SphereGeometry(0.4, 6, 6), leafMat);
+      leaf2.position.set(0.3, 0.8, 0.2);
+      leaf2.castShadow = true;
+      group.add(leaf2);
+      const leaf3 = new THREE.Mesh(new THREE.SphereGeometry(0.4, 6, 6), leafMat);
+      leaf3.position.set(-0.25, 0.85, -0.2);
+      leaf3.castShadow = true;
+      group.add(leaf3);
+      group.position.set(x, -0.3, z);
+      return group;
+    }
+    scene.add(createTree(-6, 7));
+    scene.add(createTree(6, 8));
+    scene.add(createTree(-5, -10));
+    scene.add(createTree(10, -4));
+    scene.add(createTree(-11, -5));
+    scene.add(createTree(4, 10));
+    scene.add(createTree(-10, 6));
+
+    // === ساخت انواع تفنگ ===
+    const weapons = [];
+
+    // 1. M4A1
+    function createM4A1() {
+      const group = new THREE.Group();
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.25, metalness: 0.85 });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.28, 1.6), bodyMat);
+      body.position.set(0, 0.1, 0);
+      body.castShadow = true;
+      group.add(body);
+      const barrelMat = new THREE.MeshStandardMaterial({ color: 0x445566, roughness: 0.15, metalness: 0.95 });
+      const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 1.0, 16), barrelMat);
+      barrel.rotation.x = Math.PI / 2;
+      barrel.position.set(0, 0.1, 0.9);
+      barrel.castShadow = true;
+      group.add(barrel);
+      const handguardMat = new THREE.MeshStandardMaterial({ color: 0x333344, roughness: 0.5, metalness: 0.6 });
+      const handguard = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.15, 0.6, 12), handguardMat);
+      handguard.rotation.x = Math.PI / 2;
+      handguard.position.set(0, 0.1, 0.5);
+      handguard.castShadow = true;
+      group.add(handguard);
+      const stockMat = new THREE.MeshStandardMaterial({ color: 0x2a1a0a, roughness: 0.9, metalness: 0.0 });
+      const stock = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.22, 0.7), stockMat);
+      stock.position.set(0, 0.05, -0.75);
+      stock.castShadow = true;
+      group.add(stock);
+      const gripMat = new THREE.MeshStandardMaterial({ color: 0x1a100a, roughness: 0.9 });
+      const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.13, 0.45, 10), gripMat);
+      grip.position.set(0, -0.25, -0.2);
+      grip.rotation.x = 0.3;
+      grip.castShadow = true;
+      group.add(grip);
+      const triggerMat = new THREE.MeshStandardMaterial({ color: 0x222233, metalness: 0.7, roughness: 0.3 });
+      const trigger = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.02), triggerMat);
+      trigger.position.set(0, -0.12, -0.05);
+      group.add(trigger);
+      const sightMat = new THREE.MeshStandardMaterial({ color: 0x888899, metalness: 0.9, roughness: 0.2 });
+      const frontSight = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.1, 0.04), sightMat);
+      frontSight.position.set(0, 0.25, 0.65);
+      group.add(frontSight);
+      const rearSight = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.1, 0.04), sightMat);
+      rearSight.position.set(0, 0.25, -0.15);
+      group.add(rearSight);
+      const magMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2a, metalness: 0.6, roughness: 0.4 });
+      const mag = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.3, 0.07), magMat);
+      mag.position.set(0, -0.12, 0.2);
+      group.add(mag);
+      const railMat = new THREE.MeshStandardMaterial({ color: 0x556677, metalness: 0.8, roughness: 0.3 });
+      for (let side = -1; side <= 1; side+=2) {
+        for (let i = 0; i < 4; i++) {
+          const rail = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.08), railMat);
+          rail.position.set(side * 0.22, 0.16, 0.1 + i * 0.12);
+          group.add(rail);
+        }
+      }
+      return group;
+    }
+
+    // 2.狙击步枪 (Sniper)
+    function createSniper() {
+      const group = new THREE.Group();
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.2, metalness: 0.8 });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.25, 2.0), bodyMat);
+      body.position.set(0, 0.1, 0);
+      body.castShadow = true;
+      group.add(body);
+      const barrelMat = new THREE.MeshStandardMaterial({ color: 0x334455, roughness: 0.1, metalness: 0.95 });
+      const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 1.4, 12), barrelMat);
+      barrel.rotation.x = Math.PI / 2;
+      barrel.position.set(0, 0.1, 1.2);
+      barrel.castShadow = true;
+      group.add(barrel);
+      const stockMat = new THREE.MeshStandardMaterial({ color: 0x2a1a0a, roughness: 0.9 });
+      const stock = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.18, 0.8), stockMat);
+      stock.position.set(0, 0.05, -0.9);
+      stock.castShadow = true;
+      group.add(stock);
+      const gripMat = new THREE.MeshStandardMaterial({ color: 0x1a100a, roughness: 0.9 });
+      const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.1, 0.4, 8), gripMat);
+      grip.position.set(0, -0.2, -0.1);
+      grip.rotation.x = 0.3;
+      grip.castShadow = true;
+      group.add(grip);
+      const scopeMat = new THREE.MeshStandardMaterial({ color: 0x222233, metalness: 0.7, roughness: 0.3 });
+      const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.3, 10), scopeMat);
+      scope.position.set(0, 0.25, 0.2);
+      scope.rotation.x = 0;
+      group.add(scope);
+      const lensMat = new THREE.MeshStandardMaterial({ color: 0x4488ff, emissive: 0x4488ff, emissiveIntensity: 0.1 });
+      const lens = new THREE.Mesh(new THREE.CircleGeometry(0.08, 8), lensMat);
+      lens.position.set(0, 0.25, 0.35);
+      group.add(lens);
+      return group;
+    }
+
+    // 3. شاتگان
+    function createShotgun() {
+      const group = new THREE.Group();
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x2a1a0a, roughness: 0.7, metalness: 0.3 });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.22, 1.3), bodyMat);
+      body.position.set(0, 0.1, 0);
+      body.castShadow = true;
+      group.add(body);
+      const barrelMat = new THREE.MeshStandardMaterial({ color: 0x445566, roughness: 0.2, metalness: 0.9 });
+      const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 0.8, 12), barrelMat);
+      barrel.rotation.x = Math.PI / 2;
+      barrel.position.set(0, 0.1, 0.7);
+      barrel.castShadow = true;
+      group.add(barrel);
+      const stockMat = new THREE.MeshStandardMaterial({ color: 0x1a0a05, roughness: 0.9 });
+      const stock = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.15, 0.5), stockMat);
+      stock.position.set(0, 0.05, -0.6);
+      stock.castShadow = true;
+      group.add(stock);
+      const gripMat = new THREE.MeshStandardMaterial({ color: 0x1a100a, roughness: 0.9 });
+      const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.12, 0.4, 8), gripMat);
+      grip.position.set(0, -0.2, -0.15);
+      grip.rotation.x = 0.3;
+      grip.castShadow = true;
+      group.add(grip);
+      return group;
+    }
+
+    // 4. پیستول
+    function createPistol() {
+      const group = new THREE.Group();
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x222233, roughness: 0.3, metalness: 0.8 });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.18, 0.5), bodyMat);
+      body.position.set(0, 0.05, 0);
+      body.castShadow = true;
+      group.add(body);
+      const barrelMat = new THREE.MeshStandardMaterial({ color: 0x334455, roughness: 0.2, metalness: 0.9 });
+      const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.25, 8), barrelMat);
+      barrel.rotation.x = Math.PI / 2;
+      barrel.position.set(0, 0.05, 0.3);
+      barrel.castShadow = true;
+      group.add(barrel);
+      const gripMat = new THREE.MeshStandardMaterial({ color: 0x1a100a, roughness: 0.9 });
+      const grip = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.2, 0.06), gripMat);
+      grip.position.set(0, -0.12, -0.05);
+      grip.castShadow = true;
+      group.add(grip);
+      const triggerMat = new THREE.MeshStandardMaterial({ color: 0x222233, metalness: 0.7 });
+      const trigger = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.06, 0.01), triggerMat);
+      trigger.position.set(0, -0.04, 0.02);
+      group.add(trigger);
+      return group;
+    }
+
+    const weaponGroups = [createM4A1, createSniper, createShotgun, createPistol];
+    const weaponNames = ['M4A1', '狙击步枪', 'شاتگان', 'پیستول'];
+    let currentWeaponIndex = 0;
+    let gunGroup = new THREE.Group();
+    scene.add(gunGroup);
+
+    function switchWeapon(index) {
+      // حذف تفنگ قبلی
+      while(gunGroup.children.length > 0) {
+        gunGroup.remove(gunGroup.children[0]);
+      }
+      const newGun = weaponGroups[index]();
+      gunGroup.add(newGun);
+      gunGroup.position.set(0.8, -0.1, 2.0);
+      gunGroup.scale.set(0.55, 0.55, 0.55);
+      
+      // به‌روزرسانی دکمه‌ها
+      document.querySelectorAll('.weapon-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i === index);
+      });
+      document.getElementById('gun-status').innerHTML = `<i>⚡</i> تفنگ ${weaponNames[index]}`;
+      currentWeaponIndex = index;
+    }
+
+    // انتخاب تفنگ اولیه
+    switchWeapon(0);
+
+    // رویدادهای انتخاب سلاح
+    document.querySelectorAll('.weapon-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.weapon);
+        switchWeapon(idx);
+      });
+    });
+
+    // === ساخت آدمک‌ها ===
+    function createRealisticHuman(pos, color = 0x44aaff, scale = 0.7) {
+      const group = new THREE.Group();
+      const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.1 });
+      const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 0.8, 10), bodyMat);
+      torso.position.y = 0.55;
+      torso.castShadow = true;
+      group.add(torso);
+      const beltMat = new THREE.MeshStandardMaterial({ color: 0x222233, roughness: 0.7 });
+      const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.06, 10), beltMat);
+      belt.position.y = 0.2;
+      group.add(belt);
+      const headMat = new THREE.MeshStandardMaterial({ color: 0xf0d0a0, roughness: 0.3 });
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 14, 14), headMat);
+      head.position.y = 1.1;
+      head.castShadow = true;
+      group.add(head);
+      const hairMat = new THREE.MeshStandardMaterial({ color: 0x332211, roughness: 0.9 });
+      const hair = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 8), hairMat);
+      hair.position.set(0, 1.2, -0.08);
+      hair.scale.set(1, 0.5, 1);
+      group.add(hair);
+      const hatMat = new THREE.MeshStandardMaterial({ color: 0x335577, roughness: 0.6 });
+      const hat = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.08, 10), hatMat);
+      hat.position.y = 1.24;
+      group.add(hat);
+      const hatTop = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.12, 8), hatMat);
+      hatTop.position.y = 1.3;
+      group.add(hatTop);
+      const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x4488ff, emissiveIntensity: 0.2 });
+      const pupilMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
+      for (let side = -1; side <= 1; side+=2) {
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), eyeMat);
+        eye.position.set(side * 0.09, 1.14, 0.22);
+        group.add(eye);
+        const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 6), pupilMat);
+        pupil.position.set(side * 0.11, 1.14, 0.27);
+        group.add(pupil);
+      }
+      const armMat = new THREE.MeshStandardMaterial({ color: 0xf0d0a0, roughness: 0.4 });
+      const sleeveMat = new THREE.MeshStandardMaterial({ color, roughness: 0.6 });
+      for (let side = -1; side <= 1; side+=2) {
+        const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.55, 8), armMat);
+        arm.position.set(side * 0.45, 0.75, 0);
+        arm.rotation.z = side * 0.4;
+        arm.rotation.x = 0.3;
+        arm.castShadow = true;
+        group.add(arm);
+        const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.07, 0.2, 8), sleeveMat);
+        sleeve.position.set(side * 0.45, 0.55, 0);
+        sleeve.rotation.z = side * 0.4;
+        group.add(sleeve);
+      }
+      const legMat = new THREE.MeshStandardMaterial({ color: 0x2a3a4a, roughness: 0.7 });
+      for (let side = -1; side <= 1; side+=2) {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 0.55, 8), legMat);
+        leg.position.set(side * 0.17, 0.2, 0);
+        leg.castShadow = true;
+        group.add(leg);
+        const shoeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2a, roughness: 0.9 });
+        const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.2), shoeMat);
+        shoe.position.set(side * 0.17, -0.05, 0.06);
+        group.add(shoe);
+      }
+      const labelDiv = document.createElement('div');
+      labelDiv.textContent = '🎯';
+      labelDiv.style.color = '#fff';
+      labelDiv.style.fontSize = '18px';
+      labelDiv.style.textShadow = '0 0 20px rgba(255,200,0,0.9)';
+      labelDiv.style.background = 'rgba(0,0,0,0.5)';
+      labelDiv.style.padding = '2px 12px';
+      labelDiv.style.borderRadius = '20px';
+      labelDiv.style.border = '1px solid rgba(255,215,0,0.3)';
+      labelDiv.style.backdropFilter = 'blur(4px)';
+      const label = new CSS2DObject(labelDiv);
+      label.position.set(0, 1.6, 0);
+      group.add(label);
+      group.position.set(pos.x, pos.y, pos.z);
+      group.scale.set(scale, scale, scale);
+      return group;
+    }
+
+    const humans = [];
+    const humanPositions = [
+      { x: -4.0, y: 0.3, z: -3.0 }, { x: 4.5, y: 0.3, z: -4.5 },
+      { x: -3.5, y: 0.3, z: -6.0 }, { x: 5.0, y: 0.3, z: -7.0 },
+      { x: -5.0, y: 0.3, z: -8.5 }, { x: 2.0, y: 0.3, z: -9.0 },
+      { x: -1.5, y: 0.3, z: -10.5 }, { x: 4.0, y: 0.3, z: -11.0 },
+      { x: -6.0, y: 0.3, z: -5.0 }, { x: 6.0, y: 0.3, z: -6.0 },
+      { x: -3.0, y: 0.3, z: -12.0 }, { x: 3.0, y: 0.3, z: -13.0 },
+    ];
+    const colors = [0x44aaff, 0xff6644, 0x66ff66, 0xff44aa, 0xffcc44, 0x44ffcc, 0xaa66ff, 0xff8844, 0x44ff88, 0xff44ff, 0x88ff44, 0x44aaff];
+
+    humanPositions.forEach((pos, index) => {
+      const human = createRealisticHuman(pos, colors[index % colors.length], 0.6 + Math.random() * 0.2);
+      scene.add(human);
+      humans.push({
+        mesh: human,
+        hit: false,
+        pos: pos,
+        speed: 0.005 + Math.random() * 0.01,
+        angle: Math.random() * Math.PI * 2,
+        rotSpeed: 0.01 + Math.random() * 0.02,
+        scale: 0.6 + Math.random() * 0.2,
+        moveRange: 3 + Math.random() * 4,
+        startX: pos.x,
+        startZ: pos.z,
+        moveSpeed: 0.002 + Math.random() * 0.005,
+        moveAngle: Math.random() * Math.PI * 2
+      });
+    });
+
+    // === متغیرهای بازی ===
+    let score = 0;
+    const scoreDisplay = document.getElementById('score');
+    let isShooting = false;
+
+    // === کنترل ماوس (چرخش 360 درجه) ===
+    let mouseX = 0, mouseY = 0;
+    let targetRotY = 0, targetRotX = 0;
+    let currentRotY = 0, currentRotX = 0;
+
+    document.addEventListener('mousemove', (event) => {
+      mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+      mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+      targetRotY = Math.max(-3.14, Math.min(3.14, mouseX * 3.14));
+      targetRotX = Math.max(-1.0, Math.min(1.0, mouseY * 0.8));
+    });
+
+    // === شلیک ===
+    document.addEventListener('click', (event) => {
+      if (event.button === 0) shoot();
+    });
+    document.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      shoot();
+    });
+
+    function shoot() {
+      if (isShooting) return;
+      isShooting = true;
+
+      const flash = document.createElement('div');
+      flash.style.position = 'fixed';
+      flash.style.top = '0';
+      flash.style.left = '0';
+      flash.style.width = '100%';
+      flash.style.height = '100%';
+      flash.style.background = 'radial-gradient(circle, rgba(255,255,200,0.35) 0%, transparent 70%)';
+      flash.style.pointerEvents = 'none';
+      flash.style.zIndex = '999';
+      flash.style.transition = 'opacity 0.08s';
+      document.body.appendChild(flash);
+      setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 100); }, 50);
+
+      gunGroup.position.x += 0.035;
+      gunGroup.position.y -= 0.025;
+      gunGroup.rotation.z += 0.015;
+      setTimeout(() => {
+        gunGroup.position.x -= 0.035;
+        gunGroup.position.y += 0.025;
+        gunGroup.rotation.z -= 0.015;
+      }, 60);
+
+      const raycaster = new THREE.Raycaster();
+      const center = new THREE.Vector2(0, 0);
+      raycaster.setFromCamera(center, camera);
+
+      const humanMeshes = humans.map(h => h.mesh);
+      const intersects = raycaster.intersectObjects(humanMeshes, true);
+
+      let hitHuman = false;
+      if (intersects.length > 0) {
+        let hitObj = intersects[0].object;
+        let targetGroup = null;
+        while (hitObj.parent) {
+          if (humans.some(h => h.mesh === hitObj.parent)) {
+            targetGroup = hitObj.parent;
+            break;
+          }
+          hitObj = hitObj.parent;
+        }
+        if (targetGroup) {
+          const humanData = humans.find(h => h.mesh === targetGroup);
+          if (humanData && !humanData.hit) {
+            humanData.hit = true;
+            score += 15;
+            scoreDisplay.textContent = score;
+            hitHuman = true;
+
+            const disappear = () => {
+              let s = targetGroup.scale.x;
+              s -= 0.03;
+              if (s <= 0.05) {
+                targetGroup.visible = false;
+                setTimeout(() => {
+                  const newPos = {
+                    x: (Math.random() - 0.5) * 14,
+                    y: 0.3,
+                    z: -1.5 - Math.random() * 13
+                  };
+                  targetGroup.position.set(newPos.x, newPos.y, newPos.z);
+                  targetGroup.scale.set(humanData.scale, humanData.scale, humanData.scale);
+                  targetGroup.visible = true;
+                  humanData.hit = false;
+                  humanData.pos = newPos;
+                  humanData.startX = newPos.x;
+                  humanData.startZ = newPos.z;
+                  const newColor = colors[Math.floor(Math.random() * colors.length)];
+                  targetGroup.children.forEach(child => {
+                    if (child.isMesh && child.material.color && 
+                        child.material.color.getHex() !== 0xf0d0a0 && 
+                        child.material.color.getHex() !== 0xffffff &&
+                        child.material.color.getHex() !== 0x000000 &&
+                        child.material.color.getHex() !== 0x332211) {
+                      child.material.color.setHex(newColor);
+                    }
+                  });
+                }, 1200);
+                return;
+              }
+              targetGroup.scale.set(s, s, s);
+              requestAnimationFrame(disappear);
+            };
+            disappear();
+          }
+        }
+      }
+
+      if (!hitHuman) {
+        const missDiv = document.createElement('div');
+        missDiv.style.position = 'fixed';
+        missDiv.style.top = '50%';
+        missDiv.style.left = '50%';
+        missDiv.style.transform = 'translate(-50%, -50%)';
+        missDiv.style.color = 'rgba(255,100,100,0.2)';
+        missDiv.style.fontSize = '70px';
+        missDiv.style.pointerEvents = 'none';
+        missDiv.style.zIndex = '999';
+        missDiv.textContent = '✕';
+        missDiv.style.transition = 'all 0.3s ease-out';
+        missDiv.style.opacity = '1';
+        document.body.appendChild(missDiv);
+        setTimeout(() => {
+          missDiv.style.opacity = '0';
+          missDiv.style.transform = 'translate(-50%, -50%) scale(2)';
+          setTimeout(() => missDiv.remove(), 300);
+        }, 100);
+      }
+
+      setTimeout(() => { isShooting = false; }, 200);
+    }
+
+    // === انیمیشن آدمک‌ها ===
+    function animateHumans() {
+      humans.forEach(h => {
+        if (!h.hit && h.mesh.visible) {
+          h.angle += h.speed;
+          h.moveAngle += h.moveSpeed;
+          const radius = h.moveRange;
+          const targetX = h.startX + Math.sin(h.moveAngle) * radius;
+          const targetZ = h.startZ + Math.cos(h.moveAngle) * radius;
+          h.mesh.position.x += (targetX - h.mesh.position.x) * 0.02;
+          h.mesh.position.z += (targetZ - h.mesh.position.z) * 0.02;
+          h.mesh.position.y = 0.3 + Math.sin(h.angle * 1.5) * 0.06;
+          h.mesh.rotation.y += h.rotSpeed;
+          h.mesh.children.forEach(child => {
+            if (child.position.x === 0.45 || child.position.x === -0.45) {
+              child.rotation.z += Math.sin(h.angle * 2) * 0.001;
+            }
+          });
+        }
+      });
+    }
+
+    // === حلقه اصلی ===
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // چرخش 360 درجه دوربین
+      currentRotY += (targetRotY - currentRotY) * 0.05;
+      currentRotX += (targetRotX - currentRotX) * 0.05;
+
+      const angleY = Math.max(-Math.PI, Math.min(Math.PI, currentRotY));
+      const angleX = Math.max(-0.6, Math.min(0.6, currentRotX * 0.5));
+
+      const radius = 10;
+      const baseY = 2.8;
+      const targetX = Math.sin(angleY) * radius;
+      const targetZ = -Math.cos(angleY) * radius + 2;
+      const targetY = baseY + Math.sin(angleX) * 1.5;
+
+      camera.position.x += (targetX - camera.position.x) * 0.04;
+      camera.position.z += (targetZ - camera.position.z) * 0.04;
+      camera.position.y += (targetY - camera.position.y) * 0.04;
+      camera.lookAt(0, 1.8, 0);
+
+      // چرخش تفنگ همراه با دوربین (حل مشکل)
+      gunGroup.position.x = camera.position.x * 0.3 + 0.8;
+      gunGroup.position.y = camera.position.y * 0.15 - 0.05;
+      gunGroup.rotation.y = (camera.position.x) * 0.06;
+      gunGroup.rotation.x = (camera.position.y - 2.8) * 0.03;
+
+      animateHumans();
+
+      renderer.render(scene, camera);
+      labelRenderer.render(scene, camera);
+    }
+
+    animate();
+
+    // === Resize ===
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    window.addEventListener('contextmenu', e => e.preventDefault());
+    console.log('🔫 بازی تیراندازی با ۴ نوع تفنگ و چرخش 360 درجه!');
+  </script>
+</body>
+</html>

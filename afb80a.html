@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>🎯 تیراندازی سه‌بعدی</title>
+  <style>
+    /* استایل‌های صفحه – بدون توضیح اضافه */
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0a0a1a;
+    }
+    #info {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(0,200,255,0.7);
+      pointer-events: none;
+      z-index: 10;
+      font-size: 1.2rem;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, transparent, rgba(0,150,255,0.2), transparent);
+      padding: 10px 0;
+      backdrop-filter: blur(4px);
+    }
+    #info span {
+      display: inline-block;
+      margin: 0 20px;
+      padding: 8px 25px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 40px;
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 0 30px rgba(0,100,255,0.3);
+    }
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: rgba(0, 255, 200, 0.9);
+      font-size: 40px;
+      text-shadow: 0 0 20px #0ff, 0 0 40px #0af;
+      pointer-events: none;
+      z-index: 20;
+      opacity: 0.8;
+      font-weight: 100;
+      letter-spacing: -8px;
+    }
+    #score {
+      position: absolute;
+      top: 30px;
+      right: 40px;
+      color: #fff;
+      font-size: 28px;
+      background: rgba(0,0,0,0.6);
+      padding: 12px 30px;
+      border-radius: 50px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,215,0,0.4);
+      box-shadow: 0 0 40px rgba(255,215,0,0.2);
+      z-index: 30;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+    #score::before {
+      content: "🎯 ";
+      filter: drop-shadow(0 0 10px gold);
+    }
+    #gun-status {
+      position: absolute;
+      bottom: 30px;
+      right: 40px;
+      color: #aaa;
+      font-size: 18px;
+      background: rgba(0,0,0,0.6);
+      padding: 8px 20px;
+      border-radius: 30px;
+      backdrop-filter: blur(6px);
+      border: 1px solid #444;
+      z-index: 30;
+      letter-spacing: 1px;
+    }
+    #gun-status i {
+      color: #0ff;
+      margin-right: 10px;
+    }
+    @media (max-width: 600px) {
+      #info span { font-size: 0.9rem; padding: 4px 12px; }
+      #score { font-size: 20px; padding: 6px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="score">0</div>
+  <div id="crosshair">✦</div>
+  <div id="info"><span>🔫 کلیک چپ = شلیک</span><span>🔄 حرکت ماوس = نشانه‌روی</span></div>
+  <div id="gun-status"><i>⚡</i> تفنگ سه‌بعدی</div>
+
+  <!-- بارگذاری کتابخانه Three.js و افزونه‌ها -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+    // --- راه‌اندازی صحنه، دوربین، رندرها ---
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a1a);
+    scene.fog = new THREE.FogExp2(0x0a0a1a, 0.008);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 2.5, 8);
+    camera.lookAt(0, 1.5, 0);
+
+    // رندر WebGL
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    document.body.appendChild(renderer.domElement);
+
+    // رندر CSS2D برای نشانه‌های سه‌بعدی
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0px';
+    labelRenderer.domElement.style.left = '0px';
+    labelRenderer.domElement.style.pointerEvents = 'none'; // کلیک از طریق آن عبور کند
+    document.body.appendChild(labelRenderer.domElement);
+
+    // --- نورپردازی واقع‌گرایانه ---
+    const ambientLight = new THREE.AmbientLight(0x404060);
+    scene.add(ambientLight);
+
+    const mainLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+    mainLight.position.set(5, 10, 7);
+    mainLight.castShadow = true;
+    mainLight.shadow.mapSize.width = 1024;
+    mainLight.shadow.mapSize.height = 1024;
+    scene.add(mainLight);
+
+    const fillLight = new THREE.DirectionalLight(0x4488ff, 0.4);
+    fillLight.position.set(-5, 0, 5);
+    scene.add(fillLight);
+
+    const backLight = new THREE.PointLight(0xffaa44, 0.3);
+    backLight.position.set(-2, 3, -6);
+    scene.add(backLight);
+
+    const spotLight = new THREE.SpotLight(0x88aaff, 0.5);
+    spotLight.position.set(0, 8, 0);
+    scene.add(spotLight);
+
+    // --- زمین / سکو (برای حس سه‌بعدی) ---
+    const groundGeometry = new THREE.CircleGeometry(6, 32);
+    const groundMaterial = new THREE.MeshStandardMaterial({
+      color: 0x1a1a2e,
+      roughness: 0.7,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.8,
+      side: THREE.DoubleSide
+    });
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // شبکه راهنما (شیشه‌ای)
+    const gridHelper = new THREE.GridHelper(10, 20, 0x44aaff, 0x3366aa);
+    gridHelper.position.y = -0.1;
+    scene.add(gridHelper);
+
+    // --- ساخت تفنگ سه‌بعدی (ترکیبی از اشکال) ---
+    const gunGroup = new THREE.Group();
+    
+    // بدنه اصلی
+    const bodyGeo = new THREE.BoxGeometry(0.3, 0.2, 1.2);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x222233, roughness: 0.3, metalness: 0.9 });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.set(0, 0.1, 0);
+    body.castShadow = true;
+    gunGroup.add(body);
+
+    // لوله
+    const barrelGeo = new THREE.CylinderGeometry(0.08, 0.1, 0.8, 8);
+    const barrelMat = new THREE.MeshStandardMaterial({ color: 0x334466, roughness: 0.2, metalness: 0.95 });
+    const barrel = new THREE.Mesh(barrelGeo, barrelMat);
+    barrel.rotation.x = Math.PI / 2;
+    barrel.position.set(0, 0.1, 0.7);
+    barrel.castShadow = true;
+    gunGroup.add(barrel);
+
+    // قنداق
+    const stockGeo = new THREE.BoxGeometry(0.25, 0.15, 0.5);
+    const stockMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.8 });
+    const stock = new THREE.Mesh(stockGeo, stockMat);
+    stock.position.set(0, 0.05, -0.5);
+    stock.castShadow = true;
+    gunGroup.add(stock);
+
+    // دستگیره
+    const gripGeo = new THREE.CylinderGeometry(0.1, 0.12, 0.35);
+    const gripMat = new THREE.MeshStandardMaterial({ color: 0x2a1a0a, roughness: 0.9 });
+    const grip = new THREE.Mesh(gripGeo, gripMat);
+    grip.position.set(0, -0.2, -0.2);
+    grip.rotation.x = 0.2;
+    grip.castShadow = true;
+    gunGroup.add(grip);
+
+    // دوربین (نشانه‌گیر)
+    const sightGeo = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+    const sightMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0x442200 });
+    const sight1 = new THREE.Mesh(sightGeo, sightMat);
+    sight1.position.set(0, 0.2, 0.3);
+    gunGroup.add(sight1);
+    const sight2 = new THREE.Mesh(sightGeo, sightMat);
+    sight2.position.set(0, 0.2, -0.2);
+    gunGroup.add(sight2);
+
+    // جزئیات جانبی
+    const detailMat = new THREE.MeshStandardMaterial({ color: 0x556677, roughness: 0.4, metalness: 0.7 });
+    const detail1 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.3), detailMat);
+    detail1.position.set(0.15, 0.1, 0.1);
+    gunGroup.add(detail1);
+    const detail2 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.3), detailMat);
+    detail2.position.set(-0.15, 0.1, 0.1);
+    gunGroup.add(detail2);
+
+    gunGroup.position.set(0.6, -0.2, 1.2);
+    gunGroup.scale.set(0.6, 0.6, 0.6);
+    scene.add(gunGroup);
+
+    // --- ایجاد اهداف (هدف‌های سه‌بعدی با طرح‌های مختلف) ---
+    const targets = [];
+    const targetColors = [0xff3333, 0x33ff33, 0x33aaff, 0xffaa33, 0xff44ff, 0x44ffcc];
+    const targetPositions = [
+      { x: -2.5, y: 1.2, z: -1 },
+      { x: 2.8, y: 1.8, z: -2.5 },
+      { x: -1.8, y: 2.5, z: -4 },
+      { x: 3.2, y: 0.8, z: -3.5 },
+      { x: -3.5, y: 1.5, z: -5 },
+      { x: 0.5, y: 2.2, z: -6 },
+      { x: -0.8, y: 0.9, z: -7.5 },
+      { x: 2.0, y: 1.0, z: -8 },
+    ];
+
+    // تابع ساخت هدف با ظاهر متفاوت
+    function createTarget(color, pos, size = 0.6) {
+      const group = new THREE.Group();
+      
+      // بدنه هدف (صفحه)
+      const bodyGeo = new THREE.CylinderGeometry(size * 0.9, size * 0.9, 0.1, 16);
+      const bodyMat = new THREE.MeshStandardMaterial({
+        color: color,
+        roughness: 0.3,
+        metalness: 0.2,
+        emissive: new THREE.Color(color).multiplyScalar(0.15)
+      });
+      const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+      bodyMesh.rotation.x = 0;
+      bodyMesh.position.y = 0;
+      bodyMesh.castShadow = true;
+      group.add(bodyMesh);
+
+      // حلقه داخلی
+      const ringMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: new THREE.Color(color).multiplyScalar(0.3),
+        roughness: 0.2
+      });
+      const ring = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.35, 24), ringMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.06;
+      group.add(ring);
+
+      // مرکز (نقطه قرمز)
+      const centerMat = new THREE.MeshStandardMaterial({
+        color: 0xff0000,
+        emissive: 0x440000,
+        roughness: 0.1
+      });
+      const center = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), centerMat);
+      center.position.y = 0.08;
+      group.add(center);
+
+      // پایه‌های نگهدارنده (برای ظاهر سه‌بعدی)
+      const legMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.3 });
+      for (let i = 0; i < 4; i++) {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.04), legMat);
+        const angle = (i / 4) * Math.PI * 2;
+        leg.position.set(Math.sin(angle) * 0.5, -0.2, Math.cos(angle) * 0.5);
+        group.add(leg);
+      }
+
+      // برچسب CSS2D (برای جلوه سه‌بعدی)
+      const div = document.createElement('div');
+      div.textContent = '🎯';
+      div.style.color = '#fff';
+      div.style.fontSize = '18px';
+      div.style.textShadow = '0 0 20px rgba(255,200,0,0.9)';
+      div.style.background = 'rgba(0,0,0,0.3)';
+      div.style.padding = '2px 10px';
+      div.style.borderRadius = '20px';
+      div.style.border = '1px solid rgba(255,255,255,0.2)';
+      div.style.backdropFilter = 'blur(4px)';
+      const label = new CSS2DObject(div);
+      label.position.set(0, 0.7, 0);
+      group.add(label);
+
+      group.position.set(pos.x, pos.y, pos.z);
+      
+      // چرخش تصادفی برای تنوع
+      group.rotation.y = Math.random() * Math.PI * 2;
+      
+      scene.add(group);
+      
+      // ذخیره اطلاعات هدف
+      targets.push({
+        mesh: group,
+        hit: false,
+        color: color,
+        pos: pos,
+        size: size,
+        speed: 0.005 + Math.random() * 0.01,
+        angle: Math.random() * Math.PI * 2
+      });
+      
+      return group;
+    }
+
+    // ساخت اهداف
+    targetPositions.forEach((pos, index) => {
+      const col = targetColors[index % targetColors.length];
+      const size = 0.5 + Math.random() * 0.4;
+      createTarget(col, pos, size);
+    });
+
+    // --- متغیرهای بازی ---
+    let score = 0;
+    const scoreDisplay = document.getElementById('score');
+    let isShooting = false;
+
+    // --- نشانه‌گیری با ماوس (کنترل دوربین) ---
+    let mouseX = 0, mouseY = 0;
+    let targetRotX = 0, targetRotY = 0;
+
+    document.addEventListener('mousemove', (event) => {
+      mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+      mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+      
+      // محدود کردن چرخش
+      targetRotY = Math.max(-1.2, Math.min(1.2, mouseX * 0.8));
+      targetRotX = Math.max(-0.6, Math.min(0.6, mouseY * 0.5));
+    });
+
+    // --- شلیک با کلیک چپ ---
+    document.addEventListener('click', (event) => {
+      if (event.button === 0) {
+        shoot();
+      }
+    });
+
+    // همچنین برای دستگاه‌های لمسی
+    document.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      shoot();
+    });
+
+    function shoot() {
+      if (isShooting) return;
+      isShooting = true;
+
+      // افکت فلاش (شبیه‌سازی)
+      const flash = document.createElement('div');
+      flash.style.position = 'fixed';
+      flash.style.top = '0';
+      flash.style.left = '0';
+      flash.style.width = '100%';
+      flash.style.height = '100%';
+      flash.style.background = 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%)';
+      flash.style.pointerEvents = 'none';
+      flash.style.zIndex = '999';
+      flash.style.transition = 'opacity 0.1s';
+      document.body.appendChild(flash);
+      setTimeout(() => {
+        flash.style.opacity = '0';
+        setTimeout(() => flash.remove(), 150);
+      }, 50);
+
+      // لرزش تفنگ (جلوه)
+      gunGroup.position.x += 0.02;
+      gunGroup.position.y -= 0.01;
+      setTimeout(() => {
+        gunGroup.position.x -= 0.02;
+        gunGroup.position.y += 0.01;
+      }, 50);
+
+      // تشخیص برخورد با اهداف (از مرکز صفحه)
+      const raycaster = new THREE.Raycaster();
+      const center = new THREE.Vector2(0, 0); // نشانه‌گیری دقیق از وسط صفحه
+      raycaster.setFromCamera(center, camera);
+
+      // بررسی برخورد با تمام اهداف (فقط بدنه اصلی)
+      const targetMeshes = targets.map(t => t.mesh).filter(m => m !== undefined);
+      const intersects = raycaster.intersectObjects(targetMeshes, true);
+
+      let hitTarget = false;
+      if (intersects.length > 0) {
+        // پیدا کردن هدف والد
+        let hitObj = intersects[0].object;
+        let targetGroup = null;
+        while (hitObj.parent) {
+          if (targets.some(t => t.mesh === hitObj.parent)) {
+            targetGroup = hitObj.parent;
+            break;
+          }
+          hitObj = hitObj.parent;
+        }
+        if (targetGroup) {
+          const targetData = targets.find(t => t.mesh === targetGroup);
+          if (targetData && !targetData.hit) {
+            targetData.hit = true;
+            score += 10;
+            scoreDisplay.textContent = score;
+            hitTarget = true;
+            
+            // انیمیشن ناپدید شدن هدف
+            const origScale = targetGroup.scale.x;
+            const disappear = () => {
+              let scale = targetGroup.scale.x;
+              scale -= 0.02;
+              if (scale <= 0) {
+                targetGroup.visible = false;
+                // بازآفرینی هدف بعد از 2 ثانیه
+                setTimeout(() => {
+                  const newPos = {
+                    x: (Math.random() - 0.5) * 8,
+                    y: 0.8 + Math.random() * 2.2,
+                    z: -2 - Math.random() * 7
+                  };
+                  targetGroup.position.set(newPos.x, newPos.y, newPos.z);
+                  targetGroup.scale.set(1, 1, 1);
+                  targetGroup.visible = true;
+                  targetData.hit = false;
+                  targetData.pos = newPos;
+                  // تغییر رنگ برای تنوع
+                  const newColor = targetColors[Math.floor(Math.random() * targetColors.length)];
+                  targetGroup.children.forEach(child => {
+                    if (child.isMesh && child.material.color) {
+                      child.material.color.setHex(newColor);
+                    }
+                  });
+                }, 1500);
+                return;
+              }
+              targetGroup.scale.set(scale, scale, scale);
+              requestAnimationFrame(disappear);
+            };
+            disappear();
+          }
+        }
+      }
+
+      // اگر هدفی زده نشد، یک افکت نمایشی (گلوله)
+      if (!hitTarget) {
+        const missDiv = document.createElement('div');
+        missDiv.style.position = 'fixed';
+        missDiv.style.top = '50%';
+        missDiv.style.left = '50%';
+        missDiv.style.transform = 'translate(-50%, -50%)';
+        missDiv.style.color = 'rgba(255,100,100,0.3)';
+        missDiv.style.fontSize = '60px';
+        missDiv.style.pointerEvents = 'none';
+        missDiv.style.zIndex = '999';
+        missDiv.textContent = '✕';
+        missDiv.style.transition = 'all 0.3s ease-out';
+        missDiv.style.opacity = '1';
+        document.body.appendChild(missDiv);
+        setTimeout(() => {
+          missDiv.style.opacity = '0';
+          missDiv.style.transform = 'translate(-50%, -50%) scale(2)';
+          setTimeout(() => missDiv.remove(), 300);
+        }, 100);
+      }
+
+      setTimeout(() => {
+        isShooting = false;
+      }, 200);
+    }
+
+    // --- انیمیشن حلقه (حرکت اهداف و به‌روزرسانی) ---
+    function animateTargets() {
+      targets.forEach(t => {
+        if (!t.hit && t.mesh.visible) {
+          // حرکت نوسانی ملایم
+          t.angle += t.speed;
+          t.mesh.position.y += Math.sin(t.angle * 2) * 0.001;
+          t.mesh.rotation.y += 0.005;
+          t.mesh.rotation.x = Math.sin(t.angle * 0.5) * 0.05;
+        }
+      });
+    }
+
+    // --- حلقه رندر ---
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // چرخش دوربین با ماوس (نشانه‌گیری)
+      camera.position.x += (targetRotY * 1.5 - camera.position.x) * 0.05;
+      camera.position.y += (targetRotX * 1.2 + 2.5 - camera.position.y) * 0.05;
+      camera.lookAt(0, 1.5, -2);
+
+      // حرکت تفنگ همراه با دوربین (جلوه)
+      gunGroup.position.x = camera.position.x * 0.5 + 0.4;
+      gunGroup.position.y = camera.position.y * 0.3 - 0.1;
+
+      // چرخش تفنگ به سمت نشانه
+      gunGroup.rotation.y = (camera.position.x) * 0.1;
+      gunGroup.rotation.x = (camera.position.y - 2.5) * 0.05;
+
+      // انیمیشن اهداف
+      animateTargets();
+
+      // رندر
+      renderer.render(scene, camera);
+      labelRenderer.render(scene, camera);
+    }
+
+    animate();
+
+    // --- تنظیم اندازه صفحه ---
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // غیرفعال کردن منوی راست‌کلیک
+    window.addEventListener('contextmenu', e => e.preventDefault());
+
+    console.log('🎯 بازی تیراندازی سه‌بعدی راه‌اندازی شد!');
+  </script>
+</body>
+</html>

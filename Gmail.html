@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gmail کلون | سرویس ایمیل</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+    :root{--bg:#ffffff;--bg-secondary:#f6f8fc;--bg-hover:#f1f3f4;--text:#202124;--text-secondary:#5f6368;--text-muted:#70757a;--border:#dadce0;--accent:#1a73e8;--accent-hover:#1557b0;--accent-glow:rgba(26,115,232,0.1);--shadow:0 1px 6px rgba(0,0,0,0.06);--radius:8px;--transition:all 0.3s ease}
+    body.dark-mode{--bg:#1a1a1a;--bg-secondary:#2d2d2d;--bg-hover:#3c3c3c;--text:#e8eaed;--text-secondary:#9aa0a6;--text-muted:#5f6368;--border:#3c4043;--shadow:0 1px 6px rgba(0,0,0,0.3)}
+    body{background:var(--bg-secondary);min-height:100vh;transition:var(--transition);color:var(--text)}
+    ::-webkit-scrollbar{width:6px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--text-muted);border-radius:10px}
+    .control-buttons{position:fixed;top:12px;right:12px;display:flex;gap:6px;z-index:9999}
+    .theme-toggle,.lang-toggle{background:var(--bg);border:1px solid var(--border);padding:6px 12px;border-radius:50px;cursor:pointer;font-size:0.65rem;display:flex;align-items:center;gap:4px;transition:var(--transition);box-shadow:var(--shadow);color:var(--text)}
+    .theme-toggle:hover,.lang-toggle:hover{transform:scale(1.05);box-shadow:var(--shadow-hover)}
+    body.ltr .control-buttons{right:auto;left:12px}
+    
+    /* ===== HEADER ===== */
+    .header{background:var(--bg);border-bottom:1px solid var(--border);padding:6px 16px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100}
+    .header .logo{display:flex;align-items:center;gap:8px;font-size:1.2rem;font-weight:700;color:var(--text);cursor:pointer}
+    .header .logo i{color:#ea4335;font-size:1.4rem}
+    .header .logo span{color:var(--text-secondary);font-weight:400}
+    .header-search{display:flex;align-items:center;background:var(--bg-secondary);border-radius:var(--radius);padding:4px 12px;gap:6px;border:1px solid var(--border);flex:1;max-width:600px;transition:var(--transition)}
+    .header-search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+    .header-search input{border:none;background:transparent;outline:none;flex:1;padding:6px 0;color:var(--text);font-size:0.85rem}
+    .header-search input::placeholder{color:var(--text-muted)}
+    .header-search i{color:var(--text-muted);font-size:0.9rem;cursor:pointer;transition:var(--transition)}
+    .header-search i:hover{color:var(--accent)}
+    .header-actions{display:flex;gap:12px;align-items:center}
+    .header-actions i{font-size:1.1rem;color:var(--text-secondary);cursor:pointer;padding:6px;border-radius:50%;transition:var(--transition)}
+    .header-actions i:hover{background:var(--bg-hover)}
+    .header-avatar{width:32px;height:32px;border-radius:50%;background:#ea4335;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:0.7rem;cursor:pointer}
+
+    /* ===== MAIN LAYOUT ===== */
+    .main{display:grid;grid-template-columns:220px 1fr;height:calc(100vh - 60px);max-width:1400px;margin:0 auto}
+    
+    /* ===== SIDEBAR ===== */
+    .sidebar{background:var(--bg);border-left:1px solid var(--border);padding:12px 8px;overflow-y:auto}
+    body.ltr .sidebar{border-left:none;border-right:1px solid var(--border)}
+    .compose-btn{width:100%;padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:50px;font-weight:600;cursor:pointer;transition:var(--transition);display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:12px;font-size:0.85rem}
+    .compose-btn:hover{background:var(--accent-hover);box-shadow:0 2px 12px var(--accent-glow)}
+    .sidebar-item{display:flex;align-items:center;gap:12px;padding:8px 14px;border-radius:50px;cursor:pointer;transition:var(--transition);color:var(--text-secondary);font-size:0.85rem;margin-bottom:2px}
+    .sidebar-item:hover{background:var(--bg-hover);color:var(--text)}
+    .sidebar-item.active{background:var(--bg-hover);color:var(--text);font-weight:600}
+    .sidebar-item i{width:20px;font-size:1rem}
+    .sidebar-item .badge{margin-right:auto;background:var(--accent);color:#fff;font-size:0.6rem;padding:1px 8px;border-radius:50px}
+    body.ltr .sidebar-item .badge{margin-right:0;margin-left:auto}
+    .sidebar-divider{height:1px;background:var(--border);margin:8px 8px}
+
+    /* ===== EMAIL LIST ===== */
+    .email-list{background:var(--bg);overflow-y:auto}
+    .email-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 12px;background:var(--bg)}
+    .email-tabs a{padding:12px 16px;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;border-bottom:3px solid transparent;transition:var(--transition)}
+    .email-tabs a:hover{color:var(--text)}
+    .email-tabs a.active{color:var(--accent);border-bottom-color:var(--accent)}
+    .email-item{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:var(--transition)}
+    .email-item:hover{background:var(--bg-hover)}
+    .email-item .avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:0.65rem;flex-shrink:0}
+    .email-item .info{flex:1;min-width:0}
+    .email-item .info .from{font-weight:600;font-size:0.85rem}
+    .email-item .info .subject{font-size:0.85rem}
+    .email-item .info .preview{color:var(--text-secondary);font-size:0.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .email-item .time{font-size:0.7rem;color:var(--text-muted);white-space:nowrap}
+    .email-item .star{color:var(--text-muted);cursor:pointer;transition:var(--transition)}
+    .email-item .star:hover{color:#fbbc05}
+    .email-item .star.active{color:#fbbc05}
+    .email-item.unread .info .from,.email-item.unread .info .subject{font-weight:700}
+    .email-item.selected{background:var(--bg-hover);border-left:4px solid var(--accent)}
+    body.ltr .email-item.selected{border-left:none;border-right:4px solid var(--accent)}
+
+    /* ===== EMAIL VIEW ===== */
+    .email-view{background:var(--bg);padding:20px 24px;overflow-y:auto;display:none}
+    .email-view .back-btn{display:none;padding:6px 12px;background:var(--bg-hover);border:none;border-radius:8px;cursor:pointer;color:var(--text);margin-bottom:12px}
+    .email-view .back-btn:hover{background:var(--border)}
+    .email-view .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:none;padding:0 0 12px;position:static}
+    .email-view .header .from{font-weight:600;font-size:1.1rem}
+    .email-view .header .to{color:var(--text-secondary);font-size:0.8rem}
+    .email-view .header .time{color:var(--text-muted);font-size:0.75rem}
+    .email-view .subject{font-size:1.2rem;font-weight:700;margin-bottom:8px}
+    .email-view .body{color:var(--text-secondary);font-size:0.95rem;line-height:1.8;margin-top:12px}
+    .email-view .actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+    .email-view .actions button{padding:6px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:500;transition:var(--transition);font-size:0.8rem}
+    .email-view .actions .reply{background:var(--accent);color:#fff}
+    .email-view .actions .reply:hover{background:var(--accent-hover)}
+    .email-view .actions .archive{background:var(--bg-hover);color:var(--text)}
+    .email-view .actions .archive:hover{background:var(--border)}
+
+    /* ===== COMPOSE ===== */
+    .compose-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:9998;display:none;align-items:center;justify-content:center}
+    .compose-overlay.show{display:flex}
+    .compose-window{background:var(--bg);border-radius:12px;padding:24px;max-width:500px;width:90%;box-shadow:0 12px 48px rgba(0,0,0,0.2);animation:fadeIn 0.3s ease}
+    @keyframes fadeIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+    .compose-window .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .compose-window .head h3{font-size:1.1rem}
+    .compose-window .head .close{cursor:pointer;font-size:1.2rem;color:var(--text-muted)}
+    .compose-window .head .close:hover{color:var(--text)}
+    .compose-window .group{margin-bottom:12px}
+    .compose-window .group label{display:block;font-size:0.75rem;color:var(--text-secondary);margin-bottom:3px}
+    .compose-window .group input,.compose-window .group textarea{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-secondary);color:var(--text);font-size:0.85rem;transition:var(--transition)}
+    .compose-window .group input:focus,.compose-window .group textarea:focus{border-color:var(--accent);outline:none}
+    .compose-window .group textarea{resize:vertical;min-height:120px}
+    .compose-window .send-btn{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:var(--transition)}
+    .compose-window .send-btn:hover{background:var(--accent-hover)}
+
+    /* ===== RESPONSIVE ===== */
+    @media(max-width:992px){.main{grid-template-columns:1fr}.sidebar{display:none}.email-view .back-btn{display:inline-flex}.email-view{display:block}.email-view .header{flex-direction:column;gap:4px}.header-search{max-width:300px}}
+    @media(max-width:768px){.header{padding:4px 10px;flex-wrap:wrap;gap:6px}.header-search{max-width:100%;order:3;flex-basis:100%}.header .logo{font-size:1rem}.email-item{padding:6px 10px}.email-item .info .preview{display:none}.compose-window{padding:16px}.control-buttons{top:6px;right:6px;gap:4px}.theme-toggle,.lang-toggle{padding:4px 8px;font-size:0.55rem}}
+    body.ltr{direction:ltr;text-align:left}
+  </style>
+</head>
+<body>
+  <div class="control-buttons">
+    <button class="theme-toggle" id="themeToggleBtn"><i class="fas fa-moon"></i> <span id="themeLabel">دارک</span></button>
+    <button class="lang-toggle" id="langToggleBtn"><i class="fas fa-globe"></i> <span id="langLabel">English</span></button>
+  </div>
+
+  <header class="header">
+    <div class="logo" onclick="showTab('inbox')"><i class="fas fa-envelope"></i> <span>Gmail</span></div>
+    <div class="header-search">
+      <i class="fas fa-search"></i>
+      <input type="text" id="searchInput" placeholder="جستجو در ایمیل‌ها..." onkeyup="searchEmails()">
+    </div>
+    <div class="header-actions">
+      <i class="fas fa-question-circle" onclick="showNotification('راهنما ❓')"></i>
+      <i class="fas fa-cog" onclick="showNotification('تنظیمات ⚙️')"></i>
+      <i class="fas fa-th" onclick="showNotification('برنامه‌ها 📱')"></i>
+      <div class="header-avatar" onclick="showNotification('پروفایل')">ع</div>
+    </div>
+  </header>
+
+  <div class="main">
+    <!-- ===== SIDEBAR ===== -->
+    <div class="sidebar" id="sidebar">
+      <button class="compose-btn" onclick="openCompose()"><i class="fas fa-pen"></i> نوشتن</button>
+      <div class="sidebar-item active" onclick="showTab('inbox')"><i class="fas fa-inbox"></i> ورودی <span class="badge">12</span></div>
+      <div class="sidebar-item" onclick="showNotification('ستاره‌دار ⭐')"><i class="fas fa-star"></i> ستاره‌دار</div>
+      <div class="sidebar-item" onclick="showNotification('بعداً 📅')"><i class="fas fa-clock"></i> بعداً</div>
+      <div class="sidebar-item" onclick="showNotification('ارسال شده 📤')"><i class="fas fa-paper-plane"></i> ارسال شده</div>
+      <div class="sidebar-item" onclick="showNotification('پیش‌نویس 📝')"><i class="fas fa-file-alt"></i> پیش‌نویس</div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-item" onclick="showNotification('دسته‌بندی 🏷️')"><i class="fas fa-tags"></i> دسته‌بندی</div>
+      <div class="sidebar-item" onclick="showNotification('بیشتر ⋮')"><i class="fas fa-ellipsis-h"></i> بیشتر</div>
+    </div>
+
+    <!-- ===== EMAIL LIST ===== -->
+    <div class="email-list" id="emailList">
+      <div class="email-tabs">
+        <a class="active" onclick="showTab('inbox')">ورودی</a>
+        <a onclick="showNotification('اجتماعی 👥')">اجتماعی</a>
+        <a onclick="showNotification('تبلیغات 📢')">تبلیغات</a>
+        <a onclick="showNotification('به‌روزرسانی 📊')">به‌روزرسانی</a>
+        <a onclick="showNotification('انجمن 💬')">انجمن</a>
+      </div>
+      <div id="emailContainer"></div>
+    </div>
+
+    <!-- ===== EMAIL VIEW ===== -->
+    <div class="email-view" id="emailView">
+      <button class="back-btn" onclick="closeEmailView()"><i class="fas fa-arrow-right"></i> بازگشت</button>
+      <div id="emailDetail"></div>
+    </div>
+  </div>
+
+  <!-- ===== COMPOSE ===== -->
+  <div class="compose-overlay" id="composeOverlay" onclick="if(event.target===this)closeCompose()">
+    <div class="compose-window">
+      <div class="head"><h3>پیام جدید</h3><span class="close" onclick="closeCompose()">&times;</span></div>
+      <div class="group"><label>به</label><input type="email" id="composeTo" placeholder="ایمیل گیرنده"></div>
+      <div class="group"><label>موضوع</label><input type="text" id="composeSubject" placeholder="موضوع"></div>
+      <div class="group"><label>پیام</label><textarea id="composeBody" placeholder="متن پیام"></textarea></div>
+      <button class="send-btn" onclick="sendEmail()">ارسال</button>
+    </div>
+  </div>
+
+  <script>
+    // ===== DATA =====
+    const emails = [
+      { id:1, from:'Google', subject:'به Gmail خوش آمدید', preview:'با Gmail می‌توانید ایمیل‌های خود را مدیریت کنید.', body:'به Gmail خوش آمدید! با این سرویس می‌توانید ایمیل‌های خود را به راحتی مدیریت کنید. از امکانات پیشرفته Gmail لذت ببرید.', time:'۱۰ دقیقه پیش', unread:true, avatar:'G', color:'#ea4335' },
+      { id:2, from:'سارا محمدی', subject:'جلسه امروز ساعت ۳', preview:'جلسه امروز ساعت ۳ در سالن کنفرانس برگزار می‌شود.', body:'سلام علی، جلسه امروز ساعت ۳ در سالن کنفرانس برگزار می‌شود. لطفاً به موقع حضور داشته باشید.', time:'۲ ساعت پیش', unread:true, avatar:'س', color:'#34a853' },
+      { id:3, from:'مهدی کریمی', subject:'پروژه جدید شروع شد', preview:'پروژه جدید طراحی سایت شروع شد. لطفاً مستندات را بررسی کنید.', body:'سلام دوستان، پروژه جدید طراحی سایت شروع شد. لطفاً مستندات پروژه را در Drive بررسی کنید و نظرات خود را اعلام کنید.', time:'۵ ساعت پیش', unread:false, avatar:'م', color:'#fbbc05' },
+      { id:4, from:'زهرا حسینی', subject:'ممنون از کمکت🙏', preview:'از کمکی که در پروژه قبلی کردید بسیار ممنونم.', body:'سلام علی، از کمکی که در پروژه قبلی کردید بسیار ممنونم. واقعاً عالی بود و بدون کمک شما امکان‌پذیر نبود.', time:'دیروز', unread:false, avatar:'ز', color:'#4285f4' },
+      { id:5, from:'علی رضایی', subject:'گزارش هفتگی', preview:'گزارش هفتگی پروژه آماده شده است.', body:'سلام، گزارش هفتگی پروژه آماده شده است. لطفاً آن را بررسی کرده و نظرات خود را بفرمایید.', time:'دیروز', unread:false, avatar:'ع', color:'#ea4335' },
+      { id:6, from:'ندا کریمی', subject:'دعوت به همکاری', preview:'ما از شما برای همکاری در پروژه جدید دعوت می‌کنیم.', body:'سلام علی، ما از شما برای همکاری در پروژه جدید دعوت می‌کنیم. پروژه بسیار جذاب و چالش‌برانگیز است.', time:'۳ روز پیش', unread:false, avatar:'ن', color:'#8e24aa' }
+    ];
+
+    let currentEmails = [...emails];
+    let selectedEmail = null;
+    let currentView = 'inbox';
+
+    function renderEmails(list){
+      const container = document.getElementById('emailContainer');
+      if(!list.length){
+        container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted)"><i class="fas fa-inbox" style="font-size:2rem;opacity:0.3"></i><p style="margin-top:8px">صندوق ورودی خالی است</p></div>';
+        return;
+      }
+      container.innerHTML = list.map(e => `
+        <div class="email-item ${e.unread?'unread':''}" onclick="openEmail(${e.id})">
+          <div class="avatar" style="background:${e.color}">${e.avatar}</div>
+          <div class="info">
+            <div class="from">${e.from}</div>
+            <div class="subject">${e.subject}</div>
+            <div class="preview">${e.preview}</div>
+          </div>
+          <div class="star ${e.starred?'active':''}" onclick="event.stopPropagation();toggleStar(${e.id})"><i class="fas fa-star"></i></div>
+          <div class="time">${e.time}</div>
+        </div>
+      `).join('');
+    }
+
+    function openEmail(id){
+      const email = currentEmails.find(e => e.id === id);
+      if(!email) return;
+      selectedEmail = email;
+      email.unread = false;
+      renderEmails(currentEmails);
+      
+      document.getElementById('emailList').style.display = 'none';
+      document.getElementById('emailView').style.display = 'block';
+      
+      document.getElementById('emailDetail').innerHTML = `
+        <div class="subject">${email.subject}</div>
+        <div class="header">
+          <div><div class="from">${email.from} &lt;${email.from.toLowerCase().replace(' ','')}@gmail.com&gt;</div>
+          <div class="to">به: من</div></div>
+          <div class="time">${email.time}</div>
+        </div>
+        <div class="body">${email.body}</div>
+        <div class="actions">
+          <button class="reply" onclick="replyEmail()"><i class="fas fa-reply"></i> پاسخ</button>
+          <button class="archive" onclick="archiveEmail(${email.id})"><i class="fas fa-archive"></i> بایگانی</button>
+          <button class="archive" onclick="deleteEmail(${email.id})" style="color:var(--text-muted)"><i class="fas fa-trash"></i> حذف</button>
+        </div>
+      `;
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    function closeEmailView(){
+      document.getElementById('emailList').style.display = 'block';
+      document.getElementById('emailView').style.display = 'none';
+      renderEmails(currentEmails);
+    }
+
+    function toggleStar(id){
+      const email = currentEmails.find(e => e.id === id);
+      if(email) email.starred = !email.starred;
+      renderEmails(currentEmails);
+    }
+
+    function archiveEmail(id){
+      currentEmails = currentEmails.filter(e => e.id !== id);
+      closeEmailView();
+      showNotification('📁 ایمیل بایگانی شد');
+    }
+
+    function deleteEmail(id){
+      if(confirm('آیا از حذف این ایمیل اطمینان دارید؟')){
+        currentEmails = currentEmails.filter(e => e.id !== id);
+        closeEmailView();
+        showNotification('🗑️ ایمیل حذف شد');
+      }
+    }
+
+    function replyEmail(){
+      document.getElementById('composeTo').value = selectedEmail ? selectedEmail.from.toLowerCase().replace(' ','')+'@gmail.com' : '';
+      document.getElementById('composeSubject').value = selectedEmail ? 'Re: '+selectedEmail.subject : '';
+      document.getElementById('composeBody').value = selectedEmail ? `\n\nدر پاسخ به ${selectedEmail.from}:\n${selectedEmail.body}` : '';
+      openCompose();
+    }
+
+    function searchEmails(){
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      if(!q){ currentEmails = [...emails]; renderEmails(currentEmails); return; }
+      currentEmails = emails.filter(e => 
+        e.from.toLowerCase().includes(q) || 
+        e.subject.toLowerCase().includes(q) || 
+        e.preview.toLowerCase().includes(q) ||
+        e.body.toLowerCase().includes(q)
+      );
+      renderEmails(currentEmails);
+    }
+
+    function showTab(tab){
+      currentView = tab;
+      document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.email-tabs a').forEach(el => el.classList.remove('active'));
+      
+      if(tab === 'inbox'){
+        currentEmails = [...emails];
+        renderEmails(currentEmails);
+        closeEmailView();
+        document.querySelector('.sidebar-item:first-child').classList.add('active');
+        document.querySelector('.email-tabs a:first-child').classList.add('active');
+      }
+    }
+
+    // ===== COMPOSE =====
+    function openCompose(){
+      document.getElementById('composeOverlay').classList.add('show');
+    }
+    function closeCompose(){
+      document.getElementById('composeOverlay').classList.remove('show');
+    }
+    function sendEmail(){
+      const to = document.getElementById('composeTo').value.trim();
+      const subject = document.getElementById('composeSubject').value.trim();
+      const body = document.getElementById('composeBody').value.trim();
+      if(!to || !subject || !body){
+        showNotification('❌ لطفاً تمام فیلدها را پر کنید!');
+        return;
+      }
+      const name = to.split('@')[0] || 'کاربر';
+      const newEmail = {
+        id: currentEmails.length+1,
+        from: name,
+        subject: subject,
+        preview: body.substring(0,50)+'...',
+        body: body,
+        time: 'همین الان',
+        unread: true,
+        avatar: name.charAt(0).toUpperCase(),
+        color: ['#ea4335','#34a853','#fbbc05','#4285f4','#8e24aa'][Math.floor(Math.random()*5)]
+      };
+      currentEmails.unshift(newEmail);
+      emails.unshift(newEmail);
+      closeCompose();
+      renderEmails(currentEmails);
+      showNotification('✅ ایمیل با موفقیت ارسال شد!');
+      document.getElementById('composeTo').value = '';
+      document.getElementById('composeSubject').value = '';
+      document.getElementById('composeBody').value = '';
+    }
+
+    // ===== NOTIFICATION =====
+    let notifTimeout;
+    function showNotification(msg){
+      const n = document.getElementById('notification');
+      if(!n){
+        const div = document.createElement('div');
+        div.id = 'notification';
+        div.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg);color:var(--text);padding:8px 18px;border-radius:10px;font-size:0.75rem;z-index:9999;opacity:0;transition:0.5s;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,0.2);border:1px solid var(--border)';
+        document.body.appendChild(div);
+      }
+      const el = document.getElementById('notification');
+      el.textContent = msg;
+      el.style.opacity = '1';
+      el.style.transform = 'translateX(-50%) translateY(0)';
+      clearTimeout(notifTimeout);
+      notifTimeout = setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(-50%) translateY(20px)';
+      }, 2500);
+    }
+
+    // ===== DARK MODE =====
+    const body = document.body;
+    const themeBtn = document.getElementById('themeToggleBtn');
+    const themeLabel = document.getElementById('themeLabel');
+    function toggleDarkMode(){
+      body.classList.toggle('dark-mode');
+      const isDark = body.classList.contains('dark-mode');
+      themeLabel.textContent = isDark ? 'روشن' : 'دارک';
+      themeBtn.innerHTML = isDark ? '<i class="fas fa-sun"></i> روشن' : '<i class="fas fa-moon"></i> دارک';
+    }
+    themeBtn.addEventListener('click', toggleDarkMode);
+
+    // ===== LANGUAGE =====
+    const langBtn = document.getElementById('langToggleBtn');
+    const langLabel = document.getElementById('langLabel');
+    function setLanguage(lang){
+      if(lang === 'en'){
+        body.classList.add('ltr');
+        body.setAttribute('dir','ltr');
+        document.documentElement.lang = 'en';
+        langLabel.textContent = 'فارسی';
+      } else {
+        body.classList.remove('ltr');
+        body.setAttribute('dir','rtl');
+        document.documentElement.lang = 'fa';
+        langLabel.textContent = 'English';
+      }
+    }
+    langBtn.addEventListener('click', function(){
+      const isFa = body.getAttribute('dir') === 'rtl';
+      setLanguage(isFa ? 'en' : 'fa');
+    });
+
+    // ===== INIT =====
+    renderEmails(currentEmails);
+    setLanguage('fa');
+    console.log('✅ Gmail Clone کامل بارگذاری شد!');
+  </script>
+</body>
+</html>

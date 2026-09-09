@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>گوگل کلون | Google Clone</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+    :root{--bg:#ffffff;--bg-secondary:#f8f9fa;--text:#202124;--text-secondary:#5f6368;--text-muted:#70757a;--border:#dadce0;--accent:#1a73e8;--accent-hover:#1557b0;--accent-glow:rgba(26,115,232,0.1);--shadow:0 1px 6px rgba(0,0,0,0.06);--shadow-hover:0 1px 6px rgba(0,0,0,0.12);--radius:24px;--transition:all 0.3s ease}
+    body.dark-mode{--bg:#1a1a1a;--bg-secondary:#2d2d2d;--text:#e8eaed;--text-secondary:#9aa0a6;--text-muted:#5f6368;--border:#3c4043;--shadow:0 1px 6px rgba(0,0,0,0.3);--shadow-hover:0 1px 6px rgba(0,0,0,0.5)}
+    body{background:var(--bg);min-height:100vh;transition:var(--transition);color:var(--text)}
+    ::-webkit-scrollbar{width:6px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--text-muted);border-radius:10px}
+    .control-buttons{position:fixed;top:12px;right:12px;display:flex;gap:6px;z-index:9999}
+    .theme-toggle,.lang-toggle{background:var(--bg-secondary);border:1px solid var(--border);padding:6px 12px;border-radius:50px;cursor:pointer;font-size:0.65rem;display:flex;align-items:center;gap:4px;transition:var(--transition);box-shadow:var(--shadow);color:var(--text)}
+    .theme-toggle:hover,.lang-toggle:hover{transform:scale(1.05);box-shadow:var(--shadow-hover)}
+    body.ltr .control-buttons{right:auto;left:12px}
+    .header{background:var(--bg);padding:8px 20px;display:flex;justify-content:flex-end;align-items:center;gap:16px;border-bottom:1px solid var(--border)}
+    .header a{color:var(--text-secondary);text-decoration:none;font-size:0.85rem;transition:var(--transition);cursor:pointer}
+    .header a:hover{color:var(--text);text-decoration:underline}
+    .header .apps{font-size:1.2rem;color:var(--text-secondary);cursor:pointer;padding:6px;border-radius:50%;transition:var(--transition)}
+    .header .apps:hover{background:var(--bg-secondary)}
+    .header-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:0.75rem;cursor:pointer;transition:var(--transition)}
+    .header-avatar:hover{filter:brightness(0.9)}
+    .main{max-width:1200px;margin:0 auto;padding:40px 20px;min-height:70vh;display:flex;flex-direction:column;align-items:center}
+    .logo{font-size:4.5rem;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:6px}
+    .logo .blue{color:#4285f4}
+    .logo .red{color:#ea4335}
+    .logo .yellow{color:#fbbc05}
+    .logo .green{color:#34a853}
+    .logo .dot{color:#4285f4;font-size:3rem}
+    .search-box{display:flex;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:50px;padding:6px 8px 6px 16px;max-width:600px;width:100%;transition:var(--transition);box-shadow:var(--shadow)}
+    .search-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-glow)}
+    .search-box input{border:none;background:transparent;outline:none;flex:1;padding:10px 6px;font-size:1rem;color:var(--text)}
+    .search-box input::placeholder{color:var(--text-muted)}
+    .search-box .icons{display:flex;gap:8px;align-items:center;padding:0 4px}
+    .search-box .icons i{font-size:1.2rem;color:var(--text-muted);cursor:pointer;transition:var(--transition)}
+    .search-box .icons i:hover{color:var(--accent)}
+    .search-buttons{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;justify-content:center}
+    .search-buttons button{padding:10px 24px;border:1px solid var(--border);border-radius:4px;background:var(--bg-secondary);color:var(--text);font-size:0.85rem;cursor:pointer;transition:var(--transition)}
+    .search-buttons button:hover{box-shadow:var(--shadow-hover);border-color:var(--text-muted)}
+    .languages{margin-top:20px;font-size:0.8rem;color:var(--text-secondary)}
+    .languages a{color:var(--accent);cursor:pointer;text-decoration:none;margin:0 4px}
+    .languages a:hover{text-decoration:underline}
+    .footer{background:var(--bg-secondary);border-top:1px solid var(--border);padding:12px 24px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:0.8rem;color:var(--text-muted)}
+    .footer a{color:var(--text-muted);text-decoration:none;margin:0 10px;cursor:pointer;transition:var(--transition)}
+    .footer a:hover{color:var(--text)}
+    .footer .left,.footer .right{display:flex;flex-wrap:wrap;gap:4px}
+    .tab-content{display:none;animation:fadeIn 0.3s ease}
+    .tab-content.active{display:block}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .results-container{padding:20px 0;max-width:650px;width:100%}
+    .result-item{padding:14px 0;border-bottom:1px solid var(--border)}
+    .result-item .title{font-size:1.2rem;color:var(--accent);cursor:pointer;font-weight:500}
+    .result-item .title:hover{text-decoration:underline}
+    .result-item .link{font-size:0.8rem;color:var(--text-muted)}
+    .result-item .desc{font-size:0.9rem;color:var(--text-secondary);margin-top:4px;line-height:1.5}
+    .result-item .date{font-size:0.7rem;color:var(--text-muted)}
+    .apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:16px;max-width:500px;width:100%;margin:20px auto}
+    .app-item{text-align:center;padding:16px 8px;border-radius:12px;transition:var(--transition);cursor:pointer}
+    .app-item:hover{background:var(--bg-secondary)}
+    .app-item .icon{font-size:2.5rem;display:block;margin-bottom:4px}
+    .app-item .name{font-size:0.7rem;color:var(--text-secondary)}
+    .image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;width:100%;margin-top:16px}
+    .image-item{aspect-ratio:1;background:var(--bg-secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:3rem;border:1px solid var(--border);cursor:pointer;transition:var(--transition)}
+    .image-item:hover{transform:scale(1.02);box-shadow:var(--shadow-hover)}
+    .image-item .label{font-size:0.7rem;color:var(--text-muted);position:absolute;bottom:8px;background:rgba(0,0,0,0.6);color:#fff;padding:2px 12px;border-radius:12px}
+    .settings-panel{background:var(--bg-secondary);border-radius:12px;padding:24px;border:1px solid var(--border);max-width:500px;width:100%;margin:0 auto}
+    .settings-panel .row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+    .settings-panel .row:last-child{border-bottom:none}
+    .settings-panel .row .label{font-weight:500}
+    .settings-panel .row .value{color:var(--text-secondary)}
+    .settings-panel .toggle{width:44px;height:24px;background:var(--text-muted);border-radius:40px;position:relative;cursor:pointer;transition:var(--transition)}
+    .settings-panel .toggle.active{background:var(--accent)}
+    .settings-panel .toggle::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:var(--transition)}
+    body.ltr .settings-panel .toggle::after{left:2px}
+    .settings-panel .toggle.active::after{left:22px}
+    body.ltr .settings-panel .toggle.active::after{left:22px}
+    @media(max-width:768px){.logo{font-size:3rem}.main{padding:20px 12px}.search-box{padding:4px 6px 4px 12px}.search-box input{padding:6px 4px;font-size:0.9rem}.footer{flex-direction:column;text-align:center;padding:10px 16px}.header{justify-content:center;flex-wrap:wrap}.apps-grid{grid-template-columns:repeat(4,1fr)}.image-grid{grid-template-columns:repeat(2,1fr)}.control-buttons{top:6px;right:6px;gap:4px}.theme-toggle,.lang-toggle{padding:4px 8px;font-size:0.55rem}}
+    body.ltr{direction:ltr;text-align:left}
+    body.ltr .logo .dot{font-size:3rem}
+  </style>
+</head>
+<body>
+  <div class="control-buttons">
+    <button class="theme-toggle" id="themeToggleBtn"><i class="fas fa-moon"></i> <span id="themeLabel">دارک</span></button>
+    <button class="lang-toggle" id="langToggleBtn"><i class="fas fa-globe"></i> <span id="langLabel">English</span></button>
+  </div>
+  <div class="notification" id="notification" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg-secondary);color:var(--text);padding:8px 18px;border-radius:10px;font-size:0.75rem;z-index:9999;opacity:0;transition:0.5s;pointer-events:none;box-shadow:var(--shadow);border:1px solid var(--border)"></div>
+
+  <header class="header">
+    <a onclick="showTab('gmail')">Gmail</a>
+    <a onclick="showTab('images')">تصاویر</a>
+    <div class="apps" onclick="showTab('apps')"><i class="fas fa-th"></i></div>
+    <div class="header-avatar" onclick="showTab('account')">ع</div>
+  </header>
+
+  <div class="main">
+    <div class="tab-content active" id="tab-search">
+      <div class="logo">
+        <span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span class="blue">g</span><span class="green">l</span><span class="red">e</span>
+        <span class="dot">.</span>
+      </div>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="جستجوی گوگل یا وارد کردن آدرس" onkeyup="if(event.key==='Enter')searchGoogle()">
+        <div class="icons">
+          <i class="fas fa-microphone" onclick="showNotification('🎤 جستجوی صوتی')"></i>
+          <i class="fas fa-camera" onclick="showNotification('📷 جستجوی تصویر')"></i>
+        </div>
+      </div>
+      <div class="search-buttons">
+        <button onclick="searchGoogle()">جستجوی گوگل</button>
+        <button onclick="showNotification('🎲 خوش شانس')">شانس</button>
+      </div>
+      <div class="languages">
+        زبان: <a onclick="setLanguage('fa')">فارسی</a> - <a onclick="setLanguage('en')">English</a>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-results">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;width:100%;max-width:650px">
+        <span class="blue" style="font-size:1.4rem;font-weight:700">G</span>
+        <div style="flex:1;display:flex;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:50px;padding:4px 12px">
+          <input type="text" id="resultSearchInput" placeholder="جستجو..." style="border:none;background:transparent;outline:none;flex:1;padding:8px 4px;color:var(--text);font-size:0.9rem" onkeyup="if(event.key==='Enter')searchGoogle()">
+          <i class="fas fa-search" style="color:var(--text-muted);cursor:pointer" onclick="searchGoogle()"></i>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:8px;width:100%;max-width:650px">
+        <a style="color:var(--accent);cursor:pointer;font-size:0.85rem;border-bottom:3px solid var(--accent);padding-bottom:6px" onclick="showTab('results')">همه</a>
+        <a style="color:var(--text-secondary);cursor:pointer;font-size:0.85rem;padding-bottom:6px" onclick="showTab('images')">تصاویر</a>
+        <a style="color:var(--text-secondary);cursor:pointer;font-size:0.85rem;padding-bottom:6px" onclick="showNotification('ویدیوها 🎬')">ویدیوها</a>
+        <a style="color:var(--text-secondary);cursor:pointer;font-size:0.85rem;padding-bottom:6px" onclick="showNotification('اخبار 📰')">اخبار</a>
+        <a style="color:var(--text-secondary);cursor:pointer;font-size:0.85rem;padding-bottom:6px" onclick="showNotification('بیشتر ⋮')">بیشتر</a>
+      </div>
+      <div class="results-container" id="resultsContainer"></div>
+    </div>
+
+    <div class="tab-content" id="tab-images">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;width:100%;max-width:650px">
+        <span class="blue" style="font-size:1.4rem;font-weight:700">G</span>
+        <div style="flex:1;display:flex;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:50px;padding:4px 12px">
+          <input type="text" id="imageSearchInput" placeholder="جستجوی تصاویر..." style="border:none;background:transparent;outline:none;flex:1;padding:8px 4px;color:var(--text);font-size:0.9rem" onkeyup="if(event.key==='Enter')searchImages()">
+          <i class="fas fa-search" style="color:var(--text-muted);cursor:pointer" onclick="searchImages()"></i>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;width:100%">
+        <a style="color:var(--accent);cursor:pointer;font-size:0.8rem;border-bottom:3px solid var(--accent);padding-bottom:4px" onclick="showNotification('همه')">همه</a>
+        <a style="color:var(--text-secondary);cursor:pointer;font-size:0.8rem;padding-bottom:4px" onclick="showNotification('سایز')">سایز</a>
+        <a style="color:var(--text-secondary);cursor:pointer;font-size:0.8rem;padding-bottom:4px" onclick="showNotification('رنگ')">رنگ</a>
+        <a style="color:var(--text-secondary);cursor:pointer;font-size:0.8rem;padding-bottom:4px" onclick="showNotification('نوع')">نوع</a>
+      </div>
+      <div class="image-grid" id="imageGrid"></div>
+    </div>
+
+    <div class="tab-content" id="tab-apps">
+      <h3 style="margin-bottom:16px">برنامه‌های گوگل</h3>
+      <div class="apps-grid">
+        <div class="app-item" onclick="showNotification('Gmail 📧')"><span class="icon">📧</span><span class="name">Gmail</span></div>
+        <div class="app-item" onclick="showNotification('Drive 📁')"><span class="icon">📁</span><span class="name">Drive</span></div>
+        <div class="app-item" onclick="showNotification('Maps 🗺️')"><span class="icon">🗺️</span><span class="name">Maps</span></div>
+        <div class="app-item" onclick="showNotification('YouTube ▶️')"><span class="icon">▶️</span><span class="name">YouTube</span></div>
+        <div class="app-item" onclick="showNotification('Photos 🖼️')"><span class="icon">🖼️</span><span class="name">Photos</span></div>
+        <div class="app-item" onclick="showNotification('Calendar 📅')"><span class="icon">📅</span><span class="name">Calendar</span></div>
+        <div class="app-item" onclick="showNotification('Meet 📹')"><span class="icon">📹</span><span class="name">Meet</span></div>
+        <div class="app-item" onclick="showNotification('News 📰')"><span class="icon">📰</span><span class="name">News</span></div>
+        <div class="app-item" onclick="showNotification('Keep 📝')"><span class="icon">📝</span><span class="name">Keep</span></div>
+        <div class="app-item" onclick="showNotification('Tasks ✅')"><span class="icon">✅</span><span class="name">Tasks</span></div>
+        <div class="app-item" onclick="showNotification('Translate 🌐')"><span class="icon">🌐</span><span class="name">Translate</span></div>
+        <div class="app-item" onclick="showNotification('Podcasts 🎙️')"><span class="icon">🎙️</span><span class="name">Podcasts</span></div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-account">
+      <div class="settings-panel">
+        <h3 style="margin-bottom:12px">حساب کاربری</h3>
+        <div class="row"><span class="label">نام</span><span class="value">علی رضایی</span></div>
+        <div class="row"><span class="label">ایمیل</span><span class="value">ali.rezaei@gmail.com</span></div>
+        <div class="row"><span class="label">تلفن</span><span class="value">۰۹۱۲۱۲۳۴۵۶۷</span></div>
+        <div class="row"><span class="label">حالت تاریک</span><div class="toggle" id="darkToggle" onclick="toggleDarkMode()"></div></div>
+        <div class="row"><span class="label">خروج</span><span class="value" style="color:var(--accent);cursor:pointer" onclick="showNotification('خروج از حساب')">خروج</span></div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-gmail">
+      <h2 style="margin-bottom:16px;display:flex;align-items:center;gap:10px"><i class="fas fa-envelope" style="color:#ea4335"></i> Gmail</h2>
+      <div style="background:var(--bg-secondary);border-radius:12px;padding:12px;border:1px solid var(--border);max-width:650px;width:100%">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">Google</span><span style="color:var(--text-muted)">سلام!</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">سارا محمدی</span><span style="color:var(--text-muted)">جلسه امروز ساعت ۳</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">مهدی کریمی</span><span style="color:var(--text-muted)">پروژه جدید شروع شد</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0"><span style="font-weight:600">زهرا حسینی</span><span style="color:var(--text-muted)">ممنون از کمکت🙏</span></div>
+        <button style="margin-top:12px;padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer" onclick="showNotification('ایمیل جدید ✏️')">ایمیل جدید</button>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <div class="left">
+      <a onclick="showNotification('درباره گوگل ℹ️')">درباره</a>
+      <a onclick="showNotification('تبلیغات 📢')">تبلیغات</a>
+      <a onclick="showNotification('کسب و کار 💼')">کسب و کار</a>
+    </div>
+    <div class="right">
+      <a onclick="showNotification('حریم خصوصی 🔒')">حریم خصوصی</a>
+      <a onclick="showNotification('شرایط 📋')">شرایط</a>
+      <a onclick="showNotification('تنظیمات ⚙️')">تنظیمات</a>
+    </div>
+  </footer>
+
+  <script>
+    const results = [
+      { title: 'گوگل - جستجوگر اینترنتی', link: 'www.google.com', desc: 'گوگل یک موتور جستجوی اینترنتی است که توسط لری پیج و سرگئی برین ساخته شده است...', date: '۲ روز پیش' },
+      { title: 'Gmail - سرویس ایمیل', link: 'mail.google.com', desc: 'سرویس ایمیل رایگان گوگل با فضای ذخیره‌سازی ۱۵ گیگابایت...', date: '۱ هفته پیش' },
+      { title: 'Google Maps - نقشه', link: 'maps.google.com', desc: 'سرویس نقشه و مسیریابی گوگل با اطلاعات ترافیک لحظه‌ای...', date: '۳ روز پیش' },
+      { title: 'YouTube - اشتراک ویدیو', link: 'www.youtube.com', desc: 'پلتفرم اشتراک ویدیو که توسط گوگل خریداری شده است...', date: '۵ روز پیش' }
+    ];
+
+    const images = [
+      '🌄', '🏔️', '🌊', '🌺', '🌅', '🏝️', '🌃', '🎨', '🌈', '🌻', '🌿', '🦋'
+    ];
+
+    function searchGoogle(){
+      const query = document.getElementById('searchInput').value.trim() || document.getElementById('resultSearchInput')?.value.trim() || 'جستجو';
+      showTab('results');
+      const container = document.getElementById('resultsContainer');
+      const filtered = results.filter(r => r.title.includes(query) || r.desc.includes(query));
+      const data = filtered.length > 0 ? filtered : results;
+      container.innerHTML = data.map(r => `
+        <div class="result-item">
+          <div class="title" onclick="showNotification('بازدید ${r.title}')">${r.title}</div>
+          <div class="link">${r.link}</div>
+          <div class="desc">${r.desc}</div>
+          <div class="date">${r.date}</div>
+        </div>
+      `).join('');
+      showNotification(`🔍 نتایج جستجو برای: ${query}`);
+    }
+
+    function searchImages(){
+      const query = document.getElementById('imageSearchInput').value.trim() || 'تصاویر';
+      showTab('images');
+      const grid = document.getElementById('imageGrid');
+      grid.innerHTML = images.map(img => `
+        <div class="image-item" style="position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;background:var(--bg-secondary);border-radius:8px;border:1px solid var(--border);cursor:pointer;aspect-ratio:1;font-size:3rem" onclick="showNotification('${img} تصویر')">
+          ${img}
+          <span style="font-size:0.6rem;color:var(--text-muted);margin-top:4px">${query}</span>
+        </div>
+      `).join('');
+      showNotification(`🖼️ نتایج تصاویر برای: ${query}`);
+    }
+
+    let notifTimeout;
+    function showNotification(msg){
+      const n = document.getElementById('notification');
+      n.textContent = msg;
+      n.style.opacity = '1';
+      n.style.transform = 'translateX(-50%) translateY(0)';
+      clearTimeout(notifTimeout);
+      notifTimeout = setTimeout(() => {
+        n.style.opacity = '0';
+        n.style.transform = 'translateX(-50%) translateY(20px)';
+      }, 2500);
+    }
+
+    function showTab(tab){
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('tab-'+tab);
+      if(target) target.classList.add('active');
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    const dict={fa:{},en:{}};
+    let currentLang='fa';
+    const body=document.body;
+    const langBtn=document.getElementById('langToggleBtn');
+    const langLabel=document.getElementById('langLabel');
+    function setLanguage(lang){
+      currentLang=lang;
+      if(lang==='en'){body.classList.add('ltr');body.setAttribute('dir','ltr');document.documentElement.lang='en';langLabel.textContent='فارسی'}
+      else{body.classList.remove('ltr');body.setAttribute('dir','rtl');document.documentElement.lang='fa';langLabel.textContent='English'}
+    }
+    langBtn.addEventListener('click',function(){setLanguage(currentLang==='fa'?'en':'fa')});
+
+    const themeBtn=document.getElementById('themeToggleBtn');
+    const themeLabel=document.getElementById('themeLabel');
+    const darkToggle=document.getElementById('darkToggle');
+    function toggleDarkMode(){
+      body.classList.toggle('dark-mode');
+      const isDark=body.classList.contains('dark-mode');
+      themeLabel.textContent=isDark?'روشن':'دارک';
+      themeBtn.innerHTML=isDark?'<i class="fas fa-sun"></i> روشن':'<i class="fas fa-moon"></i> دارک';
+      if(darkToggle) darkToggle.classList.toggle('active');
+    }
+    themeBtn.addEventListener('click',toggleDarkMode);
+    if(darkToggle) darkToggle.addEventListener('click',toggleDarkMode);
+
+    setLanguage('fa');
+    showTab('search');
+    console.log('✅ Google Clone کامل بارگذاری شد!');
+  </script>
+</body>
+</html>
